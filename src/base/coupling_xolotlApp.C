@@ -4,6 +4,13 @@
 #include "ModulesApp.h"
 #include "MooseSyntax.h"
 
+
+// My custom Executioner
+#include "XolotlExecutioner.h"
+
+// My custom TimeStepper
+#include "XolotlTimeStepper.h"
+
 template <>
 InputParameters
 validParams<coupling_xolotlApp>()
@@ -39,6 +46,11 @@ void
 coupling_xolotlApp::registerObjects(Factory & factory)
 {
     Registry::registerObjectsTo(factory, {"coupling_xolotlApp"});
+    //Registering XolotlExecutioner
+    registerExecutioner(XolotlExecutioner);
+
+    //Registering XolotlTimeStepper
+    registerTimeStepper(XolotlTimeStepper);
 }
 
 void
