@@ -59,7 +59,7 @@ APPLICATION_NAME   := coupling_xolotl
 BUILD_EXEC         := yes
 GEN_REVISION       := no
 include            $(FRAMEWORK_DIR)/app.mk
-#export EXTERNAL_FLAGS += -std=c++11 -L$(extlibpath) -lxolotlInter
+#export EXTERNAL_FLAGS += -std=c++11
 
 ###############################################################################
 # Additional special case targets should be added here
