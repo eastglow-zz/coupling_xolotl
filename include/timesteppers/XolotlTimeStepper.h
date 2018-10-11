@@ -22,8 +22,6 @@ protected:
 
 private:
   Real _dt;
-  std::string _ext_lib_path_name;
-  std::string _func_name;
 };
 
 #endif //XOLOTLTIMESTEPPER_H

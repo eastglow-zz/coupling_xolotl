@@ -44,12 +44,13 @@ POROUS_FLOW         := no
 include $(MOOSE_DIR)/modules/modules.mk
 ###############################################################################
 #External non-MOOSE shared library linking - not necessary
-extlibpath          :=/Users/donguk.kim/projects/xolotl-build/lib
-extheaderpath       :=/Users/donguk.kim/projects/xolotl-build/include
+#extlibpath          :=/Users/donguk.kim/projects/xolotl-build/lib
+#extlibpath          :=/Users/donguk.kim/projects/xolotl-build
+xolotlincludepath    :=/Users/donguk.kim/projects/xolotl-build/include
 #ADDITIONAL_INCLUDES    +=/Users/sophie/Code/petsc/include/
 #ADDITIONAL_INCLUDES    +=/Users/sophie/Code/petsc/20180509/include
 #ADDITIONAL_DEPEND_LIBS    +=$(extlibpath)
-ADDITIONAL_INCLUDES:= -I$(extheaderpath)
+ADDITIONAL_INCLUDES:= -I$(xolotlincludepath)
 ###############################################################################
 
 # dep apps
@@ -58,7 +59,7 @@ APPLICATION_NAME   := coupling_xolotl
 BUILD_EXEC         := yes
 GEN_REVISION       := no
 include            $(FRAMEWORK_DIR)/app.mk
-export EXTERNAL_FLAGS += -std=c++11 -L$(extlibpath) -lxolotlInter
+#export EXTERNAL_FLAGS += -std=c++11 -L$(extlibpath) -lxolotlInter
 
 ###############################################################################
 # Additional special case targets should be added here

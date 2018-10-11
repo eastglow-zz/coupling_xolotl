@@ -9,12 +9,8 @@
 []
 [Executioner]
   type = XolotlExecutioner
-  [./TimeStepper]
-    type = XolotlTimeStepper
-    # library_path_name ='/Users/sophie/GitWorkspace/xolotl-moose-source/build/lib/libxolotlInter.dylib'
-    # library_path_name = '/Users/donguk.kim/projects/xolotl-build/lib/libxolotlInter.dylib'
-  [../]
-  end_time = 10
+  library_path_name = '/Users/donguk.kim/projects/xolotl-build/lib/libxolotlInter.dylib'
+  XolotlInput_path_name = './params_NE.txt'
 []
 [Problem]
   kernel_coverage_check = false
