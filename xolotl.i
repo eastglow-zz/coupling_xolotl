@@ -9,7 +9,7 @@
 []
 [Executioner]
   type = XolotlExecutioner
-  library_path_name = '/Users/donguk.kim/projects/xolotl-build/lib/libxolotlInter.dylib'
+  library_path_name = '/home/donguk.kim/projects/xolotlb/lib/libxolotlInter.so'
   XolotlInput_path_name = './params_NE.txt'
 []
 [Problem]

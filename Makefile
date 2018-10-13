@@ -46,7 +46,7 @@ include $(MOOSE_DIR)/modules/modules.mk
 #External non-MOOSE shared library linking - not necessary
 #extlibpath          :=/Users/donguk.kim/projects/xolotl-build/lib
 #extlibpath          :=/Users/donguk.kim/projects/xolotl-build
-xolotlincludepath    :=/Users/donguk.kim/projects/xolotl-build/include
+xolotlincludepath    :=/home/donguk.kim/projects/xolotlb/include
 #ADDITIONAL_INCLUDES    +=/Users/sophie/Code/petsc/include/
 #ADDITIONAL_INCLUDES    +=/Users/sophie/Code/petsc/20180509/include
 #ADDITIONAL_DEPEND_LIBS    +=$(extlibpath)

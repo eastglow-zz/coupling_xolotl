@@ -67,7 +67,7 @@ void XolotlExecutioner::init() {
 
   // MPI_Init(&argc, &argv);
   // Initialize it
-  auto solver = interface->initializeXolotl(argc, argv, MPI::COMM_WORLD);
+  auto solver = interface->initializeXolotl(argc, argv, MPI_COMM_WORLD);
   // std::shared_ptr<xolotlSolver::PetscSolver> solver = interface->initializeXolotl(argc, argv, MPI_COMM_WORLD);
   printf("after initializeXolotl\n");
   // Run the solve
