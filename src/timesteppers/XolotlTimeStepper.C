@@ -62,6 +62,17 @@ XolotlTimeStepper::step()
     auto solver = interface.initializeXolotl(argc,
                                              argv, MPI_COMM_WORLD);
     interface.solveXolotl(solver);
+    
+    interface.printRetention(solver);
+    auto retention = interface.getPointerRetention(solver);
+    if (retention->size() > 0)
+		retention->at(3) = 1.0;
+    interface.printRetention(solver);
+    auto retentionCopy = interface.getCopyRetention(solver);
+    if (retentionCopy.size() > 0)
+		retentionCopy[5] = 1.0;
+    interface.printRetention(solver);
+
     interface.finalizeXolotl(solver);
 
 
