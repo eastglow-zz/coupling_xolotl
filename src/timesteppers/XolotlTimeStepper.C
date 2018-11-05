@@ -53,14 +53,14 @@ XolotlTimeStepper::step()
     std::string parameterFile = "crap";
     argv[0] = new char[parameterFile.length() + 1];
     strcpy(argv[0], parameterFile.c_str());
-    //parameterFile = "/Users/sophie/MOOSE/moose/coupling_nonmoose_test/param.txt";
-    parameterFile = "/Users/donguk.kim/projects/coupling_xolotl/params_NE.txt";
+//    parameterFile = "/home2/bqo/MOOSE/projects/coupling_xolotl_std/params_NE.txt";
+    parameterFile = "/Users/donguk.kim/projects/coupling_xolotl/params_NE.txt";    
     argv[1] = new char[parameterFile.length() + 1];
     strcpy(argv[1], parameterFile.c_str());
     argv[2] = 0; // null-terminate the array
 
     auto solver = interface.initializeXolotl(argc,
-                                             argv, MPI_COMM_WORLD);
+                                             argv, MPI_COMM_WORLD, false);
     interface.solveXolotl(solver);
     
     interface.printRetention(solver);
@@ -73,8 +73,9 @@ XolotlTimeStepper::step()
 		retentionCopy[5] = 1.0;
     interface.printRetention(solver);
 
-    interface.finalizeXolotl(solver);
+    interface.finalizeXolotl(solver, false);
 
+    solver.reset();
 
   ////////////////
   /*
