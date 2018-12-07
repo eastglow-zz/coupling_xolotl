@@ -77,12 +77,12 @@ void XolotlExecutioner::init() {
   //auto solver = interface->initializeXolotl(argc, argv, MPI_COMM_WORLD);
   auto solver = interface->initializeXolotl(argc, argv, MPI_COMM_WORLD, ISSTANDALONE); // 'isStandalone=false' doesn't work on MacOS. But, 'true' works. I don't know why.
   // std::shared_ptr<xolotlSolver::PetscSolver> solver = interface->initializeXolotl(argc, argv, MPI_COMM_WORLD);
-  printf("after initializeXolotl\n");
   // Run the solve
   interface->solveXolotl(solver);
   // Finalize the run
   // interface->finalizeXolotl(solver);
-  interface->finalizeXolotl(solver, ISSTANDALONE); // 'isStandalone=false' doesn't work on MacOS. But, 'true' works. I don't know why.
+  // interface->finalizeXolotl(solver, ISSTANDALONE); // 'isStandalone=false' doesn't work on MacOS. But, 'true' works. I don't know why.
+  interface->finalizeXolotl(solver, false); // 'isStandalone=false' doesn't work on MacOS. But, 'true' works. I don't know why.
 
   // destroy the class
   destroy_interface(interface);
