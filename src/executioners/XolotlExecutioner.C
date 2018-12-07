@@ -3,6 +3,12 @@
 #include <XolotlDLinterface.h>  // Xolotl interface
 #include <dlfcn.h>
 
+#ifdef __APPLE__
+#define ISSTANDALONE true
+#elif __linux__
+#define ISSTANDALONE false
+#endif
+
 template<>
 InputParameters validParams<XolotlExecutioner>()
 {
@@ -70,7 +76,7 @@ void XolotlExecutioner::init() {
 
   // MPI_Init(&argc, &argv);
   // Initialize it
-  auto solver = interface->initializeXolotl(argc, argv, MPI_COMM_WORLD, false);
+  auto solver = interface->initializeXolotl(argc, argv, MPI_COMM_WORLD, ISSTANDALONE);
   // auto solver = interface->initializeXolotl(argc, argv, MPI_COMM_WORLD);
   // std::shared_ptr<xolotlSolver::PetscSolver> solver = interface->initializeXolotl(argc, argv, MPI_COMM_WORLD);
   printf("after initializeXolotl\n");
@@ -78,7 +84,7 @@ void XolotlExecutioner::init() {
   interface->solveXolotl(solver);
   // Finalize the run
   // interface->finalizeXolotl(solver);
-  interface->finalizeXolotl(solver, false);
+  interface->finalizeXolotl(solver, ISSTANDALONE);
 
   // destroy the class
   destroy_interface(interface);
