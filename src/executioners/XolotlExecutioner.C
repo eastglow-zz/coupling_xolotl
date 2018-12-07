@@ -32,6 +32,9 @@ void XolotlExecutioner::init() {
   using std::cout;
   using std::cerr;
   void* handle = dlopen(_ext_lib_path_name.c_str(), RTLD_LAZY);
+  //void* handle = dlopen(_ext_lib_path_name.c_str(), RTLD_NOW);
+  //void* handle = dlopen(_ext_lib_path_name.c_str(), RTLD_GLOBAL);
+  //void* handle = dlopen(_ext_lib_path_name.c_str(), RTLD_LOCAL);
   if (!handle) {
     cerr << "Cannot open library: " << dlerror() << '\n';
   }
@@ -67,13 +70,15 @@ void XolotlExecutioner::init() {
 
   // MPI_Init(&argc, &argv);
   // Initialize it
-  auto solver = interface->initializeXolotl(argc, argv, MPI_COMM_WORLD);
+  auto solver = interface->initializeXolotl(argc, argv, MPI_COMM_WORLD, false);
+  // auto solver = interface->initializeXolotl(argc, argv, MPI_COMM_WORLD);
   // std::shared_ptr<xolotlSolver::PetscSolver> solver = interface->initializeXolotl(argc, argv, MPI_COMM_WORLD);
   printf("after initializeXolotl\n");
   // Run the solve
   interface->solveXolotl(solver);
   // Finalize the run
-  interface->finalizeXolotl(solver);
+  // interface->finalizeXolotl(solver);
+  interface->finalizeXolotl(solver, false);
 
   // destroy the class
   destroy_interface(interface);

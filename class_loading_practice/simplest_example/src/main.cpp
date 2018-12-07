@@ -8,7 +8,7 @@ int main() {
     using std::cerr;                                                         
                                                                              
     // load the triangle library                                             
-    void* triangle = dlopen("./triangle.so", RTLD_LAZY);                     
+    void* triangle = dlopen("/home/donguk.kim/projects/coupling_xolotl/class_loading_practice/simplest_example/triangle.so", RTLD_LAZY);                     
     if (!triangle) {                                                         
         cerr << "Cannot load library: " << dlerror() << '\n';                
         return 1;                                                            

@@ -47,9 +47,11 @@ include $(MOOSE_DIR)/modules/modules.mk
 #extlibpath          :=/Users/donguk.kim/projects/xolotl-build/lib
 #extlibpath          :=/Users/donguk.kim/projects/xolotl-build
 xolotlincludepath    :=/home/donguk.kim/projects/xolotlb/include
+#xolotlpetscinclude   :=/home/donguk.kim/xolotlenv/petsc-install/include
 #ADDITIONAL_INCLUDES    +=/Users/sophie/Code/petsc/include/
 #ADDITIONAL_INCLUDES    +=/Users/sophie/Code/petsc/20180509/include
 #ADDITIONAL_DEPEND_LIBS    +=$(extlibpath)
+#ADDITIONAL_INCLUDES:= -I$(xolotlincludepath) -I$(xolotlpetscinclude)
 ADDITIONAL_INCLUDES:= -I$(xolotlincludepath)
 ###############################################################################
 
@@ -59,7 +61,7 @@ APPLICATION_NAME   := coupling_xolotl
 BUILD_EXEC         := yes
 GEN_REVISION       := no
 include            $(FRAMEWORK_DIR)/app.mk
-#export EXTERNAL_FLAGS += -std=c++11
+#export EXTERNAL_FLAGS += -std=c++11 -ldl
 
 ###############################################################################
 # Additional special case targets should be added here
