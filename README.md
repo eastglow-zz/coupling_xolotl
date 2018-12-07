@@ -11,3 +11,5 @@ To build Xolotl dynamic library, please use 'mooseApps-coupling' branch of https
 'externCinterface' branch uses dynamic loading method, and was tested on MacOS.
 
 'externCinterfaceHPG2' branch used dynamic loading method, and was tested on the HiPerGator2 cluster of University of Florida.
+
+To use the dynamic loading method, please use 'mooseApps-coupling' branch of https://github.com/eastglow-zz/xolotl.git.
