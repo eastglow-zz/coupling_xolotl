@@ -87,7 +87,7 @@ void XolotlExecutioner::init() {
   // destroy the class
   destroy_interface(interface);
 
-  // unload the triangle library
+  // unload the library
   dlclose(handle);
 
   // MPI_Finalize();
