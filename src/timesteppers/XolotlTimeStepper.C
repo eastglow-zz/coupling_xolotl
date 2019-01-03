@@ -1,5 +1,4 @@
 #include <XolotlTimeStepper.h>
-#include <interface.h>
 #include <dlfcn.h>
 
 template<>
@@ -20,8 +19,23 @@ XolotlTimeStepper::XolotlTimeStepper(const InputParameters & parameters) :
     TimeStepper(parameters),
     _dt(getParam<Real>("dt")),
     _ext_lib_path_name(getParam<std::string>("library_path_name"))
-//    _func_name(getParam<std::string>("function_name"))
 {
+    // Initialize the step number
+    stepNumber = 0;
+
+    int argc = 3;
+    char ** argv = new char*[argc];
+    std::string parameterFile = "crap";
+    argv[0] = new char[parameterFile.length() + 1];
+    strcpy(argv[0], parameterFile.c_str());
+    parameterFile = "/home2/bqo/MOOSE/projects/coupling_xolotl_std/params_NE.txt";
+//    parameterFile = "/Users/donguk.kim/projects/coupling_xolotl/params_NE.txt";    
+    argv[1] = new char[parameterFile.length() + 1];
+    strcpy(argv[1], parameterFile.c_str());
+    argv[2] = 0; // null-terminate the array
+
+    solver = interface.initializeXolotl(argc,
+                                                                 argv, MPI_COMM_WORLD, false);
 }
 
 /* This method is a pure virtual function, so it must be redefined by any
@@ -43,81 +57,33 @@ XolotlTimeStepper::computeDT()
 void
 XolotlTimeStepper::step()
 {
+    // Increment the step number
+    stepNumber++;
 
-    XolotlInterface interface;
+    // Set the time we want to reach
+    interface.setTimes(solver, 5.0e4 * stepNumber, 5.0e3);
 
-    interface.printSomething();
-
-    int argc = 3;
-    char ** argv = new char*[argc];
-    std::string parameterFile = "crap";
-    argv[0] = new char[parameterFile.length() + 1];
-    strcpy(argv[0], parameterFile.c_str());
-//    parameterFile = "/home2/bqo/MOOSE/projects/coupling_xolotl_std/params_NE.txt";
-    parameterFile = "/Users/donguk.kim/projects/coupling_xolotl/params_NE.txt";    
-    argv[1] = new char[parameterFile.length() + 1];
-    strcpy(argv[1], parameterFile.c_str());
-    argv[2] = 0; // null-terminate the array
-
-    auto solver = interface.initializeXolotl(argc,
-                                             argv, MPI_COMM_WORLD, false);
+    // Run the solver
     interface.solveXolotl(solver);
     
+    // Print the retention
     interface.printRetention(solver);
-    auto retention = interface.getPointerRetention(solver);
-    if (retention->size() > 0)
-		retention->at(3) = 1.0;
-    interface.printRetention(solver);
-    auto retentionCopy = interface.getCopyRetention(solver);
-    if (retentionCopy.size() > 0)
-		retentionCopy[5] = 1.0;
-    interface.printRetention(solver);
-
-    interface.finalizeXolotl(solver, false);
-
-    solver.reset();
-
-  ////////////////
-  /*
-  printf("Executing internal custum routine\n");
-  for (unsigned int i = 1; i <= 10; i++)
-  {
-    printf("%d\n",i);
-  }
-  */
-  ////////////////
-//  using std::cout;
-//  using std::cerr;
-//  printf("Calling an external function\n");
-//  //void* handle = dlopen("/Users/donguk.kim/projects/coupling_nonmoose_test/external_app/static/lib/wrapper.so", RTLD_LAZY);
-//  void* handle = dlopen(_ext_lib_path_name.c_str(), RTLD_LAZY);
-//  //the library path above alse can be provided by the input file
-//
-//  if (!handle) {
-//    cerr << "Cannot open library: " << dlerror() << '\n';
-//  }
-//
-//  typedef void (*importfunc_t)();
-//
-//  dlerror();
-//  importfunc_t func_loaded = (importfunc_t) dlsym(handle, _func_name.c_str());
-//  const char *dlsym_error = dlerror();
-//  if (dlsym_error) {
-//    cerr << "Cannot load symbol " << _func_name.c_str() << ": " << dlsym_error << '\n';
-//    dlclose(handle);
-//  }else{
-//    func_loaded();
-//
-//    cout << "Closing library...\n";
-//    dlclose(handle);
-//  }
-
-  ////////////////
+//    auto retention = interface.getPointerRetention(solver);
+//    if (retention->size() > 0)
+//		retention->at(3) = 1.0;
+//    interface.printRetention(solver);
+//    auto retentionCopy = interface.getCopyRetention(solver);
+//    if (retentionCopy.size() > 0)
+//		retentionCopy[5] = 1.0;
+//    interface.printRetention(solver);
 }
 
 void
 XolotlTimeStepper::postExecute()
 {
+    interface.finalizeXolotl(solver, false);
+
+    solver.reset();
 }
 
 /* Indication of whether the Monte Carlo solve converged - assume this will
