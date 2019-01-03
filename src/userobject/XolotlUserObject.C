@@ -38,6 +38,7 @@ validParams<XolotlUserObject>()
   params.addParam<Real>("ymax", 1.0, "Upper Y Coordinate of the generated mesh");
   params.addParam<Real>("zmax", 1.0, "Upper Z Coordinate of the generated mesh");
   params.addRequiredCoupledVar("variable", "The name of the variable that this object operates on");
+  params.addRequiredCoupledVar("variable_gb", "The name of the variable that passes the grain boundary data");
   params.addParam<std::string>("library_path_name",
                                "default",
                                "Name with the path for the dynamic library to load");
@@ -69,6 +70,7 @@ XolotlUserObject::XolotlUserObject(const InputParameters & parameters)
   _zmax(getParam<Real>("zmax")),
   _var(*mooseVariable()),
   _u(_var.dofValues()),
+  _v(coupledValue("variable_gb")),
   _ext_lib_path_name(getParam<std::string>("library_path_name")),
   _xolotl_input_path_name(getParam<std::string>("XolotlInput_path_name"))
 {

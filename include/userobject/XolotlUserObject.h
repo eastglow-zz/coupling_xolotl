@@ -60,6 +60,7 @@ private:
 
   MooseVariable & _var;
   const VariableValue & _u;
+  const VariableValue & _v;
 
   /*========= Variables for the External Application =========*/
   /// Finite Difference mesh parameters for the External App.
