@@ -66,16 +66,11 @@ XolotlTimeStepper::step()
     // Run the solver
     interface.solveXolotl(solver);
     
-    // Print the retention
-    interface.printRetention(solver);
-//    auto retention = interface.getPointerRetention(solver);
-//    if (retention->size() > 0)
-//		retention->at(3) = 1.0;
-//    interface.printRetention(solver);
-//    auto retentionCopy = interface.getCopyRetention(solver);
-//    if (retentionCopy.size() > 0)
-//		retentionCopy[5] = 1.0;
-//    interface.printRetention(solver);
+    // Get the local rate
+    auto localRate = interface.getLocalXeRate(solver);
+    // Print its dimensions
+    std::cout << "The vector is: " << localRate->size() << " in the X direction, " << localRate->at(0).size()
+	<< " in the Y direction, and " << localRate->at(0)[0].size() << " in the Z direction." << std::endl; 
 }
 
 void
