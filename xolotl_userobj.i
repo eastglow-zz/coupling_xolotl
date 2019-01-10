@@ -43,7 +43,7 @@
   type = Transient
   [./TimeStepper]
     type = ConstantDT
-    dt = 1
+    dt = 1.0
   [../]
   start_time = 0
   end_time = 2

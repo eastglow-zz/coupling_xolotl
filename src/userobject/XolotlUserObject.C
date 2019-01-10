@@ -107,13 +107,6 @@ XolotlUserObject::XolotlUserObject(const InputParameters & parameters)
 
   _ext_coord = initExtCoords();
   print_ext_coord(_ext_coord);
-}
-
-void
-XolotlUserObject::initialize()
-{
-  // The parameters of the External Application will be initialized here
-  // This member function is called once at a MOOSE time step (maybe able to be specified by using execute_on parameter in the input file)
 
   // Preparing for the external library handle
   _ext_lib_handle = dlopen(_ext_lib_path_name.c_str(), RTLD_LAZY);
@@ -121,21 +114,6 @@ XolotlUserObject::initialize()
     std::cerr << "Cannot open library: " << dlerror() << '\n';
   }
   dlerror();
-
-  // Parameter initialization for the external diffusion Solver
-  // mdp.time_start = _t - _dt;
-  // mdp.time_end = _t;
-  // mdp.x0 = xmin;
-  // mdp.dx = dx;
-  // mdp.nghost = 1;
-  // mdp.iLower = 0 + mdp.nghost;
-  // mdp.iUpper = nNode_x-1 + mdp.nghost;
-  // mdp.numdata = 2 * mdp.nghost + mdp.iUpper - mdp.iLower + 1;
-  // mdp.iboundaryL = mdp.iLower - mdp.nghost;
-  // mdp.iboundaryU = mdp.iUpper + mdp.nghost;
-  // mdp.DiffCoef = 1.0;
-  // mdp.bc_Lval_Dirichlet = 1.0;
-  // mdp.bc_Uval_Dirichlet = -1.0;
 
   // Loading Xolotl solver pointer
   typedef XolotlDLinterface* create_t();
@@ -158,6 +136,18 @@ XolotlUserObject::initialize()
   _xolotl_interface = create_interface();
 
   _xolotl_solver = _xolotl_interface->initializeXolotl(_argc, _argv, MPI_COMM_WORLD, ISSTANDALONE);
+  _xolotl_interface->setTimes(_xolotl_solver, _t, _dt);
+}
+
+void
+XolotlUserObject::initialize()
+{
+  // The parameters of the External Application will be initialized here
+  // This member function is called once at a MOOSE time step (maybe able to be specified by using execute_on parameter in the input file)
+
+  _xolotl_interface->setTimes(_xolotl_solver, _t, _dt);
+  _xolotl_interface->solveXolotl(_xolotl_solver);
+  _xolotl_interface->printRetention(_xolotl_solver);
 }
 
 void
@@ -212,12 +202,10 @@ XolotlUserObject::finalize()
   // delete[] mdp_data;
   // delete[] mdp_x;
 
-  _xolotl_interface->solveXolotl(_xolotl_solver);
-
-  _xolotl_interface->finalizeXolotl(_xolotl_solver, false);
+  // _xolotl_interface->finalizeXolotl(_xolotl_solver, false);
+  // _xolotl_solver.reset();
   // Deallocating the external library handle
-  dlclose(_ext_lib_handle);
-
+  // dlclose(_ext_lib_handle);
 }
 
 void
