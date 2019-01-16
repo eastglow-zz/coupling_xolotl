@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "XolotlUserObject.h"
+#include <dlfcn.h>
 //MOOSE includes
 
 #ifdef __APPLE__
@@ -136,7 +137,10 @@ XolotlUserObject::XolotlUserObject(const InputParameters & parameters)
   _xolotl_interface = create_interface();
 
   _xolotl_solver = _xolotl_interface->initializeXolotl(_argc, _argv, MPI_COMM_WORLD, ISSTANDALONE);
-  _xolotl_interface->setTimes(_xolotl_solver, _t, _dt);
+  Real dtime = 1.1e-20;
+  if (_dt > 1e-20) dtime = _dt;
+  _xolotl_interface->setTimes(_xolotl_solver, _t, dtime);
+  _xolotl_LocalXeRate = _xolotl_interface->getLocalXeRate(_xolotl_solver);  // Buffer initialization; data values do not matter here
 }
 
 void
@@ -147,7 +151,34 @@ XolotlUserObject::initialize()
 
   _xolotl_interface->setTimes(_xolotl_solver, _t, _dt);
   _xolotl_interface->solveXolotl(_xolotl_solver);
-  _xolotl_interface->printRetention(_xolotl_solver);
+  // _xolotl_interface->printRetention(_xolotl_solver);
+  _xolotl_LocalXeRate = _xolotl_interface->getLocalXeRate(_xolotl_solver); // Bringing the data
+
+  int xolotl_local_nx = _xolotl_LocalXeRate->size();
+  int xolotl_local_ny = _xolotl_LocalXeRate->at(0).size();
+  int xolotl_local_nz = _xolotl_LocalXeRate->at(0)[0].size();
+
+  // Console output of the data and its coordinate
+  for (int k = 0; k < xolotl_local_nz; k++){
+    for (int j = 0; j < xolotl_local_ny; j++){
+      for (int i = 0; i < xolotl_local_nx; i++){
+        double localRate = _xolotl_LocalXeRate->at(i)[j][k];
+        if (fabs(localRate) > 1e-20) {
+          std::cout << i<<", "<<j<<", "<<k<<", "<<localRate << std::endl;
+        }
+      }
+    }
+  }
+
+  int *xs, *xm, *Mx, *ys, *ym, *My, *zs, *zm, *Mz;
+  int myrank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
+  _xolotl_interface->getLocalCoordinates(_xolotl_solver, xs, xm, Mx, ys, ym, My, zs, zm, Mz);
+  std::cout<<"rank, (xs, xm), (ys, ym), (zs, zm)"<<std::endl;
+  printf("%d, (%d, %d), (%d, %d), (%d, %d)\n",myrank, *xs, *xm, *ys, *ym, *zs, *zm);
+
+  // std::cout<<
+
 }
 
 void

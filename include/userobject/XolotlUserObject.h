@@ -13,7 +13,6 @@
 #include "NodalUserObject.h"
 #include "MooseVariableInterface.h"
 #include <XolotlDLinterface.h>  // Xolotl interface
-#include <dlfcn.h>
 
 // Forward Declarations
 class XolotlUserObject;
@@ -75,6 +74,7 @@ private:
   char ** _argv = new char*[_argc];
   std::string _parameterFile = "crap";
   std::shared_ptr<xolotlSolver::PetscSolver> _xolotl_solver;
+  std::vector<std::vector<std::vector<double> > > * _xolotl_LocalXeRate;
 };
 
 #endif //MYDIFFUSIONUSEROBJECT_H
