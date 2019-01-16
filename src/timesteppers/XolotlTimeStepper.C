@@ -28,14 +28,14 @@ XolotlTimeStepper::XolotlTimeStepper(const InputParameters & parameters) :
     std::string parameterFile = "crap";
     argv[0] = new char[parameterFile.length() + 1];
     strcpy(argv[0], parameterFile.c_str());
-    parameterFile = "/home2/bqo/MOOSE/projects/coupling_xolotl_std/params_NE.txt";
-//    parameterFile = "/Users/donguk.kim/projects/coupling_xolotl/params_NE.txt";    
+//    parameterFile = "/home2/bqo/MOOSE/projects/coupling_xolotl_std/params_NE.txt";
+    parameterFile = "/Users/donguk.kim/projects/coupling_xolotl/params_NE_3D.txt";    
     argv[1] = new char[parameterFile.length() + 1];
     strcpy(argv[1], parameterFile.c_str());
     argv[2] = 0; // null-terminate the array
 
     solver = interface.initializeXolotl(argc,
-                                                                 argv, MPI_COMM_WORLD, false);
+                                                                 argv, MPI_COMM_WORLD, true);
 }
 
 /* This method is a pure virtual function, so it must be redefined by any
