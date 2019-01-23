@@ -1,15 +1,19 @@
 [Mesh]
-  type = GeneratedMesh
+  # type = GeneratedMesh
+  # dim = 3
+  # nx = 144
+  # ny = 20
+  # nz = 20
+  # xmin = 0
+  # xmax = 21
+  # ymin = 0
+  # ymax = 21
+  # zmin = 0
+  # zmax = 21
+  type = XolotlMesh
   dim = 3
-  nx = 144
-  ny = 20
-  nz = 20
-  xmin = 0
-  xmax = 21
-  ymin = 0
-  ymax = 21
-  zmin = 0
-  zmax = 21
+  library_path_name ='/Users/donguk.kim/projects/xolotl-build/lib/libxolotlInter.dylib'
+  XolotlInput_path_name = './params_NE_3D.txt'
 []
 [Variables]
   [./d]
@@ -62,16 +66,6 @@
 [UserObjects]
   [./Xolotl_driver]
     type = XolotlUserObject
-    dim = 3
-    nx = 144
-    ny = 20
-    nz = 20
-    xmin = 0
-    xmax = 21
-    ymin = 0
-    ymax = 21
-    zmin = 0
-    zmax = 21
     variable = Auxv
     variable_gb = Auxv_gb
     library_path_name ='/Users/donguk.kim/projects/xolotl-build/lib/libxolotlInter.dylib'

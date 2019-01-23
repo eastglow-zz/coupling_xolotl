@@ -38,34 +38,43 @@ public:
 
 private:
   Real calc_spatial_value() const;
-  virtual Real getMinInDimension(unsigned int component) const;
-  virtual Real getMaxInDimension(unsigned int component) const;
-  virtual std::vector<libMesh::Point> initExtCoords() const;
-  virtual unsigned int map_MOOSE2Ext(const Node & MOOSEnode) const;
+  // virtual Real getMinInDimension(unsigned int component) const;
+  // virtual Real getMaxInDimension(unsigned int component) const;
+  // virtual std::vector<libMesh::Point> initExtCoords() const;
+  virtual void map_MOOSE2Xolotl(int *rank, int *i, int *j, int *k, const Node & MOOSEnode) const;
   virtual void print_mesh_params() const;
-  virtual void print_ext_coord(std::vector<libMesh::Point> a) const;
+  // virtual void print_ext_coord(std::vector<libMesh::Point> a) const;
+  virtual int** init_xolotl_local_index_table(int ncolumn) const;
+  virtual void print_xolotl_local_index_table(int** table, int ncolumn) const;
+  virtual void fillout_xolotl_local_index_table(int** table, int ncolumn) const;
+  virtual double* build_xolotl_axis(int nsize, double dl) const;
+  virtual int max3int(int a, int b, int c) const;
 
   std::vector<libMesh::Point> _ext_coord;
   std::vector<Real> _ext_data;
 
-  /// The dimension of the mesh
-  MooseEnum _dim;
-
-  /// Number of elements in x, y, z direction
-  unsigned int _nx, _ny, _nz;
-
-  /// The min/max values for x,y,z component (from input file)
-  Real _xmin, _xmax, _ymin, _ymax, _zmin, _zmax;
-
   MooseVariable & _var;
   const VariableValue & _u;
   const VariableValue & _v;
+  int _moose_rank;
 
   /*========= Variables for the External Application =========*/
-  /// Finite Difference mesh parameters for the External App.
-  Real xmin, xmax, ymin, ymax, zmin, zmax;
-  unsigned int nNode_x, nNode_y, nNode_z;
-  Real dx, dy, dz;
+  /// Finite Difference grid parameters for Xolotl
+  int _xolotl_dim;
+  int _xolotl_nx, _xolotl_ny, _xolotl_nz; // Total # of grid points along each axis
+  double _xolotl_dx, _xolotl_dy, _xolotl_dz; // Grid spacings
+  double *_xolotl_xc, *_xolotl_yc, *_xolotl_zc;
+  double _xolotl_lx, _xolotl_ly, _xolotl_lz; // Total length of the domain along each axis
+  int _xolotl_xi_lb, _xolotl_xi_ub; // Lower & upper bounds of the x-grid index of the MPI process
+  int _xolotl_yi_lb, _xolotl_yi_ub; // Lower & upper bounds of the y-grid index of the MPI process
+  int _xolotl_zi_lb, _xolotl_zi_ub; // Lower & upper bounds of the z-grid index of the MPI process
+
+  /*
+    The table of local index bounds of each Xolotl local grid at each MPI process
+    Its size should be np * 6; row: mpirank & column: xs, xs+xm, ys, ys+ym, zs, zs+zm
+  */
+  int **_xolotl_local_index_bounds;
+
   std::string _ext_lib_path_name; // External dynamic library path variable
   std::string _xolotl_input_path_name;
   void* _ext_lib_handle; // External dynamic library handle variable
@@ -73,8 +82,10 @@ private:
   int _argc = 3;
   char ** _argv = new char*[_argc];
   std::string _parameterFile = "crap";
+  // std::shared_ptr<xolotlCore::Options> _xolotl_options;
   std::shared_ptr<xolotlSolver::PetscSolver> _xolotl_solver;
   std::vector<std::vector<std::vector<double> > > * _xolotl_LocalXeRate;
+  std::vector<std::vector<std::vector<double> > > * _xolotl_LocalConc;
 };
 
 #endif //MYDIFFUSIONUSEROBJECT_H
