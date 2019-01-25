@@ -34,24 +34,31 @@ public:
   virtual void execute() override; //contains data transfer from MOOSE to Exernal App.
   virtual void finalize() override; //contains execution of the External App.
   virtual void threadJoin(const UserObject & y) override;
-  virtual Real spatialValue(const libMesh::Point & /*p*/) const override {return calc_spatial_value();} //contains data transfer from External App. to MOOSE
+  virtual Real spatialValue(const libMesh::Point & /*p*/) const override {return calc_spatial_value_glob();} //contains data transfer from External App. to MOOSE
 
 private:
   Real calc_spatial_value() const;
-  // virtual Real getMinInDimension(unsigned int component) const;
-  // virtual Real getMaxInDimension(unsigned int component) const;
-  // virtual std::vector<libMesh::Point> initExtCoords() const;
+  Real calc_spatial_value_glob() const;
   virtual void map_MOOSE2Xolotl(int *rank, int *i, int *j, int *k, const Node & MOOSEnode) const;
+  virtual void map_MOOSE2XolotlGlob(int *i, int *j, int *k, const Node & MOOSEnode) const;
   virtual void print_mesh_params() const;
-  // virtual void print_ext_coord(std::vector<libMesh::Point> a) const;
   virtual int** init_xolotl_local_index_table(int ncolumn) const;
   virtual void print_xolotl_local_index_table(int** table, int ncolumn) const;
   virtual void fillout_xolotl_local_index_table(int** table, int ncolumn) const;
   virtual double* build_xolotl_axis(int nsize, double dl) const;
   virtual int max3int(int a, int b, int c) const;
-
-  std::vector<libMesh::Point> _ext_coord;
-  std::vector<Real> _ext_data;
+  virtual int** init_xolotl_rankpair() const;
+  virtual void fillout_xolotl_rankpair(int **table, int myrank, int recvRank) const;
+  virtual void print_xolotl_rankpair(int **table) const;
+  virtual double* vectorized_xolotl_XeRate(std::shared_ptr<xolotlSolver::PetscSolver> solver) const;
+  virtual double* vectorized_xolotl_XeConc(std::shared_ptr<xolotlSolver::PetscSolver> solver) const;
+  virtual double* allocate_xolotlGlobalData() const;
+  virtual void localFill_xolotlGlobalXeRate(double *arr, std::shared_ptr<xolotlSolver::PetscSolver> solver) const;
+  virtual void localFill_xolotlGlobalXeConc(double *arr, std::shared_ptr<xolotlSolver::PetscSolver> solver) const;
+  virtual void globalFill_xolotlGlobalData(double *arr) const;
+  virtual int iiGlob(int i, int j, int k) const;
+  virtual int ii(int i, int j, int k) const;
+  virtual int iiR(int rank, int i, int j, int k) const;
 
   MooseVariable & _var;
   const VariableValue & _u;
@@ -68,12 +75,19 @@ private:
   int _xolotl_xi_lb, _xolotl_xi_ub; // Lower & upper bounds of the x-grid index of the MPI process
   int _xolotl_yi_lb, _xolotl_yi_ub; // Lower & upper bounds of the y-grid index of the MPI process
   int _xolotl_zi_lb, _xolotl_zi_ub; // Lower & upper bounds of the z-grid index of the MPI process
+  int _xolotl_localNx, _xolotl_localNy, _xolotl_localNz;
 
   /*
     The table of local index bounds of each Xolotl local grid at each MPI process
-    Its size should be np * 6; row: mpirank & column: xs, xs+xm, ys, ys+ym, zs, zs+zm
+    Its size should be np * 6; row: mpirank & column: xs, xm, ys, ym, zs, zm
   */
-  int **_xolotl_local_index_bounds;
+  int **_xolotl_local_index_table;
+
+  /*
+    The table of pairs of ranks for send to or recv from
+    Its size should be np; row: _moose_rank & coulmn: sendRank, recvRank
+  */
+  int **_xolotl_rank_pair;
 
   std::string _ext_lib_path_name; // External dynamic library path variable
   std::string _xolotl_input_path_name;
@@ -84,8 +98,11 @@ private:
   std::string _parameterFile = "crap";
   // std::shared_ptr<xolotlCore::Options> _xolotl_options;
   std::shared_ptr<xolotlSolver::PetscSolver> _xolotl_solver;
-  std::vector<std::vector<std::vector<double> > > * _xolotl_LocalXeRate;
-  std::vector<std::vector<std::vector<double> > > * _xolotl_LocalConc;
+  double *_xolotl_XeRate;
+  double *_xolotl_XeConc;
+
+  double *_xolotl_GlobalXeRate;
+  double *_xolotl_GlobalXeConc;
 };
 
 #endif //MYDIFFUSIONUSEROBJECT_H

@@ -158,9 +158,9 @@ XolotlMesh::XolotlMesh(const InputParameters & parameters)
   _xolotl_zc = build_xolotl_axis(_xolotl_nz, _xolotl_dz);
 
   _dim = _xolotl_dim;
-  _nx = _xolotl_nx;
-  _ny = _xolotl_ny;
-  _nz = _xolotl_nz;
+  _nx = _xolotl_nx-1; // Note that _nx is the # of elements, and _xolotl_nx is the # of nodes.
+  _ny = _xolotl_ny-1;
+  _nz = _xolotl_nz-1;
   _xmin = 0.0;
   _xmax = _xolotl_lx;
   _ymin = 0.0;

@@ -44,8 +44,8 @@ XolotlUserObject::XolotlUserObject(const InputParameters & parameters)
                                "variable",
                                Moose::VarKindType::VAR_ANY,
                                Moose::VarFieldType::VAR_FIELD_STANDARD),
-  _ext_coord(_mesh.nNodes()),
-  _ext_data(_mesh.nNodes()),
+  // _ext_coord(_mesh.nNodes()),
+  // _ext_data(_mesh.nNodes()),
   _var(*mooseVariable()),
   _u(_var.dofValues()),
   _v(coupledValue("variable_gb")),
@@ -73,9 +73,6 @@ XolotlUserObject::XolotlUserObject(const InputParameters & parameters)
   strcpy(_argv[1], _xolotl_input_path_name.c_str());
   _argv[2] = 0; // null-terminate the array
 
-  // _ext_coord = initExtCoords();
-  // print_ext_coord(_ext_coord);
-
   // Preparing for the external library handle
   _ext_lib_handle = dlopen(_ext_lib_path_name.c_str(), RTLD_LAZY);
   if (!_ext_lib_handle) {
@@ -100,11 +97,7 @@ XolotlUserObject::XolotlUserObject(const InputParameters & parameters)
   }
 
   // create an instance of the class
-  // XolotlDLinterface* interface = create_interface();
   _xolotl_interface = create_interface();
-
-  // Loading Xolotl options from the Xolotl input file
-  // _xolotl_options.readParams(_argv);
 
   _xolotl_solver = _xolotl_interface->initializeXolotl(_argc, _argv, MPI_COMM_WORLD, ISSTANDALONE);
 
@@ -115,35 +108,35 @@ XolotlUserObject::XolotlUserObject(const InputParameters & parameters)
   _xolotl_xc = build_xolotl_axis(_xolotl_nx, _xolotl_dx);
   _xolotl_yc = build_xolotl_axis(_xolotl_ny, _xolotl_dy);
   _xolotl_zc = build_xolotl_axis(_xolotl_nz, _xolotl_dz);
-  for (int i = 0; i < _xolotl_ny; i++) {
-    printf("%d\t%lf\n", i, _xolotl_yc[i]);
-  }
-
 
   // Print out the loaded Xolotl grid parameters
   print_mesh_params();
 
-  _xolotl_local_index_bounds = init_xolotl_local_index_table(6);
-  fillout_xolotl_local_index_table(_xolotl_local_index_bounds, 6);
-  // print_xolotl_local_index_table(_xolotl_local_index_bounds, 6);
+  _xolotl_local_index_table = init_xolotl_local_index_table(6);
+  fillout_xolotl_local_index_table(_xolotl_local_index_table, 6);
+  print_xolotl_local_index_table(_xolotl_local_index_table, 6);
 
-  //  Get local array index bounds
-  int xs, xm, Mx, ys, ym, My, zs, zm, Mz;
-  _xolotl_interface->getLocalCoordinates(_xolotl_solver, &xs, &xm, &Mx, &ys, &ym, &My, &zs, &zm, &Mz);
-  _xolotl_xi_lb = xs;
-  _xolotl_xi_ub = xs + xm;
-  _xolotl_yi_lb = ys;
-  _xolotl_yi_ub = ys + ym;
-  _xolotl_zi_lb = zs;
-  _xolotl_zi_ub = zs + zm;
+  _xolotl_xi_lb = _xolotl_local_index_table[_moose_rank][0];
+  _xolotl_xi_ub = _xolotl_xi_lb + _xolotl_local_index_table[_moose_rank][1] - 1;
+  _xolotl_yi_lb = _xolotl_local_index_table[_moose_rank][2];
+  _xolotl_yi_ub = _xolotl_yi_lb + _xolotl_local_index_table[_moose_rank][3] - 1;
+  _xolotl_zi_lb = _xolotl_local_index_table[_moose_rank][4];
+  _xolotl_zi_ub = _xolotl_zi_lb + _xolotl_local_index_table[_moose_rank][5] - 1;
+  _xolotl_localNx = _xolotl_local_index_table[_moose_rank][1];
+  _xolotl_localNy = _xolotl_local_index_table[_moose_rank][3];
+  _xolotl_localNz = _xolotl_local_index_table[_moose_rank][5];
 
   // Syncing the time stepping
   Real dtime = 1.1e-20;
   if (_dt > 1e-20) dtime = _dt;
   _xolotl_interface->setTimes(_xolotl_solver, _t, dtime);
-  _xolotl_LocalXeRate = _xolotl_interface->getLocalXeRate(_xolotl_solver);  // Buffer initialization; data values do not matter here
-  _xolotl_LocalConc = _xolotl_interface->getLocalXeConc(_xolotl_solver);  // Buffer initialization; data values do not matter here
+  _xolotl_XeRate = vectorized_xolotl_XeRate(_xolotl_solver);
+  _xolotl_XeConc = vectorized_xolotl_XeConc(_xolotl_solver);
+  _xolotl_GlobalXeRate = allocate_xolotlGlobalData();
+  _xolotl_GlobalXeConc = allocate_xolotlGlobalData();
 
+  // Make the local buffer visible for all processors in MPI_COMM_WORLD
+  // MPI_Win_create(&_xolotl_XeConc[0], _xolotl_localNx * _xolotl_localNy * _xolotl_localNz * sizeof(double), sizeof(double), MPI_INFO_NULL, MPI_COMM_WORLD, &_win);
 
   // Printing out the nodeID through the domain
   // std::vector<dof_id_type> nodelist;
@@ -156,10 +149,8 @@ XolotlUserObject::XolotlUserObject(const InputParameters & parameters)
   //   std::cout<<"Node loop; id: "<<nodeID<<std::endl;
   // }
 
-  int myrank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
-  // std::cout << "constructor: MPIrank = " << myrank <<std::endl;
-  // printf("constructor: MPIrank = %d\n", myrank);
+  // Simple MPI_get example
+
 }
 
 void
@@ -171,33 +162,6 @@ XolotlUserObject::initialize()
   // Syncing the time stepping
   _xolotl_interface->setTimes(_xolotl_solver, _t, _dt);
 
-  int xolotl_local_nx = _xolotl_LocalXeRate->size();
-  int xolotl_local_ny = _xolotl_LocalXeRate->at(0).size();
-  int xolotl_local_nz = _xolotl_LocalXeRate->at(0)[0].size();
-
-  // Console output of the data and its coordinate
-  for (int k = 0; k < xolotl_local_nz; k++){
-    for (int j = 0; j < xolotl_local_ny; j++){
-      for (int i = 0; i < xolotl_local_nx; i++){
-        double localRate = _xolotl_LocalXeRate->at(i)[j][k];
-        if (fabs(localRate) > 1e-20) {
-          std::cout << i<<", "<<j<<", "<<k<<", "<<localRate << std::endl;
-        }
-      }
-    }
-  }
-
-  int xs, xm, Mx, ys, ym, My, zs, zm, Mz;
-  int myrank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
-  _xolotl_interface->getLocalCoordinates(_xolotl_solver, &xs, &xm, &Mx, &ys, &ym, &My, &zs, &zm, &Mz);
-  std::cout<<"rank, (xs, xm), (ys, ym), (zs, zm)"<<std::endl;
-  printf("%d, (%d, %d), (%d, %d), (%d, %d)\n",myrank, xs, xm, ys, ym, zs, zm);
-
-  // std::cout<<
-
-  // std::cout << "initialize: MPIrank = " << myrank <<std::endl;
-  // printf("initialize: MPIrank = %d\n", myrank);
 }
 
 void
@@ -225,43 +189,12 @@ void
 XolotlUserObject::finalize()
 {
   _xolotl_interface->solveXolotl(_xolotl_solver);
-  _xolotl_LocalXeRate = _xolotl_interface->getLocalXeRate(_xolotl_solver); // Bringing the Xe rate data (within GB)
-  _xolotl_LocalConc = _xolotl_interface->getLocalXeConc(_xolotl_solver);  // Bringing the Xe concentration data (within bulk)
-
-  // Updating _ext_data by executing the External App.
-  // This member function is called once at a time step.
-  // The external app will be instanciated and update the _ext_data here
-
-  // Normal run
-  // Temporary buffers for the External App.
-  // double *mdp_data;
-  // mdp_data = new double[mdp.numdata];
-  // double *mdp_x;
-  // mdp_x = new double[mdp.numdata];
-  //
-  // //Copying the coordinates and data to the temporary buffers for the External App.
-  // for (unsigned int i = mdp.iLower; i <= mdp.iUpper; i++) {
-  //   mdp_x[i] = _ext_coord[i-mdp.nghost](0); // Copying x-coordinates; beware that the index of mdp_x has been shifted as mdp.nghost
-  //   mdp_data[i] = _ext_data[i-mdp.nghost]; // Copying the data; beware that the index of mdp_data has also been shifted as mdp.nghost
-  // }
-
-  //Printing the data just for checking; before the update
-  // mdp_output_data_console(mdp_data, mdp.iLower, mdp.iUpper, mdp_x, mdp.time_start);
-
-  // Updating mdp_data
-  // mdp_Diffu_module(mdp_data, mdp_x, mdp);
-
-  // //Printing the data just for checking; after the update
-  // mdp_output_data_console(mdp_data, mdp.iLower, mdp.iUpper, mdp_x, mdp.time_end);
-  //
-  // //Updating _ext_data with mdp_data updated
-  // for (unsigned int i = mdp.iLower; i <= mdp.iUpper; i++) {
-  //   _ext_data[i-mdp.nghost] = mdp_data[i]; // Copying the data; beware that the index of mdp_data has also been shifted as mdp.nghost
-  // }
-  //
-  // // Deallocating the temporary buffers
-  // delete[] mdp_data;
-  // delete[] mdp_x;
+  _xolotl_XeRate = vectorized_xolotl_XeRate(_xolotl_solver);
+  _xolotl_XeConc = vectorized_xolotl_XeConc(_xolotl_solver);
+  localFill_xolotlGlobalXeRate(_xolotl_GlobalXeRate, _xolotl_solver);
+  globalFill_xolotlGlobalData(_xolotl_GlobalXeRate);
+  localFill_xolotlGlobalXeConc(_xolotl_GlobalXeConc, _xolotl_solver);
+  globalFill_xolotlGlobalData(_xolotl_GlobalXeConc);
 
   // _xolotl_interface->finalizeXolotl(_xolotl_solver, false);
   // _xolotl_solver.reset();
@@ -271,6 +204,7 @@ XolotlUserObject::finalize()
   // MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
   // std::cout << "finalize: MPIrank = " << myrank <<std::endl;
   // printf("finalize: MPIrank = %d\n", myrank);
+
 }
 
 void
@@ -286,77 +220,92 @@ XolotlUserObject::calc_spatial_value() const
   // This member function is called as per spatialValue() called, which is called at every node points.
   // The corresponding ext_data to the current node will be retunred by this function
 
-  // unsigned int ii = map_MOOSE2Ext(*_current_node);
+  int myrank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
+  Real result;
+  int recvRank, i, j, k;
+  map_MOOSE2Xolotl(&recvRank, &i, &j, &k, *_current_node);
+  if (myrank == recvRank) { // MPI communication will not happen.
+    result = _xolotl_XeConc[ii(i,j,k)];
+  }else{  //MPI communication will happen.
+    double tmp = -99999.9;
+    // MPI_Win win;
+    // MPI_Win_create(_xolotl_XeConc, _xolotl_localNx * _xolotl_localNy * _xolotl_localNz * sizeof(double), sizeof(double), MPI_INFO_NULL, MPI_COMM_WORLD, &win);
+    // // if (myrank == 2) printf("myrank=%d, recvRank=%d, i,j,k = %d, %d, %d\n",myrank,recvRank,i,j,k);
+    // // MPI_Win_fence(0, win); // One-sided communication begin
+    // MPI_Win_lock(MPI_LOCK_SHARED, recvRank, 0, win);
+    // int err = MPI_Get(&tmp, 1, MPI_DOUBLE, recvRank, iiR(recvRank,i,j,k), 1, MPI_DOUBLE, win);
+    // // // MPI_Win_fence(0, win); // One-sided communication end
+    // MPI_Win_unlock(recvRank, win);
+    // MPI_Win_free(&win);
+    // if (err != MPI_SUCCESS) {
+    //   if (err == MPI_ERR_ARG) {
+    //     printf("MPI_Get:: invalid argument, rank = %d\n)", myrank);
+    //   }
+    //   if (err == MPI_ERR_COUNT) {
+    //     printf("MPI_Get:: invalid count, rank = %d\n)", myrank);
+    //   }
+    //   if (err == MPI_ERR_RANK) {
+    //     printf("MPI_Get:: invalid rank, rank = %d\n)", myrank);
+    //   }
+    //   if (err == MPI_ERR_TYPE) {
+    //     printf("MPI_Get:: invalid type, rank = %d\n)", myrank);
+    //   }
+    //   if (err == MPI_ERR_WIN) {
+    //     printf("MPI_Get:: invalid window, rank = %d\n)", myrank);
+    //   } else {
+    //     printf("MPI_Get:: unknown error, rank = %d\n", myrank);
+    //   }
+    // }else{
+    //   // if (myrank == 2)
+    //     printf("MPI_Get:: Success!, myrank=%d, recvRank=%d, i,j,k = %d, %d, %d\n", myrank,recvRank,i,j,k);
+    // }
+    result = tmp;
+  }
 
-  // Returning _ext_data values to pass to the AuxKernel that will modify the AuxVariable values
-  // return _ext_data[ii];
-  // int myrank;
-  // MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
-  //std::cout << "calc_spatial_value: MPIrank = " << myrank <<s
 
-  int rank, i, j, k;
-  map_MOOSE2Xolotl(&rank, &i, &j, &k, *_current_node);
-  double localRate = _xolotl_LocalXeRate->at(i)[j][k];
-  double concentration = _xolotl_LocalConc->at(i)[j][k];
-
-  // return localRate;
-  return concentration;
+  // double tmp = -9999.9;
+  // // MPI_Win_fence(MPI_MODE_NOPRECEDE, _win);
+  // MPI_Win_fence(0, win);
+  // int err = MPI_Get(&tmp, 1, MPI_DOUBLE, recvRank, iiR(recvRank,i,j,k), 1, MPI_DOUBLE, win);
+  // MPI_Win_fence(0, win);
+  // if (err != MPI_SUCCESS) {
+  //   if (err == MPI_ERR_ARG) {
+  //     printf("MPI_Get:: invalid argument, rank = %d\n)", myrank);
+  //   }
+  //   if (err == MPI_ERR_COUNT) {
+  //     printf("MPI_Get:: invalid count, rank = %d\n)", myrank);
+  //   }
+  //   if (err == MPI_ERR_RANK) {
+  //     printf("MPI_Get:: invalid rank, rank = %d\n)", myrank);
+  //   }
+  //   if (err == MPI_ERR_TYPE) {
+  //     printf("MPI_Get:: invalid type, rank = %d\n)", myrank);
+  //   }
+  //   if (err == MPI_ERR_WIN) {
+  //     printf("MPI_Get:: invalid window, rank = %d\n)", myrank);
+  //   } else {
+  //     printf("MPI_Get:: unknown error, rank = %d\n", myrank);
+  //   }
+  // }else{
+  //   printf("MPI_Get:: Success!, tmp = %lf, myrank=%d, recvRank=%d, i,j,k = %d, %d, %d, iiR = %d\n",tmp, myrank,recvRank,i,j,k, iiR(recvRank, i, j, k));
+  // }
+  // result = tmp;
+  // // MPI_Win_fence(MPI_MODE_NOSUCCEED, _win);
+  // MPI_Win_free(&win);
+  // return result;
+  return (double)myrank;
 }
 
-// Real
-// XolotlUserObject::getMinInDimension(unsigned int component) const
-// {
-//   switch (component)
-//   {
-//     case 0:
-//       return _xmin;
-//     case 1:
-//       return _dim > 1 ? _ymin : 0;
-//     case 2:
-//       return _dim > 2 ? _zmin : 0;
-//     default:
-//       mooseError("Invalid component");
-//   }
-// }
-//
-// Real
-// XolotlUserObject::getMaxInDimension(unsigned int component) const
-// {
-//   switch (component)
-//   {
-//     case 0:
-//       return _xmax;
-//     case 1:
-//       return _dim > 1 ? _ymax : 0;
-//     case 2:
-//       return _dim > 2 ? _zmax : 0;
-//     default:
-//       mooseError("Invalid component");
-//   }
-// }
-//
-// std::vector<libMesh::Point>
-// XolotlUserObject::initExtCoords() const
-// {
-//   std::vector<libMesh::Point> xyz(_mesh.nNodes());
-//   print_mesh_params();
-//   // Contiguous memory chunk for the Ext. app. (i-outermost order)
-//   for (unsigned int i = 0; i < nNode_x; i++) {
-//     for (unsigned int j = 0; j < nNode_y; j++) {
-//       for (unsigned int k = 0; k < nNode_z; k++) {
-//         unsigned int ii = nNode_y * nNode_z * i + nNode_z * j + k;
-//         libMesh::Point xyz_build={0.0};
-//         xyz_build(0) = _xmin + i * _xolotl_dx;
-//         xyz_build(1) = _ymin + j * _xolotl_dy;
-//         xyz_build(2) = _zmin + k * _xolotl_dz;
-//         xyz[ii] = xyz_build;
-//         std::cout<<"x,y,z = "<<xyz[ii](0)<<","<<xyz[ii](1)<<","<<xyz[ii](2)<<","<<std::endl;
-//       }
-//     }
-//   }
-//   return xyz;
-// }
-//
+Real
+XolotlUserObject::calc_spatial_value_glob() const
+{
+  int i, j, k;
+  map_MOOSE2XolotlGlob(&i, &j, &k, *_current_node);
+  return _xolotl_GlobalXeConc[iiGlob(i,j,k)];
+  // return _moose_rank;
+}
+
 void
 XolotlUserObject::map_MOOSE2Xolotl(int *rankreturn, int *ireturn, int *jreturn, int *kreturn, const Node & MOOSEnode) const
 {
@@ -408,12 +357,12 @@ XolotlUserObject::map_MOOSE2Xolotl(int *rankreturn, int *ireturn, int *jreturn, 
   MPI_Comm_size(MPI_COMM_WORLD, &nprocess);
   int ranksave = -1;
   for (int i = 0; i < nprocess; i++) {
-    int ixL = _xolotl_local_index_bounds[i][0];
-    int ixU = _xolotl_local_index_bounds[i][1];
-    int iyL = _xolotl_local_index_bounds[i][2];
-    int iyU = _xolotl_local_index_bounds[i][3];
-    int izL = _xolotl_local_index_bounds[i][4];
-    int izU = _xolotl_local_index_bounds[i][5];
+    int ixL = _xolotl_local_index_table[i][0];
+    int ixU = ixL + _xolotl_local_index_table[i][1] - 1;
+    int iyL = _xolotl_local_index_table[i][2];
+    int iyU = iyL + _xolotl_local_index_table[i][3] - 1;
+    int izL = _xolotl_local_index_table[i][4];
+    int izU = izL + _xolotl_local_index_table[i][5] - 1;
     if ( iglob >= ixL && iglob <= ixU
       && jglob >= iyL && jglob <= iyU
       && kglob >= izL && kglob <= izU )
@@ -424,19 +373,60 @@ XolotlUserObject::map_MOOSE2Xolotl(int *rankreturn, int *ireturn, int *jreturn, 
   }
 
   // Converting iglob, jglob, and kglob into the local indices
-  int iloc = iglob - _xolotl_local_index_bounds[ranksave][0];
-  int jloc = jglob - _xolotl_local_index_bounds[ranksave][2];
-  int kloc = kglob - _xolotl_local_index_bounds[ranksave][4];
+  int iloc = iglob - _xolotl_local_index_table[ranksave][0];
+  int jloc = jglob - _xolotl_local_index_table[ranksave][2];
+  int kloc = kglob - _xolotl_local_index_table[ranksave][4];
 
   *rankreturn = ranksave;
-  if (ranksave == _moose_rank) {
-    *ireturn = iloc;
-    *jreturn = jloc;
-    *kreturn = kloc;
-  }else{
-    std::cout<<"Parallel transfer is not supported yet."<<std::endl;
-    return;
+  *ireturn = iloc;
+  *jreturn = jloc;
+  *kreturn = kloc;
+}
+
+void
+XolotlUserObject::map_MOOSE2XolotlGlob(int *ireturn, int *jreturn, int *kreturn, const Node & MOOSEnode) const
+{
+  double xn = MOOSEnode(0);
+  double yn = MOOSEnode(1);
+  double zn = MOOSEnode(2);
+  double distx, disty, distz;
+  int isave, jsave, ksave;
+  int maxsize = max3int(_xolotl_nx, _xolotl_ny, _xolotl_nz);
+  //Serching for iglob
+  distx = _xolotl_lx; //initialize with the maximum distance
+  disty = _xolotl_ly; //initialize with the maximum distance
+  distz = _xolotl_lz; //initialize with the maximum distance
+  isave = -1;
+  jsave = -1;
+  ksave = -1;
+  for (int i = 0; i < maxsize; i++) {
+    //Searching for iglob
+    if (i < _xolotl_nx) {
+      double d = fabs(_xolotl_xc[i] - xn);
+      if (d <= distx) {
+        distx = d;
+        isave = i;
+      }
+    }
+    if (i < _xolotl_ny) {
+      double d = fabs(_xolotl_yc[i] - yn);
+      if (d <= disty) {
+        disty = d;
+        jsave = i;
+      }
+    }
+    if (i < _xolotl_nz) {
+      double d = fabs(_xolotl_zc[i] - zn);
+      if (d <= distz) {
+        distz = d;
+        ksave = i;
+      }
+    }
   }
+
+  *ireturn = isave;
+  *jreturn = jsave;
+  *kreturn = ksave;
 }
 
 void
@@ -449,15 +439,6 @@ XolotlUserObject::print_mesh_params() const
   std::cout<<"_xolotl_nx, _xolotl_ny, _xolotl_nz = "<<_xolotl_nx<<","<<_xolotl_ny<<","<<_xolotl_nz<<std::endl;
   std::cout<<"_xolotl_dx, _xolotl_dy, _xolotl_dz = "<<_xolotl_dx<<","<<_xolotl_dy<<","<<_xolotl_dz<<std::endl;
 }
-//
-// void
-// XolotlUserObject::print_ext_coord(std::vector<libMesh::Point> a) const
-// {
-//   for(unsigned int i = 0; i < a.size() ; i++)
-//   {
-//     std::cout<<"x,y,z = "<<a[i](0)<<","<<a[i](1)<<","<<a[i](2)<<std::endl;
-//   }
-// }
 
 int**
 XolotlUserObject::init_xolotl_local_index_table(int ncolumn) const
@@ -498,15 +479,15 @@ XolotlUserObject::fillout_xolotl_local_index_table(int **table, int ncol) const
   int xs, xm, Mx, ys, ym, My, zs, zm, Mz;
   _xolotl_interface->getLocalCoordinates(_xolotl_solver, &xs, &xm, &Mx, &ys, &ym, &My, &zs, &zm, &Mz);
   table[_moose_rank][0] = xs;
-  table[_moose_rank][1] = xs + xm;
+  table[_moose_rank][1] = xm;
   table[_moose_rank][2] = ys;
-  table[_moose_rank][3] = ys + ym;
+  table[_moose_rank][3] = ym;
   table[_moose_rank][4] = zs;
-  table[_moose_rank][5] = zs + zm;
+  table[_moose_rank][5] = zm;
   for (int i = 0; i < nrow; i++) {
     for (int j = 0; j < ncol; j++) {
       int globalsum = 0;
-      MPI_Allreduce(&table[i][j], &globalsum, 1, MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD);
+      MPI_Allreduce(&table[i][j], &globalsum, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
       table[i][j] = globalsum;
     }
   }
@@ -535,4 +516,204 @@ XolotlUserObject::max3int(int a, int b, int c) const
     result = c;
   }
   return result;
+}
+
+int**
+XolotlUserObject::init_xolotl_rankpair() const
+{
+  int nprocess;
+  int ncolumn = 2;
+  int **table;
+  MPI_Comm_size(MPI_COMM_WORLD, &nprocess);
+  table = new int*[nprocess];
+  for (int i = 0; i < nprocess; i++) {
+    table[i] = new int[ncolumn];
+  }
+  for (int i = 0; i < nprocess; i++) {
+    for (int j = 0; j < ncolumn; j++) {
+      table[i][j] = 0;
+    }
+  }
+  return table;
+}
+
+void
+XolotlUserObject::fillout_xolotl_rankpair(int **table, int myrank, int recvRank) const
+{
+  int nrow;
+  MPI_Comm_size(MPI_COMM_WORLD, &nrow);
+  int ncol = 2;
+  printf("fillout_xolotl_rankpair:: _moose_rank=%d, recvRank=%d\n",myrank, recvRank);
+  table[recvRank][0] = myrank; //Filling out the sendRank
+  table[myrank][1] = recvRank; //Filling out the recvRank
+  for (int i = 0; i < nrow; i++) {
+    for (int j = 0; j < ncol; j++) {
+      int globalsum = 0;
+      MPI_Allreduce(&table[i][j], &globalsum, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+      table[i][j] = globalsum;
+    }
+  }
+
+}
+
+void
+XolotlUserObject::print_xolotl_rankpair(int **table) const
+{
+  int nrow;
+  MPI_Comm_size(MPI_COMM_WORLD, &nrow);
+  for (int nrank = 0; nrank < nrow; nrank++) {
+    printf("%d, %d, %d\n", table[nrank][0], nrank, table[nrank][1]);
+  }
+}
+
+double*
+XolotlUserObject::vectorized_xolotl_XeRate(std::shared_ptr<xolotlSolver::PetscSolver> solver) const
+{
+  std::vector<std::vector<std::vector<double> > > * buff = _xolotl_interface->getLocalXeRate(solver); // Bringing the Xe rate data (within GB)
+
+  int nx = _xolotl_localNx;
+  int ny = _xolotl_localNy;
+  int nz = _xolotl_localNz;
+
+  double *vecReturn;
+  vecReturn = new double[nx*ny*nz];
+  for (int k = 0; k < nz; k++){
+    for (int j = 0; j < ny; j++){
+      for (int i = 0; i < nx; i++){
+        vecReturn[ii(i,j,k)] = buff->at(i)[j][k];
+      }
+    }
+  }
+
+  return vecReturn;
+}
+
+double*
+XolotlUserObject::vectorized_xolotl_XeConc(std::shared_ptr<xolotlSolver::PetscSolver> solver) const
+{
+  std::vector<std::vector<std::vector<double> > > * buff = _xolotl_interface->getLocalXeConc(solver); // Bringing the Xe rate data (within GB)
+  int nx = _xolotl_localNx;
+  int ny = _xolotl_localNy;
+  int nz = _xolotl_localNz;
+  double *vecReturn;
+  vecReturn = new double[nx*ny*nz];
+  for (int k = 0; k < nz; k++){
+    for (int j = 0; j < ny; j++){
+      for (int i = 0; i < nx; i++){
+        vecReturn[ii(i,j,k)] = buff->at(i)[j][k];
+      }
+    }
+  }
+
+  return vecReturn;
+}
+
+double*
+XolotlUserObject::allocate_xolotlGlobalData() const
+{
+  int nsize = _xolotl_nx * _xolotl_ny * _xolotl_nz;
+  double *arr = new double[nsize];
+  for (int i = 0; i < nsize; i++){
+    arr[i] = 0.0;
+  }
+
+  return arr;
+}
+
+void
+XolotlUserObject::localFill_xolotlGlobalXeRate(double *arr, std::shared_ptr<xolotlSolver::PetscSolver> solver) const
+{
+  std::vector<std::vector<std::vector<double> > > * buff = _xolotl_interface->getLocalXeRate(solver); // Bringing the Xe rate data (within GB)
+  // for (int k = _xolotl_zi_lb; k <= _xolotl_zi_ub; k++) {
+  //   for (int j = _xolotl_yi_lb; j <= _xolotl_yi_ub; j++) {
+  //     for (int i = _xolotl_xi_lb; i <= _xolotl_xi_ub; i++) {
+  //       int iloc = i - _xolotl_xi_lb;
+  //       int jloc = j - _xolotl_yi_lb;
+  //       int kloc = k - _xolotl_zi_lb;
+  //       arr[iiGlob(i,j,k)] = buff->at(iloc)[jloc][kloc];
+  //     }
+  //   }
+  // }
+  int nsize = _xolotl_nx * _xolotl_ny * _xolotl_nz;
+  for (int ii = 0; ii < nsize; ii++){
+    arr[ii] = 0.0;
+  }
+  for (int k = 0; k < _xolotl_localNz; k++){
+    for (int j = 0; j < _xolotl_localNy; j++){
+      for (int i = 0; i < _xolotl_localNx; i++){
+        int iGlob = i +_xolotl_xi_lb;
+        int jGlob = j +_xolotl_yi_lb;
+        int kGlob = k +_xolotl_zi_lb;
+        arr[iiGlob(iGlob,jGlob,kGlob)] = buff->at(i)[j][k];
+      }
+    }
+  }
+}
+
+void
+XolotlUserObject::localFill_xolotlGlobalXeConc(double *arr, std::shared_ptr<xolotlSolver::PetscSolver> solver) const
+{
+  std::vector<std::vector<std::vector<double> > > * buff = _xolotl_interface->getLocalXeConc(solver); // Bringing the Xe rate data (within GB)
+  // for (int k = _xolotl_zi_lb; k <= _xolotl_zi_ub; k++) {
+  //   for (int j = _xolotl_yi_lb; j <= _xolotl_yi_ub; j++) {
+  //     for (int i = _xolotl_xi_lb; i <= _xolotl_xi_ub; i++) {
+  //       int iloc = i - _xolotl_xi_lb;
+  //       int jloc = j - _xolotl_yi_lb;
+  //       int kloc = k - _xolotl_zi_lb;
+  //       arr[iiGlob(i,j,k)] = buff->at(iloc)[jloc][kloc];
+  //     }
+  //   }
+  // }
+  // Cleaning up the buffer
+  int nsize = _xolotl_nx * _xolotl_ny * _xolotl_nz;
+  for (int ii = 0; ii < nsize; ii++){
+    arr[ii] = 0.0;
+  }
+  for (int k = 0; k < _xolotl_localNz; k++){
+    for (int j = 0; j < _xolotl_localNy; j++){
+      for (int i = 0; i < _xolotl_localNx; i++){
+        int iGlob = i +_xolotl_xi_lb;
+        int jGlob = j +_xolotl_yi_lb;
+        int kGlob = k +_xolotl_zi_lb;
+        // if (_moose_rank == 1) {
+        //   arr[iiGlob(iGlob,jGlob,kGlob)] = buff->at(i)[j][k];
+        // }
+        arr[iiGlob(iGlob,jGlob,kGlob)] = buff->at(i)[j][k];
+        // arr[iiGlob(iGlob,jGlob,kGlob)] = 1.0;
+        // arr[iiGlob(iGlob,jGlob,kGlob)] = _moose_rank;
+      }
+    }
+  }
+}
+
+void
+XolotlUserObject::globalFill_xolotlGlobalData(double *arr) const
+{
+  int nsize = _xolotl_nx * _xolotl_ny * _xolotl_nz;
+  for (int i = 0; i < nsize; i++) {
+    double globalsum = 0.0;
+    MPI_Allreduce(&arr[i], &globalsum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    arr[i] = globalsum;
+  }
+  // MPI_Barrier(MPI_COMM_WORLD);
+}
+
+int
+XolotlUserObject::iiGlob(int i, int j, int k) const
+{
+  return _xolotl_ny * _xolotl_nz * i + _xolotl_nz * j + k;
+}
+
+int
+XolotlUserObject::ii(int i, int j, int k) const
+{
+  return _xolotl_localNy * _xolotl_localNz * i + _xolotl_localNz * j + k;
+}
+
+int
+XolotlUserObject::iiR(int rank, int i, int j, int k) const
+{
+  int ny = _xolotl_local_index_table[rank][3];
+  int nz = _xolotl_local_index_table[rank][5];
+  return ny * nz * i + nz * j + k;
 }
