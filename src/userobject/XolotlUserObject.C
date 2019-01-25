@@ -479,11 +479,14 @@ XolotlUserObject::fillout_xolotl_local_index_table(int **table, int ncol) const
   int xs, xm, Mx, ys, ym, My, zs, zm, Mz;
   _xolotl_interface->getLocalCoordinates(_xolotl_solver, &xs, &xm, &Mx, &ys, &ym, &My, &zs, &zm, &Mz);
   table[_moose_rank][0] = xs;
-  table[_moose_rank][1] = xm;
+  // table[_moose_rank][1] = xm;
+  table[_moose_rank][1] = xm < 1 ? 1 : xm;
   table[_moose_rank][2] = ys;
-  table[_moose_rank][3] = ym;
+  // table[_moose_rank][3] = ym;
+  table[_moose_rank][3] = ym < 1 ? 1 : ym;
   table[_moose_rank][4] = zs;
-  table[_moose_rank][5] = zm;
+  // table[_moose_rank][5] = zm;
+  table[_moose_rank][5] = zm < 1 ? 1 : zm;
   for (int i = 0; i < nrow; i++) {
     for (int j = 0; j < ncol; j++) {
       int globalsum = 0;
@@ -702,18 +705,22 @@ int
 XolotlUserObject::iiGlob(int i, int j, int k) const
 {
   return _xolotl_ny * _xolotl_nz * i + _xolotl_nz * j + k;
+  // return i + _xolotl_nx * j + _xolotl_nx * _xolotl_ny * k;
 }
 
 int
 XolotlUserObject::ii(int i, int j, int k) const
 {
   return _xolotl_localNy * _xolotl_localNz * i + _xolotl_localNz * j + k;
+  // return i + _xolotl_localNx * j + _xolotl_localNx * _xolotl_localNy * k;
 }
 
 int
 XolotlUserObject::iiR(int rank, int i, int j, int k) const
 {
+  int nx = _xolotl_local_index_table[rank][1];
   int ny = _xolotl_local_index_table[rank][3];
   int nz = _xolotl_local_index_table[rank][5];
   return ny * nz * i + nz * j + k;
+  // return i + nx * j + nx * ny * k;
 }
