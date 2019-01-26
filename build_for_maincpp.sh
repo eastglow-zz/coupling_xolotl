@@ -1,0 +1,4 @@
+#mpicc -std=c++11 test.cpp -L/Users/sophie/GitWorkspace/xolotl-moose-source/build/lib -lxolotlInter -I/Users/sophie/GitWorkspace/xolotl-moose-source/build/include -I/Users/sophie/Code/petsc/include/ -I/Users/sophie/Code/petsc/20180509/include -I/Users/sophie/Code/mpich/include/
+#mpicxx -o XolotlExe -std=c++11 ./DLmain.cpp -I/Users/donguk.kim/projects/xolotl-build/include -I/opt/petsc-install/include -I/opt/mpich/include -L/opt/boost/lib
+mpicxx -o XolotlExe -std=c++11 ./DLmain.cpp -I/Users/donguk.kim/projects/xolotl-build/include -I/opt/moose/petsc-3.8.3/mpich-3.2_clang-6.0.1-opt/include -I/opt/moose/mpich-3.2/clang-6.0.1/include -L/opt/boost/lib
+#mpicxx -o XolotlExe -std=c++11 ./DLmain.cpp -I/Users/donguk.kim/projects/xolotl-build/include -I/Users/donguk.kim/myinstall/petscworkdir/petsc-clang/include -I/opt/moose/mpich-3.2/clang-6.0.1/include -L/opt/boost/lib -L/Users/donguk.kim/myinstall/petscworkdir/petsc-clang/lib
