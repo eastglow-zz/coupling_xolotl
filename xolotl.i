@@ -1,8 +1,6 @@
 [Mesh]
- type = GeneratedMesh
- dim = 2
- nx = 10
- ny = 10
+  type = PETScDMDAMesh
+  XolotlInput_path_name = './params_NE_2D.txt'
 []
 
 [AuxVariables]
@@ -15,7 +13,6 @@
 [Problem]
  type = XolotlProblem
  sync_variable = u
- XolotlInput_path_name = './params_NE_2D.txt'
 []
 
 [Executioner]

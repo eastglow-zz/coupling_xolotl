@@ -10,6 +10,7 @@
 #define COUPLING_XOLOTLAPP_H
 
 #include "MooseApp.h"
+#include <interface.h>
 
 class coupling_xolotlApp;
 
@@ -22,8 +23,13 @@ public:
   coupling_xolotlApp(InputParameters parameters);
   virtual ~coupling_xolotlApp();
 
+  XolotlInterface & getInterface() {return _interface;}
+  TS & getXolotlTS() {return _interface.getTS();}
   static void registerApps();
   static void registerAll(Factory & f, ActionFactory & af, Syntax & s);
+
+private:
+  XolotlInterface _interface;
 };
 
 #endif /* COUPLING_XOLOTLAPP_H */

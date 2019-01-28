@@ -12,7 +12,6 @@
 
 #include "ExternalProblem.h"
 #include "coupling_xolotlApp.h"
-#include <interface.h>
 
 class XolotlProblem;
 
@@ -27,7 +26,7 @@ InputParameters validParams<XolotlProblem>();
   public:
     XolotlProblem(const InputParameters & params);
     ~XolotlProblem() {}
-
+    
     virtual void externalSolve() override;
     virtual void syncSolutions(Direction /*direction*/) override;
 
@@ -36,9 +35,7 @@ InputParameters validParams<XolotlProblem>();
   private:
 /// The name of the variable to transfer to
     const VariableName & _sync_to_var_name;
-    std::string _xolotl_input_path_name;
-    XolotlInterface _interface;
-    std::shared_ptr<xolotlSolver::PetscSolver> _solver;
+    XolotlInterface &_interface; 
   };
 
 #endif /* XOLOTLPROBLEM_H */

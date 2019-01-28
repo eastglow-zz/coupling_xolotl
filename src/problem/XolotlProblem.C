@@ -18,37 +18,24 @@ validParams<XolotlProblem>()
   InputParameters params = validParams<ExternalProblem>();
   params.addRequiredParam<VariableName>("sync_variable",
                                         "The variable the solution will be synced to");
-  params.addRequiredParam<std::string>("XolotlInput_path_name",
-                                       "Name with the path for the Xolotl input file");
   return params;
 }
 
 XolotlProblem::XolotlProblem(const InputParameters & params)
   : ExternalProblem(params),
     _sync_to_var_name(getParam<VariableName>("sync_variable")),
-    _xolotl_input_path_name(getParam<std::string>("XolotlInput_path_name"))
+    _interface(static_cast<coupling_xolotlApp &>(_app).getInterface())
 {
-    int argc = 3;
-    char ** argv = new char*[argc];
-    std::string parameterFile = "bla";
-    argv[0] = new char[parameterFile.length() + 1];
-    strcpy(argv[0], parameterFile.c_str());
-    argv[1] = new char[_xolotl_input_path_name.length() + 1];
-    strcpy(argv[1], _xolotl_input_path_name.c_str());
-    argv[2] = 0; // null-terminate the array
-    
-    _solver = _interface.initializeXolotl(argc,
-              argv, MPI_COMM_WORLD, false);
 }
 
 void
 XolotlProblem::externalSolve()
 {
     // Set the time we want to reach
-    _interface.setTimes(_solver, time(), dt());
+    _interface.setTimes(time(), dt());
     
     // Run the solver
-    _interface.solveXolotl(_solver);
+    _interface.solveXolotl();
 }
 
 void
@@ -56,9 +43,9 @@ XolotlProblem::syncSolutions(Direction direction)
 {
     if (direction == Direction::FROM_EXTERNAL_APP)
     {
-        auto localRate = _interface.getLocalXeRate(_solver);
+        auto localRate = _interface.getLocalXeRate();
         PetscInt i, j, k, xs, ys, zs, xm, ym, zm, Mx, My, Mz;
-        _interface.getLocalCoordinates(_solver, xs, xm, Mx, ys, ym, My, zs, zm, Mz);
+        _interface.getLocalCoordinates(xs, xm, Mx, ys, ym, My, zs, zm, Mz);
 
         MeshBase & to_mesh = mesh().getMesh();
         auto & sync_to_var = getVariable(
@@ -69,7 +56,7 @@ XolotlProblem::syncSolutions(Direction direction)
         for (i = xs; i < xs + max(xm, 1); i++)
         {
             Node * to_node = to_mesh.node_ptr(i + j * Mx);
-            if (to_node->n_comp(sync_to_var.sys().number(), sync_to_var.number()) > 1)
+	    if (to_node->n_comp(sync_to_var.sys().number(), sync_to_var.number()) > 1)
             mooseError("Does not support multiple components");
             dof_id_type dof = to_node->dof_number(sync_to_var.sys().number(), sync_to_var.number(), 0);
             sync_to_var.sys().solution().set(dof, localRate->at(i-xs)[j-ys][k-zs]);
