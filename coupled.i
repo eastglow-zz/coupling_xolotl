@@ -2,7 +2,9 @@
  type = GeneratedMesh
  dim = 2
  nx = 20
- ny = 10
+ ny = 20
+ xmax = 100000
+ ymax = 100000
 []
 
 [Variables]
@@ -50,7 +52,7 @@
 [Executioner]
  type = Transient
  num_steps = 10
- dt = 10000
+ dt = 1
 
  solve_type = 'PJFNK'
 

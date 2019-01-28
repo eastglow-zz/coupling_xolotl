@@ -228,10 +228,10 @@ add_element_Quad4(DM da,
     
   // Get the geometry of the Xolotl grid information
   double hy = 0.0, hz = 0.0;
-  auto xolotlGrid = interface.getGridInfo(hy, hz); // There is an offset on the grid indexing
+  auto xolotlGrid = interface.getGridInfo(hy, hz);
   
   // Bottom Left
-  auto node0_ptr = mesh.add_point(libMesh::Point(xolotlGrid[i + 1], static_cast<Real>(j)*hy, 0),
+  auto node0_ptr = mesh.add_point(libMesh::Point(xolotlGrid[i], static_cast<Real>(j)*hy, 0),
                                   node_id_Quad4(type, nx, 0, i, j, 0));
   node0_ptr->set_unique_id() = node_id_Quad4(type, nx, 0, i, j, 0);
   node0_ptr->set_id() = node0_ptr->unique_id();
@@ -240,7 +240,7 @@ add_element_Quad4(DM da,
  
   // Bottom Right
   auto node1_ptr =
-      mesh.add_point(libMesh::Point(xolotlGrid[i + 2], static_cast<Real>(j)*hy, 0),
+      mesh.add_point(libMesh::Point(xolotlGrid[i + 1], static_cast<Real>(j)*hy, 0),
                      node_id_Quad4(type, nx, 0, i + 1, j, 0));
   node1_ptr->set_unique_id() = node_id_Quad4(type, nx, 0, i + 1, j, 0);
   node1_ptr->set_id() = node1_ptr->unique_id();
@@ -248,7 +248,7 @@ add_element_Quad4(DM da,
 
   // Top Right
   auto node2_ptr =
-      mesh.add_point(libMesh::Point(xolotlGrid[i + 2], static_cast<Real>(j + 1)*hy, 0),
+      mesh.add_point(libMesh::Point(xolotlGrid[i + 1], static_cast<Real>(j + 1)*hy, 0),
                      node_id_Quad4(type, nx, 0, i + 1, j + 1, 0));
   node2_ptr->set_unique_id() = node_id_Quad4(type, nx, 0, i + 1, j + 1, 0);
   node2_ptr->set_id() = node2_ptr->unique_id();
@@ -256,7 +256,7 @@ add_element_Quad4(DM da,
 
   // Top Left
   auto node3_ptr =
-      mesh.add_point(libMesh::Point(xolotlGrid[i + 1], static_cast<Real>(j + 1)*hy, 0),
+      mesh.add_point(libMesh::Point(xolotlGrid[i], static_cast<Real>(j + 1)*hy, 0),
                      node_id_Quad4(type, nx, 0, i, j + 1, 0));
   node3_ptr->set_unique_id() = node_id_Quad4(type, nx, 0, i, j + 1, 0);
   node3_ptr->set_id() = node3_ptr->unique_id();
@@ -393,10 +393,10 @@ add_node_Qua4(dof_id_type nx,
 {
   // Get the geometry of the Xolotl grid information
   double hy = 0.0, hz = 0.0;
-  auto xolotlGrid = interface.getGridInfo(hy, hz); // There is an offset on the grid indexing
+  auto xolotlGrid = interface.getGridInfo(hy, hz);
   
   // Bottom Left
-  auto node0_ptr = mesh.add_point(libMesh::Point(xolotlGrid[i + 1], static_cast<Real>(j)*hy, 0),
+  auto node0_ptr = mesh.add_point(libMesh::Point(xolotlGrid[i], static_cast<Real>(j)*hy, 0),
                                   node_id_Quad4(type, nx, 0, i, j, 0));
   node0_ptr->set_unique_id() = node_id_Quad4(type, nx, 0, i, j, 0);
   node0_ptr->processor_id() = pid;
