@@ -163,7 +163,8 @@ add_element_Quad4(DM da,
                   const dof_id_type elem_id,
                   const processor_id_type pid,
                   const ElemType type,
-                  MeshBase & mesh)
+                  MeshBase & mesh,
+                  XolotlInterface & interface)
 {
   BoundaryInfo & boundary_info = mesh.get_boundary_info();
   // Mx: number of grid points in x direction for all processors
@@ -224,9 +225,13 @@ add_element_Quad4(DM da,
   ypidplus = ypidplus < 0 ? -ypidplus - 1 - 1 : ypidplus;
 
   DMRestoreWorkArray(da, xp + yp + 2, MPIU_INT, &lxo);
+    
+  // Get the geometry of the Xolotl grid information
+  double hy = 0.0, hz = 0.0;
+  auto xolotlGrid = interface.getGridInfo(hy, hz); // There is an offset on the grid indexing
   
   // Bottom Left
-  auto node0_ptr = mesh.add_point(libMesh::Point(static_cast<Real>(i) / nx, static_cast<Real>(j) / ny, 0),
+  auto node0_ptr = mesh.add_point(libMesh::Point(xolotlGrid[i + 1], static_cast<Real>(j)*hy, 0),
                                   node_id_Quad4(type, nx, 0, i, j, 0));
   node0_ptr->set_unique_id() = node_id_Quad4(type, nx, 0, i, j, 0);
   node0_ptr->set_id() = node0_ptr->unique_id();
@@ -235,7 +240,7 @@ add_element_Quad4(DM da,
  
   // Bottom Right
   auto node1_ptr =
-      mesh.add_point(libMesh::Point(static_cast<Real>(i + 1) / nx, static_cast<Real>(j) / ny, 0),
+      mesh.add_point(libMesh::Point(xolotlGrid[i + 2], static_cast<Real>(j)*hy, 0),
                      node_id_Quad4(type, nx, 0, i + 1, j, 0));
   node1_ptr->set_unique_id() = node_id_Quad4(type, nx, 0, i + 1, j, 0);
   node1_ptr->set_id() = node1_ptr->unique_id();
@@ -243,7 +248,7 @@ add_element_Quad4(DM da,
 
   // Top Right
   auto node2_ptr =
-      mesh.add_point(libMesh::Point(static_cast<Real>(i + 1) / nx, static_cast<Real>(j + 1) / ny, 0),
+      mesh.add_point(libMesh::Point(xolotlGrid[i + 2], static_cast<Real>(j + 1)*hy, 0),
                      node_id_Quad4(type, nx, 0, i + 1, j + 1, 0));
   node2_ptr->set_unique_id() = node_id_Quad4(type, nx, 0, i + 1, j + 1, 0);
   node2_ptr->set_id() = node2_ptr->unique_id();
@@ -251,7 +256,7 @@ add_element_Quad4(DM da,
 
   // Top Left
   auto node3_ptr =
-      mesh.add_point(libMesh::Point(static_cast<Real>(i) / nx, static_cast<Real>(j + 1) / ny, 0),
+      mesh.add_point(libMesh::Point(xolotlGrid[i + 1], static_cast<Real>(j + 1)*hy, 0),
                      node_id_Quad4(type, nx, 0, i, j + 1, 0));
   node3_ptr->set_unique_id() = node_id_Quad4(type, nx, 0, i, j + 1, 0);
   node3_ptr->set_id() = node3_ptr->unique_id();
@@ -383,17 +388,23 @@ add_node_Qua4(dof_id_type nx,
               dof_id_type j,
               processor_id_type pid,
               ElemType type,
-              MeshBase & mesh)
+              MeshBase & mesh,
+              XolotlInterface & interface)
 {
+  // Get the geometry of the Xolotl grid information
+  double hy = 0.0, hz = 0.0;
+  auto xolotlGrid = interface.getGridInfo(hy, hz); // There is an offset on the grid indexing
+  
   // Bottom Left
-  auto node0_ptr = mesh.add_point(libMesh::Point(static_cast<Real>(i) / nx, static_cast<Real>(j) / ny, 0),
+  auto node0_ptr = mesh.add_point(libMesh::Point(xolotlGrid[i + 1], static_cast<Real>(j)*hy, 0),
                                   node_id_Quad4(type, nx, 0, i, j, 0));
   node0_ptr->set_unique_id() = node_id_Quad4(type, nx, 0, i, j, 0);
   node0_ptr->processor_id() = pid;
 }
 
 void
-build_cube_Quad4(UnstructuredMesh & mesh, DM da, const ElemType type)
+build_cube_Quad4(UnstructuredMesh & mesh, DM da, const ElemType type,
+                 XolotlInterface & interface)
 {
   const auto pid = mesh.comm().rank();
 
@@ -438,7 +449,7 @@ build_cube_Quad4(UnstructuredMesh & mesh, DM da, const ElemType type)
 
       dof_id_type ele_id = (i - 1) + (j - 1) * (Mx - 1);
 
-      add_element_Quad4(da, Mx - 1, My - 1, i - 1, j - 1, ele_id, pid, type, mesh);
+      add_element_Quad4(da, Mx - 1, My - 1, i - 1, j - 1, ele_id, pid, type, mesh, interface);
     }
 
   // If there is no element at the given processor
@@ -446,7 +457,7 @@ build_cube_Quad4(UnstructuredMesh & mesh, DM da, const ElemType type)
   if ((ys == 0 && ym == 1) || (xs == 0 && xm == 1))
     for (PetscInt j = ys; j < ys + ym; j++)
       for (PetscInt i = xs; i < xs + xm; i++)
-        add_node_Qua4(Mx, My, i, j, pid, type, mesh);
+        add_node_Qua4(Mx, My, i, j, pid, type, mesh, interface);
 
   // Need to link up the local elements before we can know what's missing
   mesh.find_neighbors();
@@ -499,12 +510,16 @@ PETScDMDAMesh::buildMesh()
 
   mesh.set_mesh_dimension(_dim);
   mesh.set_spatial_dimension(_dim);
+    
+  // Get the app to get the interface for the geometry of the grid
+  coupling_xolotlApp * xolotl_app = dynamic_cast<coupling_xolotlApp *>(&_app);
+  auto & interface = xolotl_app->getInterface();
 
   // Switching on MooseEnum
   switch (_dim)
   {
     case 2:
-      build_cube_Quad4(dynamic_cast<UnstructuredMesh &>(getMesh()), _dmda, _elem_type);
+      build_cube_Quad4(dynamic_cast<UnstructuredMesh &>(getMesh()), _dmda, _elem_type, interface);
       break;
     default:
       mooseError("Does not support dimension ", _dim, "yet");
