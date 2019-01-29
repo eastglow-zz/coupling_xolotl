@@ -97,7 +97,7 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-  // Creating an instance of the class
+	// Creating an instance of the class
 	XolotlDLinterface* interface = create_interface();
 
 	// Initialize MPI
@@ -110,12 +110,13 @@ int main(int argc, char **argv) {
 
 	int nx, dummy;
 	double dx, lx, ldummy;
-	interface->getXolotlGlobalGridInfo(&dummy, &nx, &dummy, &dummy, &dx, &ldummy, &ldummy, &lx, &ldummy, &ldummy, argc, argv);
-  double *x, *conc;
+        bool regularGrid;
+	interface->getXolotlGlobalGridInfo(&dummy, &regularGrid, &nx, &dummy, &dummy, &dx, &ldummy, &ldummy, &lx, &ldummy, &ldummy, argc, argv);
+	double *x, *conc;
 	x = build_xolotl_axis(nx, dx);
 	conc = allocate_buffer(nx);
 	init_buffer(conc, nx, 0);
-  int xs, xm;
+	int xs, xm;
 	local_index_info(&xs, &xm, interface, solver);
 	printf("myrank = %d, nx = %d, xs = %d, xm = %d\n",myrank, nx, xs, xm);
 

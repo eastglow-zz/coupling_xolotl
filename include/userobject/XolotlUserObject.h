@@ -45,7 +45,8 @@ private:
   virtual int** init_xolotl_local_index_table(int ncolumn) const;
   virtual void print_xolotl_local_index_table(int** table, int ncolumn) const;
   virtual void fillout_xolotl_local_index_table(int** table, int ncolumn) const;
-  virtual double* build_xolotl_axis(int nsize, double dl) const;
+  // virtual double* build_xolotl_axis(int nsize, double dl) const;
+  virtual std::vector<double> build_xolotl_axis(int nsize, double dl) const;
   virtual int max3int(int a, int b, int c) const;
   virtual int** init_xolotl_rankpair() const;
   virtual void fillout_xolotl_rankpair(int **table, int myrank, int recvRank) const;
@@ -56,6 +57,7 @@ private:
   virtual void localFill_xolotlGlobalXeRate(double *arr, std::shared_ptr<xolotlSolver::PetscSolver> solver) const;
   virtual void localFill_xolotlGlobalXeConc(double *arr, std::shared_ptr<xolotlSolver::PetscSolver> solver) const;
   virtual void globalFill_xolotlGlobalData(double *arr) const;
+  virtual std::vector<std::tuple<int, int, int>> get_GlobalGBList(std::vector<std::tuple<int, int, int>> gbLocal) const;
   virtual int iiGlob(int i, int j, int k) const;
   virtual int ii(int i, int j, int k) const;
   virtual int iiR(int rank, int i, int j, int k) const;
@@ -64,13 +66,17 @@ private:
   const VariableValue & _u;
   const VariableValue & _v;
   int _moose_rank;
+  std::vector<std::tuple<int, int, int>> _GBListLocal;
+  std::vector<std::tuple<int, int, int>> _GBList;
 
   /*========= Variables for the External Application =========*/
   /// Finite Difference grid parameters for Xolotl
   int _xolotl_dim;
+  bool _xolotl_regulargrid;
   int _xolotl_nx, _xolotl_ny, _xolotl_nz; // Total # of grid points along each axis
   double _xolotl_dx, _xolotl_dy, _xolotl_dz; // Grid spacings
-  double *_xolotl_xc, *_xolotl_yc, *_xolotl_zc;
+  // double *_xolotl_xc, *_xolotl_yc, *_xolotl_zc;
+  std::vector<double> _xolotl_xc, _xolotl_yc, _xolotl_zc;
   double _xolotl_lx, _xolotl_ly, _xolotl_lz; // Total length of the domain along each axis
   int _xolotl_xi_lb, _xolotl_xi_ub; // Lower & upper bounds of the x-grid index of the MPI process
   int _xolotl_yi_lb, _xolotl_yi_ub; // Lower & upper bounds of the y-grid index of the MPI process

@@ -11,9 +11,9 @@
   # zmin = 0
   # zmax = 21
   type = XolotlMesh
-  dim = 1
+  dim = 3
   library_path_name ='/Users/donguk.kim/projects/xolotl-build/lib/libxolotlInter.dylib'
-  XolotlInput_path_name = './params_NE_1D.txt'
+  XolotlInput_path_name = './params_NE_3D.txt'
 []
 [Variables]
   [./d]
@@ -36,10 +36,12 @@
     variable = Auxv_gb
     inside = 1
     outside = 0
-    x1 = 4
-    x2 = 6
-    y1 = -0.1
-    y2 = 0.1
+    x1 = 71999
+    x2 = 72001
+    y1 = 0
+    y2 = 100000
+    z1 = 0
+    z2 = 100000
   [../]
 []
 
@@ -70,7 +72,7 @@
     variable = Auxv
     variable_gb = Auxv_gb
     library_path_name ='/Users/donguk.kim/projects/xolotl-build/lib/libxolotlInter.dylib'
-    XolotlInput_path_name = './params_NE_1D.txt'
+    XolotlInput_path_name = './params_NE_3D.txt'
   [../]
 []
 [Outputs]

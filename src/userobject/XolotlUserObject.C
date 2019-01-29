@@ -102,7 +102,8 @@ XolotlUserObject::XolotlUserObject(const InputParameters & parameters)
   _xolotl_solver = _xolotl_interface->initializeXolotl(_argc, _argv, MPI_COMM_WORLD, ISSTANDALONE);
 
   // Get Xolotl grid information
-  _xolotl_interface->getXolotlGlobalGridInfo(&_xolotl_dim, &_xolotl_nx, &_xolotl_ny, &_xolotl_nz,
+  _xolotl_interface->getXolotlGlobalGridInfo(&_xolotl_dim, &_xolotl_regulargrid,
+  &_xolotl_nx, &_xolotl_ny, &_xolotl_nz,
   &_xolotl_dx, &_xolotl_dy, &_xolotl_dz, &_xolotl_lx, &_xolotl_ly, &_xolotl_lz, _argc, _argv);
 
   _xolotl_xc = build_xolotl_axis(_xolotl_nx, _xolotl_dx);
@@ -167,6 +168,12 @@ XolotlUserObject::initialize()
 void
 XolotlUserObject::execute()
 {
+  if (_v[0] >= 0.5) {
+    int i, j, k;
+    map_MOOSE2XolotlGlob(&i, &j, &k, *_current_node);
+    _GBListLocal.push_back(std::make_tuple(i,j,k));
+  }
+
   // Data transfer from MOOSE to External App.
   // This member function is called at every MOOSE node points.
   // _ext_data is initialized by copying the values from the assigned AuxVariable
@@ -188,6 +195,8 @@ XolotlUserObject::execute()
 void
 XolotlUserObject::finalize()
 {
+  _GBList = get_GlobalGBList(_GBListLocal);
+  _xolotl_interface->setGBLocations(_xolotl_solver, _GBList);
   _xolotl_interface->solveXolotl(_xolotl_solver);
   _xolotl_XeRate = vectorized_xolotl_XeRate(_xolotl_solver);
   _xolotl_XeConc = vectorized_xolotl_XeConc(_xolotl_solver);
@@ -204,7 +213,8 @@ XolotlUserObject::finalize()
   // MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
   // std::cout << "finalize: MPIrank = " << myrank <<std::endl;
   // printf("finalize: MPIrank = %d\n", myrank);
-
+  std::vector<std::tuple<int, int, int>> GBListLocalClean;
+  _GBListLocal = GBListLocalClean;
 }
 
 void
@@ -302,7 +312,8 @@ XolotlUserObject::calc_spatial_value_glob() const
 {
   int i, j, k;
   map_MOOSE2XolotlGlob(&i, &j, &k, *_current_node);
-  return _xolotl_GlobalXeConc[iiGlob(i,j,k)];
+  // return _xolotl_GlobalXeConc[iiGlob(i,j,k)];
+  return _xolotl_GlobalXeRate[iiGlob(i,j,k)];
   // return _moose_rank;
 }
 
@@ -497,13 +508,16 @@ XolotlUserObject::fillout_xolotl_local_index_table(int **table, int ncol) const
 
 }
 
-double*
+// double*
+std::vector<double>
 XolotlUserObject::build_xolotl_axis(int nsize, double dl) const
 {
-  double *tmpbuff;
-  tmpbuff = new double[nsize];
+  // double *tmpbuff;
+  // tmpbuff = new double[nsize];
+  std::vector<double> tmpbuff;
   for (int i = 0; i < nsize; i++) {
-    tmpbuff[i] = (double) i * dl;
+    // tmpbuff[i] = (double) i * dl;
+    tmpbuff.push_back((double) i * dl);
   }
   return tmpbuff;
 }
@@ -698,7 +712,85 @@ XolotlUserObject::globalFill_xolotlGlobalData(double *arr) const
     MPI_Allreduce(&arr[i], &globalsum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     arr[i] = globalsum;
   }
-  // MPI_Barrier(MPI_COMM_WORLD);
+}
+
+std::vector<std::tuple<int, int, int>>
+XolotlUserObject::get_GlobalGBList(std::vector<std::tuple<int, int, int>> gbLocal) const
+{
+  int localsize = gbLocal.size();
+  int globalsize = 0;
+
+  //Make the size table
+  int nprocs;
+  MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+  int *sizes = new int[nprocs];
+  for (int i = 0; i < nprocs; i ++) {
+    sizes[i] = 0;
+  }
+  sizes[_moose_rank] = localsize;
+  for (int i = 0; i < nprocs; i++ ) {
+    int tmp = 0;
+    MPI_Allreduce(&sizes[i], &tmp, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+    sizes[i] = tmp;
+  }
+
+  //Get the total GB coordinate list size
+  MPI_Allreduce(&localsize, &globalsize, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+
+  //Initializing the global GB coordinate list
+  int *igb_global = new int[globalsize];
+  int *jgb_global = new int[globalsize];
+  int *kgb_global = new int[globalsize];
+  for (int i = 0; i < globalsize; i++) {
+    igb_global[i] = 0.0;
+    jgb_global[i] = 0.0;
+    kgb_global[i] = 0.0;
+  }
+
+  // Calc. displacement to save the GB coordinate list
+  int idisp = 0;
+  for (int i = 0; i < _moose_rank && _moose_rank > 0; i++) {
+    idisp += sizes[i];
+  }
+
+  if (localsize > 0) {
+    int *igb = new int[localsize];
+    int *jgb = new int[localsize];
+    int *kgb = new int[localsize];
+
+    // Get local GB coordinates
+    for (int i = 0; i < localsize; i++) {
+      igb[i] = std::get<0>(gbLocal[i]);
+      jgb[i] = std::get<1>(gbLocal[i]);
+      kgb[i] = std::get<2>(gbLocal[i]);
+    }
+
+    //Fill the local GB coord. data in the global array
+    for (int i = idisp; i < idisp + localsize; i++) {
+      igb_global[i] = igb[i-idisp];
+      jgb_global[i] = jgb[i-idisp];
+      kgb_global[i] = kgb[i-idisp];
+    }
+  }
+
+  //Merge the local GB coords into the global GB coord array
+  for (int i = 0; i < globalsize; i++) {
+    int tmpi = 0, tmpj = 0, tmpk = 0;
+    MPI_Allreduce(&igb_global[i], &tmpi, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+    igb_global[i] = tmpi;
+    MPI_Allreduce(&jgb_global[i], &tmpj, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+    jgb_global[i] = tmpj;
+    MPI_Allreduce(&kgb_global[i], &tmpk, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+    kgb_global[i] = tmpk;
+  }
+
+  //Make coordinates into tuple to return
+  std::vector<std::tuple<int, int, int>> gbListGlobal;
+  for (int i = 0; i < globalsize; i++) {
+    gbListGlobal.push_back(std::make_tuple(igb_global[i], jgb_global[i], kgb_global[i]));
+  }
+
+  return gbListGlobal;
 }
 
 int

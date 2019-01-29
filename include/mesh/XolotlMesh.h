@@ -12,6 +12,7 @@
 
 #include "MooseMesh.h"
 #include <XolotlDLinterface.h>  // Xolotl interface
+// #include <vector>
 
 class XolotlMesh;
 
@@ -36,7 +37,8 @@ public:
   virtual Real getMinInDimension(unsigned int component) const override;
   virtual Real getMaxInDimension(unsigned int component) const override;
 private:
-  virtual double* build_xolotl_axis(int nsize, double dl) const;
+  // virtual double* build_xolotl_axis(int nsize, double dl) const;
+  virtual std::vector<double> build_xolotl_axis(int nsize, double dl) const;
 
 protected:
   /// The dimension of the mesh
@@ -62,12 +64,16 @@ protected:
   /// _bias_x > 1 implies cells are growing in the x-direction.
   Real _bias_x, _bias_y, _bias_z;
 
+
+
   /*========= Variables for the External Application =========*/
   /// Finite Difference grid parameters for Xolotl
   int _xolotl_dim;
+  bool _xolotl_regulargrid;
   int _xolotl_nx, _xolotl_ny, _xolotl_nz; // Total # of grid points along each axis
   double _xolotl_dx, _xolotl_dy, _xolotl_dz; // Grid spacings
-  double *_xolotl_xc, *_xolotl_yc, *_xolotl_zc;
+  // double *_xolotl_xc, *_xolotl_yc, *_xolotl_zc;
+  std::vector<double> _xolotl_xc, _xolotl_yc, _xolotl_zc;
   double _xolotl_lx, _xolotl_ly, _xolotl_lz; // Total length of the domain along each axis
   int _xolotl_xi_lb, _xolotl_xi_ub; // Lower & upper bounds of the x-grid index of the MPI process
   int _xolotl_yi_lb, _xolotl_yi_ub; // Lower & upper bounds of the y-grid index of the MPI process
@@ -80,6 +86,7 @@ protected:
   int _argc = 3;
   char ** _argv = new char*[_argc];
   std::string _parameterFile = "crap";
+  std::shared_ptr<xolotlSolver::PetscSolver> _xolotl_solver;
 };
 
 #endif /* XOLOTLMESH_H */

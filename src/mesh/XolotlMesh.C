@@ -150,12 +150,16 @@ XolotlMesh::XolotlMesh(const InputParameters & parameters)
   _xolotl_interface = create_interface();
 
   // Get Xolotl grid information
-  _xolotl_interface->getXolotlGlobalGridInfo(&_xolotl_dim, &_xolotl_nx, &_xolotl_ny, &_xolotl_nz,
-  &_xolotl_dx, &_xolotl_dy, &_xolotl_dz, &_xolotl_lx, &_xolotl_ly, &_xolotl_lz, _argc, _argv);
+  _xolotl_interface->getXolotlGlobalGridInfo(&_xolotl_dim, &_xolotl_regulargrid,
+    &_xolotl_nx, &_xolotl_ny, &_xolotl_nz,
+    &_xolotl_dx, &_xolotl_dy, &_xolotl_dz, &_xolotl_lx, &_xolotl_ly, &_xolotl_lz, _argc, _argv);
 
   _xolotl_xc = build_xolotl_axis(_xolotl_nx, _xolotl_dx);
   _xolotl_yc = build_xolotl_axis(_xolotl_ny, _xolotl_dy);
   _xolotl_zc = build_xolotl_axis(_xolotl_nz, _xolotl_dz);
+
+  _xolotl_solver = _xolotl_interface->initializeXolotl(_argc, _argv, MPI_COMM_WORLD, ISSTANDALONE);
+  // _xolotl_xc = _xolotl_interface->getXolotlXgrid(_xolotl_solver);
 
   _dim = _xolotl_dim;
   _nx = _xolotl_nx-1; // Note that _nx is the # of elements, and _xolotl_nx is the # of nodes.
@@ -364,13 +368,15 @@ XolotlMesh::buildMesh()
   }
 }
 
-double*
+std::vector<double>
 XolotlMesh::build_xolotl_axis(int nsize, double dl) const
 {
-  double *tmpbuff;
-  tmpbuff = new double[nsize];
+  // double *tmpbuff;
+  // tmpbuff = new double[nsize];
+  std::vector<double> tmpbuff;
   for (int i = 0; i < nsize; i++) {
-    tmpbuff[i] = (double) i * dl;
+    // tmpbuff[i] = (double) i * dl;
+    tmpbuff.push_back((double) i * dl);
   }
   return tmpbuff;
 }
