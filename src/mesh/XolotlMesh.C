@@ -159,7 +159,9 @@ XolotlMesh::XolotlMesh(const InputParameters & parameters)
   _xolotl_zc = build_xolotl_axis(_xolotl_nz, _xolotl_dz);
 
   _xolotl_solver = _xolotl_interface->initializeXolotl(_argc, _argv, MPI_COMM_WORLD, ISSTANDALONE);
-  // _xolotl_xc = _xolotl_interface->getXolotlXgrid(_xolotl_solver);
+  if (!_xolotl_regulargrid) {
+    _xolotl_xcNR = _xolotl_interface->getXolotlXgrid(_xolotl_solver);
+  }
 
   _dim = _xolotl_dim;
   _nx = _xolotl_nx-1; // Note that _nx is the # of elements, and _xolotl_nx is the # of nodes.
@@ -280,14 +282,11 @@ XolotlMesh::buildMesh()
       break;
   }
 
-  // Apply the bias if any exists
-  if (_bias_x != 1.0 || _bias_y != 1.0 || _bias_z != 1.0)
+  // When Xolotl uses non-regular grid
+  if (!_xolotl_regulargrid)
   {
     // Reference to the libmesh mesh
     MeshBase & mesh = getMesh();
-
-    // Biases
-    Real bias[3] = {_bias_x, _bias_y, _bias_z};
 
     // "width" of the mesh in each direction
     Real width[3] = {_xmax - _xmin, _ymax - _ymin, _zmax - _zmin};
@@ -298,71 +297,20 @@ XolotlMesh::buildMesh()
     // Number of elements in each direction.
     unsigned int nelem[3] = {_nx, _ny, _nz};
 
-    // We will need the biases raised to integer powers in each
-    // direction, so let's pre-compute those...
-    std::vector<std::vector<Real>> pows(LIBMESH_DIM);
-    for (unsigned int dir = 0; dir < LIBMESH_DIM; ++dir)
-    {
-      pows[dir].resize(nelem[dir] + 1);
-      for (unsigned int i = 0; i < pows[dir].size(); ++i)
-        pows[dir][i] = std::pow(bias[dir], static_cast<int>(i));
-    }
-
     // Loop over the nodes and move them to the desired location
     for (auto & node_ptr : mesh.node_ptr_range())
     {
       Node & node = *node_ptr;
 
+      int i, j, k;
+      //Get the global coordinate index of Xolotl grid
+      map_MOOSE2XolotlGlob(&i, &j, &k, node);
+      Real newcoord[3] = {_xolotl_xcNR[i], _xolotl_yc[j], _xolotl_zc[k]};
+
       for (unsigned int dir = 0; dir < LIBMESH_DIM; ++dir)
       {
-        if (width[dir] != 0. && bias[dir] != 1.)
-        {
-          // Compute the scaled "index" of the current point.  This
-          // will either be close to a whole integer or a whole
-          // integer+0.5 for quadratic nodes.
-          Real float_index = (node(dir) - mins[dir]) * nelem[dir] / width[dir];
-
-          Real integer_part = 0;
-          Real fractional_part = std::modf(float_index, &integer_part);
-
-          // Figure out where to move the node...
-          if (std::abs(fractional_part) < TOLERANCE || std::abs(fractional_part - 1.0) < TOLERANCE)
-          {
-            // If the fractional_part ~ 0.0 or 1.0, this is a vertex node, so
-            // we don't need an average.
-            //
-            // Compute the "index" we are at in the current direction.  We
-            // round to the nearest integral value to get this instead
-            // of using "integer_part", since that could be off by a
-            // lot (e.g. we want 3.9999 to map to 4.0 instead of 3.0).
-            int index = round(float_index);
-
-            // Move node to biased location.
-            node(dir) =
-                mins[dir] + width[dir] * (1. - pows[dir][index]) / (1. - pows[dir][nelem[dir]]);
-          }
-          else if (std::abs(fractional_part - 0.5) < TOLERANCE)
-          {
-            // If the fractional_part ~ 0.5, this is a midedge/face
-            // (i.e. quadratic) node.  We don't move those with the same
-            // bias as the vertices, instead we put them midway between
-            // their respective vertices.
-            //
-            // Also, since the fractional part is nearly 0.5, we know that
-            // the integer_part will be the index of the vertex to the
-            // left, and integer_part+1 will be the index of the
-            // vertex to the right.
-            node(dir) = mins[dir] +
-                        width[dir] *
-                            (1. - 0.5 * (pows[dir][integer_part] + pows[dir][integer_part + 1])) /
-                            (1. - pows[dir][nelem[dir]]);
-          }
-          else
-          {
-            // We don't yet handle anything higher order than quadratic...
-            mooseError("Unable to bias node at node(", dir, ")=", node(dir));
-          }
-        }
+        //Move node to non-regular grid
+        node(dir) = mins[dir] + newcoord[dir];
       }
     }
   }
@@ -379,4 +327,63 @@ XolotlMesh::build_xolotl_axis(int nsize, double dl) const
     tmpbuff.push_back((double) i * dl);
   }
   return tmpbuff;
+}
+
+void
+XolotlMesh::map_MOOSE2XolotlGlob(int *ireturn, int *jreturn, int *kreturn, const Node & MOOSEnode) const
+{
+  double xn = MOOSEnode(0);
+  double yn = MOOSEnode(1);
+  double zn = MOOSEnode(2);
+  double distx, disty, distz;
+  int isave, jsave, ksave;
+  int maxsize = max3int(_xolotl_nx, _xolotl_ny, _xolotl_nz);
+  //Serching for iglob
+  distx = _xolotl_lx; //initialize with the maximum distance
+  disty = _xolotl_ly; //initialize with the maximum distance
+  distz = _xolotl_lz; //initialize with the maximum distance
+  isave = -1;
+  jsave = -1;
+  ksave = -1;
+  for (int i = 0; i < maxsize; i++) {
+    //Searching for iglob
+    if (i < _xolotl_nx) {
+      double d = fabs(_xolotl_xc[i] - xn);
+      if (d <= distx) {
+        distx = d;
+        isave = i;
+      }
+    }
+    if (i < _xolotl_ny) {
+      double d = fabs(_xolotl_yc[i] - yn);
+      if (d <= disty) {
+        disty = d;
+        jsave = i;
+      }
+    }
+    if (i < _xolotl_nz) {
+      double d = fabs(_xolotl_zc[i] - zn);
+      if (d <= distz) {
+        distz = d;
+        ksave = i;
+      }
+    }
+  }
+
+  *ireturn = isave;
+  *jreturn = jsave;
+  *kreturn = ksave;
+}
+
+int
+XolotlMesh::max3int(int a, int b, int c) const
+{
+  int result = a;
+  if (b >= result) {
+    result = b;
+  }
+  if (c >= result) {
+    result = c;
+  }
+  return result;
 }

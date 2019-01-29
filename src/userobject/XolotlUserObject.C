@@ -109,6 +109,10 @@ XolotlUserObject::XolotlUserObject(const InputParameters & parameters)
   _xolotl_xc = build_xolotl_axis(_xolotl_nx, _xolotl_dx);
   _xolotl_yc = build_xolotl_axis(_xolotl_ny, _xolotl_dy);
   _xolotl_zc = build_xolotl_axis(_xolotl_nz, _xolotl_dz);
+  if (!_xolotl_regulargrid) {
+    _xolotl_xcNR = _xolotl_interface->getXolotlXgrid(_xolotl_solver);
+    _xolotl_lxNR = _xolotl_xcNR[_xolotl_nx-1];
+  }
 
   // Print out the loaded Xolotl grid parameters
   print_mesh_params();
@@ -413,7 +417,8 @@ XolotlUserObject::map_MOOSE2XolotlGlob(int *ireturn, int *jreturn, int *kreturn,
   for (int i = 0; i < maxsize; i++) {
     //Searching for iglob
     if (i < _xolotl_nx) {
-      double d = fabs(_xolotl_xc[i] - xn);
+      double x = _xolotl_regulargrid ? _xolotl_xc[i] : _xolotl_xcNR[i];
+      double d = fabs(x - xn);
       if (d <= distx) {
         distx = d;
         isave = i;
@@ -444,11 +449,19 @@ void
 XolotlUserObject::print_mesh_params() const
 {
   std::cout<<"_xolotl_dim = "<<_xolotl_dim<<std::endl;
-  std::cout<<"_xolotl_lx = "<<_xolotl_lx<<std::endl;
+  if (_xolotl_regulargrid) {
+    std::cout<<"_xolotl_lx = "<<_xolotl_lx<<std::endl;
+  }else{
+    std::cout<<"_xolotl_lxNR = "<<_xolotl_lxNR<<std::endl;
+  }
   std::cout<<"_xolotl_ly = "<<_xolotl_ly<<std::endl;
   std::cout<<"_xolotl_lz = "<<_xolotl_lz<<std::endl;
   std::cout<<"_xolotl_nx, _xolotl_ny, _xolotl_nz = "<<_xolotl_nx<<","<<_xolotl_ny<<","<<_xolotl_nz<<std::endl;
-  std::cout<<"_xolotl_dx, _xolotl_dy, _xolotl_dz = "<<_xolotl_dx<<","<<_xolotl_dy<<","<<_xolotl_dz<<std::endl;
+  if (_xolotl_regulargrid) {
+    std::cout<<"_xolotl_dx, _xolotl_dy, _xolotl_dz = "<<_xolotl_dx<<","<<_xolotl_dy<<","<<_xolotl_dz<<std::endl;
+  }else{
+    std::cout<<"_xolotl_dy, _xolotl_dz = "<<_xolotl_dy<<","<<_xolotl_dz<<std::endl;
+  }
 }
 
 int**

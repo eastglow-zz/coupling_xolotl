@@ -36,8 +36,8 @@
     variable = Auxv_gb
     inside = 1
     outside = 0
-    x1 = 71999
-    x2 = 72001
+    x1 = 49999
+    x2 = 50001
     y1 = 0
     y2 = 100000
     z1 = 0

@@ -77,7 +77,9 @@ private:
   double _xolotl_dx, _xolotl_dy, _xolotl_dz; // Grid spacings
   // double *_xolotl_xc, *_xolotl_yc, *_xolotl_zc;
   std::vector<double> _xolotl_xc, _xolotl_yc, _xolotl_zc;
+  std::vector<double> _xolotl_xcNR;
   double _xolotl_lx, _xolotl_ly, _xolotl_lz; // Total length of the domain along each axis
+  double _xolotl_lxNR;
   int _xolotl_xi_lb, _xolotl_xi_ub; // Lower & upper bounds of the x-grid index of the MPI process
   int _xolotl_yi_lb, _xolotl_yi_ub; // Lower & upper bounds of the y-grid index of the MPI process
   int _xolotl_zi_lb, _xolotl_zi_ub; // Lower & upper bounds of the z-grid index of the MPI process
