@@ -51,9 +51,13 @@ private:
   virtual int** init_xolotl_rankpair() const;
   virtual void fillout_xolotl_rankpair(int **table, int myrank, int recvRank) const;
   virtual void print_xolotl_rankpair(int **table) const;
+  virtual double* allocate_xolotlLocalData() const;
   virtual double* vectorized_xolotl_XeRate(std::shared_ptr<xolotlSolver::PetscSolver> solver) const;
   virtual double* vectorized_xolotl_XeConc(std::shared_ptr<xolotlSolver::PetscSolver> solver) const;
+  virtual double* computeTimeDerivativeLocal(double *bnew, double *bold, double delt) const;
+  virtual void superposeArrayLocal(double *ans, double *arr1, double *arr2) const;
   virtual double* allocate_xolotlGlobalData() const;
+  virtual void localFill_xolotlGlobalData(double *arr, double *arrLocal) const;
   virtual void localFill_xolotlGlobalXeRate(double *arr, std::shared_ptr<xolotlSolver::PetscSolver> solver) const;
   virtual void localFill_xolotlGlobalXeConc(double *arr, std::shared_ptr<xolotlSolver::PetscSolver> solver) const;
   virtual void globalFill_xolotlGlobalData(double *arr) const;
@@ -99,6 +103,8 @@ private:
 
   std::string _ext_lib_path_name; // External dynamic library path variable
   std::string _xolotl_input_path_name;
+  Real _matrix_marker_thres;
+
   void* _ext_lib_handle; // External dynamic library handle variable
   XolotlDLinterface* _xolotl_interface;
   int _argc = 3;
@@ -106,11 +112,13 @@ private:
   std::string _parameterFile = "crap";
   // std::shared_ptr<xolotlCore::Options> _xolotl_options;
   std::shared_ptr<xolotlSolver::PetscSolver> _xolotl_solver;
-  double *_xolotl_XeRate;
+  double *_xolotl_XeRate;  //Actually, this is an integrated value over the time, so we neet to discritize it to get the actual rate.
   double *_xolotl_XeConc;
+  double *_xolotl_XeCdot;
 
   double *_xolotl_GlobalXeRate;
   double *_xolotl_GlobalXeConc;
+  double *_xolotl_GlobalXeCdot;
 };
 
 #endif //MYDIFFUSIONUSEROBJECT_H

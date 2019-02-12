@@ -33,6 +33,9 @@ validParams<XolotlUserObject>()
   params.addParam<std::string>("XolotlInput_path_name",
                                "default",
                                "Name with the path for the Xolotl input file");
+  params.addParam<Real>("gb_marker_threshold",
+                               0.95,
+                               "Threshold to identify the non-matrix region (GB or bubble) when (bnds(x,y,z) <= gb_marker_threshold), where bnds = 1 within the matrix region, 0 within the bubble region, and 0.5 <= bnds <= 1.0 within grain boundaries.");
 
   return params;
 }
@@ -50,7 +53,8 @@ XolotlUserObject::XolotlUserObject(const InputParameters & parameters)
   _u(_var.dofValues()),
   _v(coupledValue("variable_gb")),
   _ext_lib_path_name(getParam<std::string>("library_path_name")),
-  _xolotl_input_path_name(getParam<std::string>("XolotlInput_path_name"))
+  _xolotl_input_path_name(getParam<std::string>("XolotlInput_path_name")),
+  _matrix_marker_thres(getParam<Real>("gb_marker_threshold"))
 {
   std::cout<<"Initialization of XolotlUserObject"<<std::endl;
 
@@ -135,10 +139,12 @@ XolotlUserObject::XolotlUserObject(const InputParameters & parameters)
   Real dtime = 1.1e-20;
   if (_dt > 1e-20) dtime = _dt;
   _xolotl_interface->setTimes(_xolotl_solver, _t, dtime);
-  _xolotl_XeRate = vectorized_xolotl_XeRate(_xolotl_solver);
-  _xolotl_XeConc = vectorized_xolotl_XeConc(_xolotl_solver);
-  _xolotl_GlobalXeRate = allocate_xolotlGlobalData();
-  _xolotl_GlobalXeConc = allocate_xolotlGlobalData();
+  // _xolotl_XeRate = vectorized_xolotl_XeRate(_xolotl_solver);
+  // _xolotl_XeConc = vectorized_xolotl_XeConc(_xolotl_solver);
+  _xolotl_XeRate = allocate_xolotlLocalData();
+  _xolotl_XeCdot = allocate_xolotlLocalData();
+  // _xolotl_GlobalXeRate = allocate_xolotlGlobalData();
+  _xolotl_GlobalXeCdot = allocate_xolotlGlobalData();
 
   // Make the local buffer visible for all processors in MPI_COMM_WORLD
   // MPI_Win_create(&_xolotl_XeConc[0], _xolotl_localNx * _xolotl_localNy * _xolotl_localNz * sizeof(double), sizeof(double), MPI_INFO_NULL, MPI_COMM_WORLD, &_win);
@@ -172,7 +178,8 @@ XolotlUserObject::initialize()
 void
 XolotlUserObject::execute()
 {
-  if (_v[0] >= 0.5) {
+  // if (_v[0] >= 0.5) {
+  if (_v[0] <= _matrix_marker_thres) {
     int i, j, k;
     map_MOOSE2XolotlGlob(&i, &j, &k, *_current_node);
     _GBListLocal.push_back(std::make_tuple(i,j,k));
@@ -199,15 +206,35 @@ XolotlUserObject::execute()
 void
 XolotlUserObject::finalize()
 {
+  //Get XeRateOld
+  double *XeRateOld = vectorized_xolotl_XeRate(_xolotl_solver);
+
+  //Get XeConcOld
+  double *XeConcOld = vectorized_xolotl_XeConc(_xolotl_solver);
+
   _GBList = get_GlobalGBList(_GBListLocal);
   _xolotl_interface->setGBLocations(_xolotl_solver, _GBList);
   _xolotl_interface->solveXolotl(_xolotl_solver);
-  _xolotl_XeRate = vectorized_xolotl_XeRate(_xolotl_solver);
-  _xolotl_XeConc = vectorized_xolotl_XeConc(_xolotl_solver);
-  localFill_xolotlGlobalXeRate(_xolotl_GlobalXeRate, _xolotl_solver);
-  globalFill_xolotlGlobalData(_xolotl_GlobalXeRate);
-  localFill_xolotlGlobalXeConc(_xolotl_GlobalXeConc, _xolotl_solver);
-  globalFill_xolotlGlobalData(_xolotl_GlobalXeConc);
+
+  //Get XeRateNew
+  double *XeRateNew = vectorized_xolotl_XeRate(_xolotl_solver);
+
+  //Get XeConcNew
+  double *XeConcNew = vectorized_xolotl_XeConc(_xolotl_solver);
+
+  double *Rate = computeTimeDerivativeLocal(XeRateNew, XeRateOld, _dt);
+  double *Cdot = computeTimeDerivativeLocal(XeConcNew, XeConcOld, _dt);
+
+  superposeArrayLocal(_xolotl_XeCdot, Rate, Cdot);
+  // superposeArrayLocal(_xolotl_XeCdot, Rate, Rate);
+
+  localFill_xolotlGlobalData(_xolotl_GlobalXeCdot, _xolotl_XeCdot);
+  globalFill_xolotlGlobalData(_xolotl_GlobalXeCdot);
+
+  // localFill_xolotlGlobalXeRate(_xolotl_GlobalXeRate, _xolotl_solver);
+  // globalFill_xolotlGlobalData(_xolotl_GlobalXeRate);
+  // localFill_xolotlGlobalXeConc(_xolotl_GlobalXeConc, _xolotl_solver);
+  // globalFill_xolotlGlobalData(_xolotl_GlobalXeConc);
 
   // _xolotl_interface->finalizeXolotl(_xolotl_solver, false);
   // _xolotl_solver.reset();
@@ -317,7 +344,8 @@ XolotlUserObject::calc_spatial_value_glob() const
   int i, j, k;
   map_MOOSE2XolotlGlob(&i, &j, &k, *_current_node);
   // return _xolotl_GlobalXeConc[iiGlob(i,j,k)];
-  return _xolotl_GlobalXeRate[iiGlob(i,j,k)];
+  // return _xolotl_GlobalXeRate[iiGlob(i,j,k)];
+  return _xolotl_GlobalXeCdot[iiGlob(i,j,k)];
   // return _moose_rank;
 }
 
@@ -597,6 +625,18 @@ XolotlUserObject::print_xolotl_rankpair(int **table) const
 }
 
 double*
+XolotlUserObject::allocate_xolotlLocalData() const
+{
+  int nsize = _xolotl_localNx * _xolotl_localNy * _xolotl_localNz;
+  double *arr = new double[nsize];
+  for (int i = 0; i < nsize; i++){
+    arr[i] = 0.0;
+  }
+
+  return arr;
+}
+
+double*
 XolotlUserObject::vectorized_xolotl_XeRate(std::shared_ptr<xolotlSolver::PetscSolver> solver) const
 {
   std::vector<std::vector<std::vector<double> > > * buff = _xolotl_interface->getLocalXeRate(solver); // Bringing the Xe rate data (within GB)
@@ -639,6 +679,31 @@ XolotlUserObject::vectorized_xolotl_XeConc(std::shared_ptr<xolotlSolver::PetscSo
 }
 
 double*
+XolotlUserObject::computeTimeDerivativeLocal(double *buff_new, double *buff_old, double timeInterval) const
+{
+  int localsize = _xolotl_localNx * _xolotl_localNy * _xolotl_localNz;
+  double *toReturn = new double[localsize];
+  for (int i = 0; i < localsize; i++) {
+    if (timeInterval > 0) {
+      toReturn[i] = (buff_new[i] - buff_old[i])/timeInterval;
+    }else{
+      toReturn[i] = 0.0;
+      printf("XolotlUserObject::computeTimeDerivativeLocal(): divide by zero or negative!\n");
+    }
+  }
+  return toReturn;
+}
+
+void
+XolotlUserObject::superposeArrayLocal(double *ans, double *arr1, double *arr2) const
+{
+  int localsize = _xolotl_localNx * _xolotl_localNy * _xolotl_localNz;
+  for (int i = 0; i < localsize; i++) {
+    ans[i] = arr1[i] + arr2[i];
+  }
+}
+
+double*
 XolotlUserObject::allocate_xolotlGlobalData() const
 {
   int nsize = _xolotl_nx * _xolotl_ny * _xolotl_nz;
@@ -648,6 +713,25 @@ XolotlUserObject::allocate_xolotlGlobalData() const
   }
 
   return arr;
+}
+
+void
+XolotlUserObject::localFill_xolotlGlobalData(double *arr, double *arrLocal) const
+{
+  int nsize = _xolotl_nx * _xolotl_ny * _xolotl_nz;
+  for (int ii = 0; ii < nsize; ii++){
+    arr[ii] = 0.0;
+  }
+  for (int k = 0; k < _xolotl_localNz; k++){
+    for (int j = 0; j < _xolotl_localNy; j++){
+      for (int i = 0; i < _xolotl_localNx; i++){
+        int iGlob = i +_xolotl_xi_lb;
+        int jGlob = j +_xolotl_yi_lb;
+        int kGlob = k +_xolotl_zi_lb;
+        arr[iiGlob(iGlob,jGlob,kGlob)] = arrLocal[ii(i,j,k)];
+      }
+    }
+  }
 }
 
 void

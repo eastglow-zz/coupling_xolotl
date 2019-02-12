@@ -1,19 +1,14 @@
+# default length unit: nm
+# default time unit: s
+# default mass unit: ?
+
 [Mesh]
-  # type = GeneratedMesh
-  # dim = 3
-  # nx = 144
-  # ny = 20
-  # nz = 20
-  # xmin = 0
-  # xmax = 21
-  # ymin = 0
-  # ymax = 21
-  # zmin = 0
-  # zmax = 21
   type = XolotlMesh
-  dim = 3
+  dim = 2
   library_path_name ='/Users/donguk.kim/projects/xolotl-build/lib/libxolotlInter.dylib'
-  XolotlInput_path_name = './params_NE_3D.txt'
+  XolotlInput_path_name = './params_NE_2D_withPFsimple.txt'
+  # XolotlInput_path_name = './params_NE_2D.txt'
+  # XolotlInput_path_name = './params_NE_3D.txt'
 []
 [Variables]
   [./d]
@@ -31,17 +26,28 @@
     variable = Auxv
     value = 0
   [../]
+  # [./Init_Aux_gb]
+  #   type = BoundingBoxIC
+  #   variable = Auxv_gb
+  #   inside = 0
+  #   outside = 1
+  #   # x1 = 39999.5
+  #   # x2 = 60000.5
+  #   # y1 = 0
+  #   # y2 = 100000
+  #   # z1 = 0
+  #   # z2 = 100000
+  #   x1 = 0
+  #   x2 = 100000
+  #   y1 = 39999.5
+  #   y2 = 60000.5
+  #   z1 = 0
+  #   z2 = 100000
+  # [../]
   [./Init_Aux_gb]
-    type = BoundingBoxIC
+    type = ConstantIC
     variable = Auxv_gb
-    inside = 1
-    outside = 0
-    x1 = 49999
-    x2 = 50001
-    y1 = 0
-    y2 = 100000
-    z1 = 0
-    z2 = 100000
+    value = 1
   [../]
 []
 
@@ -71,8 +77,12 @@
     type = XolotlUserObject
     variable = Auxv
     variable_gb = Auxv_gb
+    gb_marker_threshold = 0.9
     library_path_name ='/Users/donguk.kim/projects/xolotl-build/lib/libxolotlInter.dylib'
-    XolotlInput_path_name = './params_NE_3D.txt'
+    XolotlInput_path_name = './params_NE_2D_withPFsimple.txt'
+    # XolotlInput_path_name = './params_NE_2D_withPF.txt'
+    # XolotlInput_path_name = './params_NE_2D.txt'
+    # XolotlInput_path_name = './params_NE_3D.txt'
   [../]
 []
 [Outputs]

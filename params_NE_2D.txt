@@ -11,5 +11,5 @@ startTemp=1800
 grouping=101 10
 process=diff reaction
 voidPortion=0.0
-regularGrid=yes
+regularGrid=no
 initialV=0.0
