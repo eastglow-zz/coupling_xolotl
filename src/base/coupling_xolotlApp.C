@@ -6,10 +6,10 @@
 
 
 // My custom Executioner
-#include "XolotlExecutioner.h"
+//#include "XolotlExecutioner.h"
 
 // My custom TimeStepper
-#include "XolotlTimeStepper.h"
+//#include "XolotlTimeStepper.h"
 
 template <>
 InputParameters
@@ -47,10 +47,10 @@ coupling_xolotlApp::registerObjects(Factory & factory)
 {
     Registry::registerObjectsTo(factory, {"coupling_xolotlApp"});
     //Registering XolotlExecutioner
-    registerExecutioner(XolotlExecutioner);
+    //registerExecutioner(XolotlExecutioner);
 
     //Registering XolotlTimeStepper
-    registerTimeStepper(XolotlTimeStepper);
+    //registerTimeStepper(XolotlTimeStepper);
 }
 
 void

@@ -14,6 +14,7 @@
 #include "libmesh/periodic_boundaries.h"
 #include "libmesh/periodic_boundary_base.h"
 #include "libmesh/unstructured_mesh.h"
+#include "libmesh/node.h"
 
 // C++ includes
 #include <cmath> // provides round, not std::round (see http://www.cplusplus.com/reference/cmath/round/)
@@ -289,13 +290,13 @@ XolotlMesh::buildMesh()
     MeshBase & mesh = getMesh();
 
     // "width" of the mesh in each direction
-    Real width[3] = {_xmax - _xmin, _ymax - _ymin, _zmax - _zmin};
+    std::array<Real, LIBMESH_DIM> width = {_xmax - _xmin, _dim > 1 ? _ymax - _ymin : 0, _dim > 2 ? _zmax - _zmin : 0};
 
     // Min mesh extent in each direction.
-    Real mins[3] = {_xmin, _ymin, _zmin};
+    std::array<Real, LIBMESH_DIM> mins = {_xmin, _ymin, _zmin};
 
     // Number of elements in each direction.
-    unsigned int nelem[3] = {_nx, _ny, _nz};
+    std::array<unsigned int, LIBMESH_DIM> nelem = {_nx, _dim > 1 ? _ny : 1, _dim > 2 ? _nz : 1};
 
     // Loop over the nodes and move them to the desired location
     for (auto & node_ptr : mesh.node_ptr_range())
@@ -305,7 +306,7 @@ XolotlMesh::buildMesh()
       int i, j, k;
       //Get the global coordinate index of Xolotl grid
       map_MOOSE2XolotlGlob(&i, &j, &k, node);
-      Real newcoord[3] = {_xolotl_xcNR[i], _xolotl_yc[j], _xolotl_zc[k]};
+      std::array<Real, LIBMESH_DIM> newcoord = {_xolotl_xcNR[i], _xolotl_yc[j], _xolotl_zc[k]};
 
       for (unsigned int dir = 0; dir < LIBMESH_DIM; ++dir)
       {
@@ -332,9 +333,9 @@ XolotlMesh::build_xolotl_axis(int nsize, double dl) const
 void
 XolotlMesh::map_MOOSE2XolotlGlob(int *ireturn, int *jreturn, int *kreturn, const Node & MOOSEnode) const
 {
-  double xn = MOOSEnode(0);
-  double yn = MOOSEnode(1);
-  double zn = MOOSEnode(2);
+  Real xn = MOOSEnode(0);
+  Real yn = MOOSEnode(1);
+  Real zn = MOOSEnode(2);
   double distx, disty, distz;
   int isave, jsave, ksave;
   int maxsize = max3int(_xolotl_nx, _xolotl_ny, _xolotl_nz);
