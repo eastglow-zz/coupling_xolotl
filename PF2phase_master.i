@@ -64,6 +64,11 @@
   #   [../]
   # [../]
   # [./]
+  [./bnds]
+    type = ConstantIC
+    variable = bnds
+    value = 1
+  [../]
   [./etam0_IC]
     type = BoundingBoxIC
     variable = etam0
