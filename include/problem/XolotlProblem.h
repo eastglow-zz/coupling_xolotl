@@ -35,7 +35,9 @@ InputParameters validParams<XolotlProblem>();
   private:
 /// The name of the variable to transfer to
     const VariableName & _sync_to_var_name;
-    XolotlInterface &_interface; 
+    XolotlInterface &_interface;
+    Real _dt_for_derivative;
+    std::vector<std::vector<std::vector<double> > > _old_rate;
   };
 
 #endif /* XOLOTLPROBLEM_H */

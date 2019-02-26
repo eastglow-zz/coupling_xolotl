@@ -33,6 +33,12 @@ XolotlProblem::externalSolve()
 {
     // Set the time we want to reach
     _interface.setTimes(time(), dt());
+
+    // Save the size of the dt for derivative calculation
+    _dt_for_derivative = dt();
+
+    // Save the current Xe rate
+    _old_rate = *_interface.getLocalXeRate();
     
     // Run the solver
     _interface.solveXolotl();
@@ -41,6 +47,7 @@ XolotlProblem::externalSolve()
 void
 XolotlProblem::syncSolutions(Direction direction)
 {
+
     if (direction == Direction::FROM_EXTERNAL_APP)
     {
         auto localRate = _interface.getLocalXeRate();
@@ -50,16 +57,19 @@ XolotlProblem::syncSolutions(Direction direction)
         MeshBase & to_mesh = mesh().getMesh();
         auto & sync_to_var = getVariable(
                                          0, _sync_to_var_name, Moose::VarKindType::VAR_ANY, Moose::VarFieldType::VAR_FIELD_STANDARD);
-
+	
         for (k = zs; k < zs + max(zm, 1); k++)
         for (j = ys; j < ys + max(ym, 1); j++)
         for (i = xs; i < xs + max(xm, 1); i++)
         {
-            Node * to_node = to_mesh.node_ptr(i + j * Mx);
+            Node * to_node = to_mesh.node_ptr(i + (j + k * My) * Mx);
 	    if (to_node->n_comp(sync_to_var.sys().number(), sync_to_var.number()) > 1)
             mooseError("Does not support multiple components");
             dof_id_type dof = to_node->dof_number(sync_to_var.sys().number(), sync_to_var.number(), 0);
-            sync_to_var.sys().solution().set(dof, localRate->at(i-xs)[j-ys][k-zs]);
+	    // Compute the time derivative
+	    Real value = (localRate->at(i-xs)[j-ys][k-zs] - _old_rate[i-xs][j-ys][k-zs]) / _dt_for_derivative;
+//	    if (localRate->at(i-xs)[j-ys][k-zs] > 0.0) std::cout << i << " " << j << " " << localRate->at(i-xs)[j-ys][k-zs] << " " << value << std::endl;
+            sync_to_var.sys().solution().set(dof, value);
         }
 
         sync_to_var.sys().solution().close();

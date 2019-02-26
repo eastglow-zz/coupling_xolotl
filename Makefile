@@ -32,7 +32,7 @@ FLUID_PROPERTIES    := no
 HEAT_CONDUCTION     := no
 MISC                := no
 NAVIER_STOKES       := no
-PHASE_FIELD         := no
+PHASE_FIELD         := yes
 RDG                 := no
 RICHARDS            := no
 SOLID_MECHANICS     := no
@@ -44,8 +44,8 @@ POROUS_FLOW         := no
 include $(MOOSE_DIR)/modules/modules.mk
 ###############################################################################
 #External non-MOOSE shared library linking - not necessary
-extlibpath          :=/Users/donguk.kim/projects/xolotl-build/lib
-extheaderpath       :=/Users/donguk.kim/projects/xolotl-build/include
+extlibpath          :=/home2/bqo/xolotl/xolotl-moose/build/lib
+extheaderpath       :=/home2/bqo/xolotl/xolotl-moose/build/include
 #ADDITIONAL_INCLUDES    +=/Users/sophie/Code/petsc/include/
 #ADDITIONAL_INCLUDES    +=/Users/sophie/Code/petsc/20180509/include
 #ADDITIONAL_DEPEND_LIBS    +=$(extlibpath)
