@@ -49,6 +49,11 @@
 []
 
 [ICs]
+  [./bnds]
+    type = ConstantIC
+    variable = bnds
+    value = 1
+  [../]
   [./etam0_IC]
     type = BoundingBoxIC
     variable = etam0
@@ -96,8 +101,6 @@
     value = 0
   [../]
 []
-
-
 
 [BCs]
   [./etam0_adiabatic]
@@ -211,6 +214,12 @@
     D_name = Dchiv
     args = ''
   [../]
+  [./Source_v]
+    type = CoupledForce
+    coef = 1
+    variable = wv
+    v = VacRate
+  [../]
   [./coupled_v_etab0dot]
     type = CoupledSwitchingTimeDerivative
     variable = wv
@@ -280,6 +289,11 @@
 []
 
 [AuxKernels]
+  [./BndsCalcInit]
+    type = BndsCalcAux
+    variable = bnds
+    execute_on = initial
+  [../]
   [./BndsCalc]
     type = BndsCalcAux
     variable = bnds
@@ -444,6 +458,14 @@
     derivative_order = 2
     outputs = exodus
   [../]
+  [./VacRate]
+    type = ParsedMaterial
+    f_name = VacRate
+    material_property_names = 'YXe'
+    args = 'XolotlXeRate'
+    function = 'XolotlXeRate / YXe'
+    outputs = exodus
+  [../]
 []
 
 [Postprocessors]
@@ -487,7 +509,7 @@
   [./exodus]
     type = Exodus
     # interval = 10
-    interval = 10
+    interval = 5
   [../]
   checkpoint = true
   csv = true
@@ -509,6 +531,14 @@
     multi_app = sub_app
     source_variable = Auxv
     variable = XolotlXeRate
+    fixed_meshes = true
+  [../]
+  [./tosub]
+    type = MultiAppInterpolationTransfer
+    direction = to_multiapp
+    multi_app = sub_app
+    source_variable = bnds
+    variable = AuxGB
     fixed_meshes = true
   [../]
 []

@@ -12,5 +12,4 @@ grouping=101 10
 process=diff reaction
 voidPortion=0.0
 regularGrid=yes
-grain=/home2/bqo/MOOSE/projects/coupling_xolotl_std/freeGB_3D.dat
 initialV=0.0

@@ -46,6 +46,11 @@
 []
 
 [ICs]
+  [./bnds]
+    type = ConstantIC
+    variable = bnds
+    value = 1
+  [../]
   [./etam0_IC]
     type = BoundingBoxIC
     variable = etam0
@@ -87,8 +92,6 @@
     value = 0
   [../]
 []
-
-
 
 [BCs]
   [./etam0_adiabatic]
@@ -277,6 +280,11 @@
 []
 
 [AuxKernels]
+  [./BndsCalcInit]
+    type = BndsCalcAux
+    variable = bnds
+    execute_on = initial
+  [../]
   [./BndsCalc]
     type = BndsCalcAux
     variable = bnds
@@ -441,13 +449,6 @@
     derivative_order = 2
     outputs = exodus
   [../]
-  [./XeRate]
-    type = ParsedMaterial
-    f_name = XeRate
-    args = 'XolotlXeRate'
-    function = 'XolotlXeRate'
-    outputs = exodus
-  [../]
   [./VacRate]
     type = ParsedMaterial
     f_name = VacRate
@@ -485,7 +486,7 @@
   l_tol = 1.0e-3
   nl_rel_tol = 1.0e-8
   start_time = 0.0
-  num_steps = 50
+  num_steps = 100
   end_time = 1e9
   nl_abs_tol = 1e-10
   [./TimeStepper]
@@ -499,7 +500,7 @@
   [./exodus]
     type = Exodus
     # interval = 10
-    interval = 10
+    interval = 1
   [../]
   checkpoint = true
   csv = true
@@ -521,6 +522,14 @@
     multi_app = sub_app
     source_variable = Auxv
     variable = XolotlXeRate
+    fixed_meshes = true
+  [../]
+  [./tosub]
+    type = MultiAppInterpolationTransfer
+    direction = to_multiapp
+    multi_app = sub_app
+    source_variable = bnds
+    variable = AuxGB
     fixed_meshes = true
   [../]
 []

@@ -15,29 +15,33 @@
 
 class XolotlProblem;
 
-template <>
+template<>
 InputParameters validParams<XolotlProblem>();
 
 /**
  * This is an interface to call an external solver
-  */
-  class XolotlProblem : public ExternalProblem
-  {
-  public:
-    XolotlProblem(const InputParameters & params);
-    ~XolotlProblem() {}
-    
-    virtual void externalSolve() override;
-    virtual void syncSolutions(Direction /*direction*/) override;
+ */
+class XolotlProblem: public ExternalProblem {
+public:
+	XolotlProblem(const InputParameters & params);
+	~XolotlProblem() {
+	}
 
-    virtual bool converged() override { return true; }
+	virtual void externalSolve() override;
+	virtual void syncSolutions(Direction /*direction*/) override;
 
-  private:
+	virtual bool converged() override {
+		return true;
+	}
+
+private:
 /// The name of the variable to transfer to
-    const VariableName & _sync_to_var_name;
-    XolotlInterface &_interface;
-    Real _dt_for_derivative;
-    std::vector<std::vector<std::vector<double> > > _old_rate;
-  };
+	const VariableName & _sync_to_var_name;
+	const VariableName & _sync_from_var_name;
+	XolotlInterface &_interface;
+	Real _dt_for_derivative;
+	std::vector<std::vector<std::vector<double> > > _old_rate;
+	std::vector<int> _gb_list;
+};
 
 #endif /* XOLOTLPROBLEM_H */
