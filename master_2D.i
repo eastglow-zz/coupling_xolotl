@@ -5,12 +5,12 @@
 [Mesh]
   type = GeneratedMesh
   dim = 2
-  nx = 100
-  ny = 100
+  nx = 1000
+  ny = 10
   xmin = 0
-  xmax = 1000
+  xmax = 100000
   ymin = 0
-  ymax = 1000
+  ymax = 100000
 []
 
 [GlobalParams]
@@ -57,29 +57,29 @@
     inside = 1
     outside = 0
     x1 = 0
-    x2 = 498
+    x2 = 49998
     y1 = 0
-    y2 = 1000
+    y2 = 100000
   [../]
   [./etam1_IC]
     type = BoundingBoxIC
     variable = etam1
     inside = 1
     outside = 0
-    x1 = 502
-    x2 = 1000
+    x1 = 50002
+    x2 = 100000
     y1 = 0
-    y2 = 1000
+    y2 = 100000
   [../]
   [./bubble_IC]
     type = BoundingBoxIC
     variable = etab0
     inside = 1
     outside = 0
-    x1 = 498
-    x2 = 502
+    x1 = 49998
+    x2 = 50002
     y1 = 0
-    y2 = 1000
+    y2 = 100000
   [../]
   [./IC_wv]
     type = ConstantIC
@@ -369,7 +369,7 @@
   [./const]
     type = GenericConstantMaterial
     prop_names =  'kappa   mu       L    Dm    Db     Va      cvbubeq cgbubeq gmb 	  gmm T    tgrad_corr_mult YXe'
-    prop_values = '1.0     0.004688 0.01 0.10  10.0 0.04092 0.61    0.39    0.9218 1.5 1800 0.0             0.2156'
+    prop_values = '1.0     0.004688 0.01 2.3398 2.3398 0.04092 0.61    0.39    0.9218 1.5 1800 0.0             0.2156'
   [../]
   [./cvmatrixeq]    #For values, see Li et al., Nuc. Inst. Methods in Phys. Res. B, 303, 62-27 (2013).
     type = ParsedMaterial
@@ -475,6 +475,14 @@
   [../]
 []
 
+[Functions]
+  [./dts]
+    type = PiecewiseLinear
+    x = '0 1 10 100 1000 10000 100000000'
+    y = '0.1 0.1 1 10 100 1000 5000'
+  [../]
+[]
+
 [Executioner]
   type = Transient
   nl_max_its = 15
@@ -486,13 +494,13 @@
   l_tol = 1.0e-3
   nl_rel_tol = 1.0e-8
   start_time = 0.0
-  num_steps = 100
-  end_time = 1e9
+  num_steps = 10000
+  end_time = 1e8
   nl_abs_tol = 1e-10
   [./TimeStepper]
-    type = SolutionTimeAdaptiveDT
-    dt = 0.5
-    adapt_log = true
+    type = FunctionDT
+    function = dts
+    min_dt = 0.01
   [../]
 []
 
@@ -500,7 +508,7 @@
   [./exodus]
     type = Exodus
     # interval = 10
-    interval = 1
+    interval = 200
   [../]
   checkpoint = true
   csv = true
@@ -512,6 +520,7 @@
     input_files = 'xolotl_2D.i'
     app_type = coupling_xolotlApp
     library_path = 'lib'
+    sub_cycling = true
   [../]
 []
 
