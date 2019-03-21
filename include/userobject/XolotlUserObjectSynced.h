@@ -7,15 +7,15 @@
 //* Licensed under LGPL 2.1, please see LICENSE for details
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
-#ifndef XOLOTLUSEROBJECT_H
-#define XOLOTLUSEROBJECT_H
+#ifndef XOLOTLUSEROBJECTSYNCED_H
+#define XOLOTLUSEROBJECTSYNCED_H
 
 #include "NodalUserObject.h"
 #include "MooseVariableInterface.h"
 #include <XolotlDLinterface.h>  // Xolotl interface
 
 // Forward Declarations
-class XolotlUserObject;
+class XolotlUserObjectSynced;
 
 template <>
 InputParameters validParams<NodalUserObject>();
@@ -24,18 +24,18 @@ InputParameters validParams<NodalUserObject>();
  * This UserObject computes averages of a variable storing partial
  * sums for the specified number of intervals in a direction (x,y,z).
  */
-class XolotlUserObject : public NodalUserObject,
+class XolotlUserObjectSynced : public NodalUserObject,
                             public MooseVariableInterface<Real>
 {
 public:
-  XolotlUserObject(const InputParameters & parameters);
+  XolotlUserObjectSynced(const InputParameters & parameters);
 
   virtual void initialize() override; //contains parameter initialization for External App.
   virtual void execute() override; //contains data transfer from MOOSE to Exernal App.
   virtual void finalize() override; //contains execution of the External App.
   virtual void threadJoin(const UserObject & y) override;
-  // virtual Real spatialValue(const libMesh::Point & /*p*/) const override {return calc_spatial_value_glob();} //contains data transfer from External App. to MOOSE
-  virtual Real spatialValue(const libMesh::Point & /*p*/) const override {return calc_spatial_value();} //contains data transfer from External App. to MOOSE
+  virtual Real spatialValue(const libMesh::Point & /*p*/) const override {return calc_spatial_value_glob();} //contains data transfer from External App. to MOOSE
+  // virtual Real spatialValue(const libMesh::Point & /*p*/) const override {return calc_spatial_value();} //contains data transfer from External App. to MOOSE
 
 private:
   Real calc_spatial_value() const;
@@ -124,4 +124,4 @@ private:
   double *_xolotl_GlobalXeCdot;
 };
 
-#endif //MYDIFFUSIONUSEROBJECT_H
+#endif //XOLOTLUSEROBJECTSYNCED_H
