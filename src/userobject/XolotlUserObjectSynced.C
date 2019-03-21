@@ -171,7 +171,10 @@ XolotlUserObjectSynced::initialize()
   // This member function is called once at a MOOSE time step (maybe able to be specified by using execute_on parameter in the input file)
 
   // Syncing the time stepping
-  _xolotl_interface->setTimes(_xolotl_solver, _t, _dt);
+  // _t: target MOOSE time for the solution to be converged
+  // _t - _dt: current time (the solution has been converged already)
+  // _dt: trial timestep size
+  _xolotl_interface->setTimes(_xolotl_solver, _t - _dt, _dt);
 
 }
 

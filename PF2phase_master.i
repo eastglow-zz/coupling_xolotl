@@ -1,16 +1,16 @@
 # Length unit: nm
 # Time unit: s
-# Mass unit: ?
+# Energy unit: eV
 
 [Mesh]
   type = GeneratedMesh
   dim = 2
-  nx = 100
-  ny = 100
+  nx = 120
+  ny = 120
   xmin = 0
-  xmax = 1000
+  xmax = 1200
   ymin = 0
-  ymax = 1000
+  ymax = 1200
   #uniform_refine = 3
 []
 
@@ -18,11 +18,10 @@
   op_num = 2
   grain_num = 2
   var_name_base = etam
-  numbub = 1
+  numbub = 2
   bubspac = 150
   radius = 44
-  int_width = 20
-  # displacements = 'disp_x disp_y'
+  int_width = 30
 []
 
 [Variables]
@@ -34,15 +33,6 @@
   [../]
   [./PolycrystalVariables]
   [../]
-  # Displacement fields in x and y directions
-  # [./disp_x]
-  #   order = FIRST
-  #   family = LAGRANGE
-  # [../]
-  # [./disp_y]
-  #   order = FIRST
-  #   family = LAGRANGE
-  # [../]
 []
 
 [AuxVariables]
@@ -54,6 +44,34 @@
     order = FIRST
     family = LAGRANGE
   [../]
+  [./time]
+  [../]
+  [./cg]
+    order = FIRST
+    family = MONOMIAL
+  [../]
+  [./cv]
+    order = FIRST
+    family = MONOMIAL
+  [../]
+[]
+
+[AuxKernels]
+  [./time]
+    type = FunctionAux
+    variable = time
+    function = 't'
+  [../]
+  [./cg]
+    type = MaterialRealAux
+    variable = cg
+    property = cg_from_rhog
+  [../]
+  [./cv]
+    type = MaterialRealAux
+    variable = cv
+    property = cv_from_rhov
+  [../]
 []
 
 [ICs]
@@ -64,41 +82,45 @@
   #   [../]
   # [../]
   # [./]
-  [./bnds]
-    type = ConstantIC
-    variable = bnds
-    value = 1
-  [../]
+  # [./bubble_IC]
+  #   variable = etab0
+  #   type = PolycrystalVoronoiVoidIC
+  #   structure_type = voids
+  #   invalue = 1.0
+  #   outvalue = 0.0
+  # [../]
+
   [./etam0_IC]
     type = BoundingBoxIC
     variable = etam0
     inside = 1
     outside = 0
     x1 = 0
-    x2 = 498
+    x2 = 570
     y1 = 0
-    y2 = 1000
+    y2 = 1200
   [../]
   [./etam1_IC]
     type = BoundingBoxIC
     variable = etam1
     inside = 1
     outside = 0
-    x1 = 502
-    x2 = 1000
+    x1 = 630
+    x2 = 1200
     y1 = 0
-    y2 = 1000
+    y2 = 1200
   [../]
   [./bubble_IC]
     type = BoundingBoxIC
     variable = etab0
     inside = 1
     outside = 0
-    x1 = 498
-    x2 = 502
+    x1 = 570
+    x2 = 630
     y1 = 0
-    y2 = 1000
+    y2 = 1200
   [../]
+
   [./IC_wv]
     type = ConstantIC
     variable = wv
@@ -108,6 +130,12 @@
     type = ConstantIC
     variable = wg
     value = 0
+  [../]
+
+  [./bnds]
+    type = ConstantIC
+    variable = bnds
+    value = 1
   [../]
 []
 
@@ -152,8 +180,6 @@
 []
 
 [Kernels]
-  # [./TensorMechanics]
-  # [../]
 
 # Order parameter eta_b0 for bubble phase
   [./ACb0_bulk]
@@ -161,18 +187,22 @@
     variable = etab0
     v =           'etam0 etam1'
     gamma_names = 'gmb   gmb  '
+    mu = mu
+    mob_name = L
   [../]
   [./ACb0_sw]
     type = ACSwitching
     variable = etab0
-    Fj_names  = 'omega_total_bubble   omega_total_matrix'
-    hj_names  = 'hb                   hm'
+    Fj_names  = 'omegab   omegam'
+    hj_names  = 'hb       hm'
     args = 'etam0 etam1 wv wg'
+    mob_name = L
   [../]
   [./ACb0_int]
     type = ACInterface
     variable = etab0
     kappa_name = kappa
+    mob_name = L
   [../]
   [./eb0_dot]
     type = TimeDerivative
@@ -184,18 +214,22 @@
     variable = etam0
     v =           'etab0 etam1'
     gamma_names = 'gmb   gmm  '
+    mu = mu
+    mob_name = L
   [../]
   [./ACm0_sw]
     type = ACSwitching
     variable = etam0
-    Fj_names  = 'omega_total_bubble   omega_total_matrix'
-    hj_names  = 'hb                   hm'
+    Fj_names  = 'omegab   omegam'
+    hj_names  = 'hb       hm'
     args = 'etab0 etam1 wv wg'
+    mob_name = L
   [../]
   [./ACm0_int]
     type = ACInterface
     variable = etam0
     kappa_name = kappa
+    mob_name = L
   [../]
   [./em0_dot]
     type = TimeDerivative
@@ -207,18 +241,22 @@
     variable = etam1
     v =           'etab0 etam0'
     gamma_names = 'gmb   gmm  '
+    mu = mu
+    mob_name = L
   [../]
   [./ACm1_sw]
     type = ACSwitching
     variable = etam1
-    Fj_names  = 'omega_total_bubble   omega_total_matrix'
-    hj_names  = 'hb                   hm'
+    Fj_names  = 'omegab   omegam'
+    hj_names  = 'hb       hm'
     args = 'etab0 etam0 wv wg'
+    mob_name = L
   [../]
   [./ACm1_int]
     type = ACInterface
     variable = etam1
     kappa_name = kappa
+    mob_name = L
   [../]
   [./em1_dot]
     type = TimeDerivative
@@ -241,8 +279,8 @@
   # [./Source_v]
   #   type = MaskedBodyForce
   #   variable = wv
-  #   value = 4e-7
-  #   mask = hm
+  #   value = 1
+  #   mask = VacRate0
   # [../]
   [./Source_v]
     type = MaskedBodyForce
@@ -291,8 +329,8 @@
   # [./Source_g]
   #   type = MaskedBodyForce
   #   variable = wg
-  #   value = 1e-7
-  #   mask = hm
+  #   value = 1
+  #   mask = XeRate0
   # [../]
   [./Source_g]
     type = MaskedBodyForce
@@ -341,65 +379,37 @@
     h_name = hb
     all_etas = 'etab0 etam0 etam1'
     phase_etas = 'etab0'
-    #outputs = exodus
+    outputs = exodus
   [../]
   [./hm]
     type = SwitchingFunctionMultiPhaseMaterial
     h_name = hm
     all_etas = 'etab0 etam0 etam1'
     phase_etas = 'etam0 etam1'
-    #outputs = exodus
+    outputs = exodus
   [../]
 # Chemical contribution to grand potential of bubble
   [./omegab]
     type = DerivativeParsedMaterial
-    args = 'wv wg'
+    args = 'wv wg time'
     f_name = omegab
     material_property_names = 'Va kvbub cvbubeq kgbub cgbubeq'
-    function = '-0.5*wv^2/Va^2/kvbub-wv/Va*cvbubeq-0.5*wg^2/Va^2/kgbub-wg/Va*cgbubeq'
+    function = 'if(time < 0, 0, -0.5*wv^2/Va^2/kvbub-wv/Va*cvbubeq-0.5*wg^2/Va^2/kgbub-wg/Va*cgbubeq)'
     derivative_order = 2
     #outputs = exodus
-  [../]
-  # [./elastic_energy_bubble]
-  #   type = ElasticEnergyMaterial
-  #   base_name = bubble
-  #   f_name = fe_bub
-  #   args = ' '
-  # [../]
-# Total free energy of the bubble
-  [./Total_energy_bubble]
-    type = DerivativeSumMaterial
-    f_name = omega_total_bubble
-    # sum_materials = 'omegab fe_bub'
-    sum_materials = 'omegab'
-    args = 'wv wg'
   [../]
 
 # Chemical contribution to grand potential of matrix
   [./omegam]
     type = DerivativeParsedMaterial
-    args = 'wv wg'
+    args = 'wv wg time'
     f_name = omegam
     material_property_names = 'Va kvmatrix cvmatrixeq kgmatrix cgmatrixeq'
-    function = '-0.5*wv^2/Va^2/kvmatrix-wv/Va*cvmatrixeq-0.5*wg^2/Va^2/kgmatrix-wg/Va*cgmatrixeq'
+    function = 'if(time < 0, 0, -0.5*wv^2/Va^2/kvmatrix-wv/Va*cvmatrixeq-0.5*wg^2/Va^2/kgmatrix-wg/Va*cgmatrixeq)'
     derivative_order = 2
     #outputs = exodus
   [../]
-  # [./elastic_energy_matrix]
-  #   type = ElasticEnergyMaterial
-  #   base_name = matrix
-  #   f_name = fe_m
-  #   args = ' '
-  # [../]
-# Total free energy of the matrix
-  [./Total_energy_matrix]
-    type = DerivativeSumMaterial
-    block = 0
-    f_name = omega_total_matrix
-    # sum_materials = 'omegam fe_m'
-    sum_materials = 'omegam'
-    args = 'wv wg'
-  [../]
+
 # Densities
   [./rhovbub]
     type = DerivativeParsedMaterial
@@ -439,16 +449,14 @@
   [../]
   [./const]
     type = GenericConstantMaterial
-    prop_names =  'kappa   mu       L    Dm    Db     Va      cvbubeq cgbubeq gmb 	  gmm T    tgrad_corr_mult YXe'
-    prop_values = '1.0     0.004688 0.01 0.10  10.0 0.04092 0.61    0.39    0.9218 1.5 1800 0.0             0.2156'
-    # prop_values = '0.5273  0.004688 1.0 0.01 0.04092e-9 0.61    0.39    0.9218 1.5 1200 0.0             0.2156' # um
-    # prop_values = '0.5273e4  0.004688 1.0e4 0.01e4 0.04092 0.61    0.39    0.9218 1.5 1200 0.0             0.2156' # nm
+    prop_names =  'kappa     mu     L        Dm   Db   Va      cvbubeq  cgbubeq gmb 	 gmm T     YXe'
+    prop_values = '2.21125e2 1.875  0.975e-3 0.1  0.1  0.0409  0.546    0.454   0.922  1.5 1200  0.2156'
   [../]
-  [./cvmatrixeq]    #For values, see Li et al., Nuc. Inst. Methods in Phys. Res. B, 303, 62-27 (2013).
+  [./cvmatrixeq]
     type = ParsedMaterial
     f_name = cvmatrixeq
     material_property_names = 'T'
-    constant_names        = 'kB           Efv'
+    constant_names        = 'kB           Efv'  # in eV/atom
     constant_expressions  = '8.6173324e-5 3.0'
     function = 'exp(-Efv/(kB*T))'
   [../]
@@ -456,17 +464,15 @@
     type = ParsedMaterial
     f_name = cgmatrixeq
     material_property_names = 'T'
-    constant_names        = 'kB           Efg'
+    constant_names        = 'kB           Efg'  # in eV/atom
     constant_expressions  = '8.6173324e-5 3.0'
     function = 'exp(-Efg/(kB*T))'
   [../]
   [./kvmatrix_parabola]
     type = ParsedMaterial
     f_name = kvmatrix
-    material_property_names = 'T  cvmatrixeq'
-    constant_names        = 'c0v  c0g  a1                                               a2'
-    constant_expressions  = '0.01 0.01 0.178605-0.0030782*log(1-c0v)+0.0030782*log(c0v) 0.178605-0.00923461*log(1-c0v)+0.00923461*log(c0v)'
-    function = '((-a2+3*a1)/(4*(c0v-cvmatrixeq))+(a2-a1)/(2400*(c0v-cvmatrixeq))*T)'
+    args = 'time'
+    function = '3.00625e3' # in eV/nm^3
     outputs = exodus
   [../]
   [./kgmatrix_parabola]
@@ -478,10 +484,7 @@
   [./kgbub_parabola]
     type = ParsedMaterial
     f_name = kgbub
-    material_property_names = 'kvmatrix  cvmatrixeq cvbubeq'
-    constant_names        = 'fcross'
-    constant_expressions  = '0.5'   #Scaled by C44
-    function = 'kvmatrix * fcross/(sqrt(kvmatrix)*(cvmatrixeq-cvbubeq) + sqrt(fcross))^2'
+    function = '0.5625e3' # in eV/nm^3
     outputs = exodus
   [../]
   [./kvbub_parabola]
@@ -493,8 +496,9 @@
   [./Mobility_v]
     type = DerivativeParsedMaterial
     f_name = Dchiv
-    material_property_names = 'Dg chiv'
-    function = 'Dg*chiv'
+    material_property_names = 'Db chiv'
+    args = 'time'
+    function = 'if(time < 0, 0, Db*chiv)'
     derivative_order = 2
     outputs = exodus
   [../]
@@ -502,7 +506,8 @@
     type = DerivativeParsedMaterial
     f_name = Dchig
     material_property_names = 'Dm chig'
-    function = 'Dm*chig'
+    args = 'time'
+    function = 'if(time < 0, 0, Dm*chig)'
     derivative_order = 2
     outputs = exodus
   [../]
@@ -523,66 +528,54 @@
     outputs = exodus
   [../]
 
-  #Mechanical properties
-  # [./Stiffness_matrix]
-  #   type = ComputeElasticityTensor
-  #   C_ijkl = '6.17 1.89 1.89 6.17 1.89 6.17 1 1 1'
-  #   # Elastic constants are in eV/atom to match other energies in the problem
-  #   # For symmetric9 with cubic anisotropy the constants are in order
-  #   # C11 C12 C12 C11 C12 C11 C44 C44 C44
-  #   base_name = matrix
-  #   fill_method = symmetric9
-  # [../]
-  # [./strain_matrix]
-  #   type = ComputeSmallStrain
-  #   base_name = matrix
-  # [../]
-  # [./stress_matrix]
-  #   type = ComputeLinearElasticStress
-  #   base_name = matrix
-  # [../]
-  #
-  # [./Stiffness_bubble]
-  #   type = ComputeElasticityTensor
-  #   C_ijkl = '6.17e-4 1.89e-4 1.89e-4 6.17e-4 1.89e-4 6.17e-4 1e-4 1e-4 1e-4'
-  #   base_name = bubble
-  #   fill_method = symmetric9
-  # [../]
-  # [./strain_bubble]
-  #   type = ComputeSmallStrain
-  #   base_name = bubble
-  # [../]
-  # [./stress_bubble]
-  #   type = ComputeLinearElasticStress
-  #   base_name = bubble
-  # [../]
-  # [./const_stress]
-  #   type = ComputeExtraStressConstant
-  #   base_name = bubble
-  #   extra_stress_tensor = '-6.25e-3 -6.25e-3 -6.25e-3 0 0 0'
-  # [../]
-  #
-  # [./global_stress]
-  #   type = MultiPhaseStressMaterial
-  #   phase_base = 'bubble matrix'
-  #   h          = 'hb     hm'
-  # [../]
-
   [./XeRate]
     type = ParsedMaterial
     f_name = XeRate
-    args = 'XolotlXeRate'
-    function = 'XolotlXeRate'
+    material_property_names = 'hm'
+    args = 'time XolotlXeRate'  # XolotlXeRate is in Xe/(nm^3 * s) & Va is in Xe/nm^3
+    # function = 'if(time < 0, 0, XolotlXeRate * hm)'
+    function = 'if(time < 0, 0, XolotlXeRate)'
     outputs = exodus
   [../]
 
   [./VacRate]
     type = ParsedMaterial
     f_name = VacRate
-    material_property_names = 'YXe'
-    args = 'XolotlXeRate'
-    function = 'XolotlXeRate / YXe'
+    material_property_names = 'XeRate YXe'
+    function = 'XeRate / YXe'
     outputs = exodus
+  [../]
+
+  [./XeRate_ref]
+    type = ParsedMaterial
+    f_name = XeRate0
+    material_property_names = 'Va hm'
+    constant_names = 's0'
+    constant_expressions = '2.35e-9'  # in atoms/(nm^3 * s)
+    args = 'time'
+    function = 'if(time < 0, 0, s0 * hm)'
+    outputs = exodus
+  [../]
+  [./VacRate_ref]
+    type = ParsedMaterial
+    f_name = VacRate0
+    material_property_names = 'YXe XeRate0'
+    args = 'time'
+    function = 'if(time < 0, 0, XeRate0 / YXe)'
+    outputs = exodus
+  [../]
+
+  [./cg]
+    type = ParsedMaterial
+    f_name = cg_from_rhog
+    material_property_names = 'Va rhogbub rhogmatrix hm hb'
+    function = 'hb*Va*rhogbub + hm*Va*rhogmatrix'
+  [../]
+  [./cv]
+    type = ParsedMaterial
+    f_name = cv_from_rhov
+    material_property_names = 'Va rhovbub rhovmatrix hm hb'
+    function = 'hb*Va*rhovbub + hm*Va*rhovmatrix'
   [../]
 []
 
@@ -641,7 +634,7 @@
   l_max_its = 15
   l_tol = 1.0e-3
   nl_rel_tol = 1.0e-8
-  start_time = 0.0
+  start_time = -1e3
   #num_steps = 1000
   end_time = 1e9
   nl_abs_tol = 1e-10
@@ -657,6 +650,7 @@
     type = Exodus
     # interval = 10
     interval = 1
+    sync_times = '0'
   [../]
   checkpoint = true
   csv = true
@@ -666,7 +660,7 @@
   [./XolotlWrapper]
     type = TransientMultiApp
     app_type = coupling_xolotlApp
-    execute_on = TIMESTEP_BEGIN
+    execute_on = TIMESTEP_END
     positions = '0 0 0'
     input_files = 'xolotl_userobj.i'
   [../]
