@@ -6,7 +6,8 @@
   type = XolotlMeshSynced
   # type = XolotlMesh
   dim = 2
-  library_path_name ='/Users/donguk.kim/projects/xolotl-build/lib/libxolotlInter.dylib'
+  #library_path_name ='../xolotl-build/lib/libxolotlInter.dylib'
+  library_path_name ='../xolotl-build/lib/libxolotlInter.so'
   XolotlInput_path_name = './params_NE_2D_withPFsimple.txt'
   # XolotlInput_path_name = './params_NE_2D_simpletest.txt'
   # XolotlInput_path_name = './params_NE_3D.txt'
@@ -80,7 +81,8 @@
     variable = Auxv
     variable_gb = Auxv_gb
     gb_marker_threshold = 0.9
-    library_path_name ='/Users/donguk.kim/projects/xolotl-build/lib/libxolotlInter.dylib'
+    #library_path_name ='../xolotl-build/lib/libxolotlInter.dylib'
+    library_path_name ='../xolotl-build/lib/libxolotlInter.so'
     XolotlInput_path_name = './params_NE_2D_withPFsimple.txt'
     # XolotlInput_path_name = './params_NE_2D_withPF.txt'
     # XolotlInput_path_name = './params_NE_2D_simpletest.txt'
