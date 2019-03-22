@@ -19,7 +19,7 @@ To use the dynamic loading method, please install Xolotl using 'mooseApps-coupli
 
 For the minimum effort to use this application, installation path of Xolotl is recommended at "../xolotl-build".
 
-(For the record) Xolotl configuration command line prompt used:
+(For the record) Xolotl configuration command line prompt used for the dynamic loading method with 'externCinterface' branch:
 
 CXX=/opt/moose/mpich-3.2/clang-6.0.1/bin/mpicxx CC=/opt/moose/mpich-3.2/clang-6.0.1/bin/mpicc FC="" PETSC_DIR=/Users/donguk.kim/myinstall/petscworkdir/petsc-clang HDF5_ROOT=/opt/hdf5 BOOST_ROOT=/opt/boost cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=no -DBUILD_SHARED_LIBS=yes  -DCMAKE_POSITION_INDEPENDENT_CODE=True -DCMAKE_INSTALL_RPATH_USE_LINK_PATH=true /Users/donguk.kim/myinstall/xolotl-dylib/xolotl/xolotl
 
