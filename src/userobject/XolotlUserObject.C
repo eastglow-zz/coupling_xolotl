@@ -146,22 +146,6 @@ XolotlUserObject::XolotlUserObject(const InputParameters & parameters)
   // _xolotl_GlobalXeRate = allocate_xolotlGlobalData();
   _xolotl_GlobalXeCdot = allocate_xolotlGlobalData();
 
-  // Make the local buffer visible for all processors in MPI_COMM_WORLD
-  // MPI_Win_create(&_xolotl_XeConc[0], _xolotl_localNx * _xolotl_localNy * _xolotl_localNz * sizeof(double), sizeof(double), MPI_INFO_NULL, MPI_COMM_WORLD, &_win);
-
-  // Printing out the nodeID through the domain
-  // std::vector<dof_id_type> nodelist;
-  // nodelist = _mesh.getNodeList();
-  // std::cout<<"MPIrank = "<<_moose_rank<<", "<<"Size of node list: "<<nodelist.size()<<std::endl;
-  // for (auto i = 0; i < nodelist.size(); i++)
-  // {
-  //   Node * nd = _mesh.queryNodePtr(i); //This call retrives a Node pointer corresponding to the Node ID provided.
-  //   unsigned int nodeID = nd->id();
-  //   std::cout<<"Node loop; id: "<<nodeID<<std::endl;
-  // }
-
-  // Simple MPI_get example
-
 }
 
 void
@@ -171,10 +155,7 @@ XolotlUserObject::initialize()
   // This member function is called once at a MOOSE time step (maybe able to be specified by using execute_on parameter in the input file)
 
   // Syncing the time stepping
-  // _t: target MOOSE time for the solution to be converged
-  // _t - _dt: current time (the solution has been converged already)
-  // _dt: trial timestep size
-  _xolotl_interface->setTimes(_xolotl_solver, _t - _dt, _dt);
+  _xolotl_interface->setTimes(_xolotl_solver, _t, _dt);
 
 
 }
@@ -188,23 +169,6 @@ XolotlUserObject::execute()
     map_MOOSE2XolotlGlob(&i, &j, &k, *_current_node);
     _GBListLocal.push_back(std::make_tuple(i,j,k));
   }
-
-  // Data transfer from MOOSE to External App.
-  // This member function is called at every MOOSE node points.
-  // _ext_data is initialized by copying the values from the assigned AuxVariable
-
-  // unsigned int ii = map_MOOSE2Xolotl(*_current_node);
-
-  // Initializing _ext_data with the AuxVariable value; _u[0]
-  // _ext_data[ii] = _u[0];
-  // Get MPI rank
-  // int myrank;
-  // MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
-  //
-  // unsigned int nodeID = _current_node->id();
-  //std::cout << "execute: MPIrank, nodeID = " << myrank <<", "<<nodeID << std::endl;
-  // printf("execute: MPIrank = %d, nodeID = %d\n", myrank, nodeID);
-
 }
 
 void
@@ -275,71 +239,8 @@ XolotlUserObject::calc_spatial_value() const
     result = _xolotl_XeConc[ii(i,j,k)];
   }else{  //MPI communication will happen.
     double tmp = -99999.9;
-    // MPI_Win win;
-    // MPI_Win_create(_xolotl_XeConc, _xolotl_localNx * _xolotl_localNy * _xolotl_localNz * sizeof(double), sizeof(double), MPI_INFO_NULL, MPI_COMM_WORLD, &win);
-    // // if (myrank == 2) printf("myrank=%d, recvRank=%d, i,j,k = %d, %d, %d\n",myrank,recvRank,i,j,k);
-    // // MPI_Win_fence(0, win); // One-sided communication begin
-    // MPI_Win_lock(MPI_LOCK_SHARED, recvRank, 0, win);
-    // int err = MPI_Get(&tmp, 1, MPI_DOUBLE, recvRank, iiR(recvRank,i,j,k), 1, MPI_DOUBLE, win);
-    // // // MPI_Win_fence(0, win); // One-sided communication end
-    // MPI_Win_unlock(recvRank, win);
-    // MPI_Win_free(&win);
-    // if (err != MPI_SUCCESS) {
-    //   if (err == MPI_ERR_ARG) {
-    //     printf("MPI_Get:: invalid argument, rank = %d\n)", myrank);
-    //   }
-    //   if (err == MPI_ERR_COUNT) {
-    //     printf("MPI_Get:: invalid count, rank = %d\n)", myrank);
-    //   }
-    //   if (err == MPI_ERR_RANK) {
-    //     printf("MPI_Get:: invalid rank, rank = %d\n)", myrank);
-    //   }
-    //   if (err == MPI_ERR_TYPE) {
-    //     printf("MPI_Get:: invalid type, rank = %d\n)", myrank);
-    //   }
-    //   if (err == MPI_ERR_WIN) {
-    //     printf("MPI_Get:: invalid window, rank = %d\n)", myrank);
-    //   } else {
-    //     printf("MPI_Get:: unknown error, rank = %d\n", myrank);
-    //   }
-    // }else{
-    //   // if (myrank == 2)
-    //     printf("MPI_Get:: Success!, myrank=%d, recvRank=%d, i,j,k = %d, %d, %d\n", myrank,recvRank,i,j,k);
-    // }
     result = tmp;
   }
-
-
-  // double tmp = -9999.9;
-  // // MPI_Win_fence(MPI_MODE_NOPRECEDE, _win);
-  // MPI_Win_fence(0, win);
-  // int err = MPI_Get(&tmp, 1, MPI_DOUBLE, recvRank, iiR(recvRank,i,j,k), 1, MPI_DOUBLE, win);
-  // MPI_Win_fence(0, win);
-  // if (err != MPI_SUCCESS) {
-  //   if (err == MPI_ERR_ARG) {
-  //     printf("MPI_Get:: invalid argument, rank = %d\n)", myrank);
-  //   }
-  //   if (err == MPI_ERR_COUNT) {
-  //     printf("MPI_Get:: invalid count, rank = %d\n)", myrank);
-  //   }
-  //   if (err == MPI_ERR_RANK) {
-  //     printf("MPI_Get:: invalid rank, rank = %d\n)", myrank);
-  //   }
-  //   if (err == MPI_ERR_TYPE) {
-  //     printf("MPI_Get:: invalid type, rank = %d\n)", myrank);
-  //   }
-  //   if (err == MPI_ERR_WIN) {
-  //     printf("MPI_Get:: invalid window, rank = %d\n)", myrank);
-  //   } else {
-  //     printf("MPI_Get:: unknown error, rank = %d\n", myrank);
-  //   }
-  // }else{
-  //   printf("MPI_Get:: Success!, tmp = %lf, myrank=%d, recvRank=%d, i,j,k = %d, %d, %d, iiR = %d\n",tmp, myrank,recvRank,i,j,k, iiR(recvRank, i, j, k));
-  // }
-  // result = tmp;
-  // // MPI_Win_fence(MPI_MODE_NOSUCCEED, _win);
-  // MPI_Win_free(&win);
-  // return result;
   return (double)myrank;
 }
 

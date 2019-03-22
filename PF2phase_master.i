@@ -660,7 +660,7 @@
   [./XolotlWrapper]
     type = TransientMultiApp
     app_type = coupling_xolotlApp
-    execute_on = TIMESTEP_END
+    execute_on = TIMESTEP_BEGIN
     positions = '0 0 0'
     input_files = 'xolotl_userobj.i'
   [../]

@@ -49,9 +49,6 @@ private:
   // virtual double* build_xolotl_axis(int nsize, double dl) const;
   virtual std::vector<double> build_xolotl_axis(int nsize, double dl) const;
   virtual int max3int(int a, int b, int c) const;
-  virtual int** init_xolotl_rankpair() const;
-  virtual void fillout_xolotl_rankpair(int **table, int myrank, int recvRank) const;
-  virtual void print_xolotl_rankpair(int **table) const;
   virtual double* allocate_xolotlLocalData() const;
   virtual double* vectorized_xolotl_XeRate(std::shared_ptr<xolotlSolver::PetscSolver> solver) const;
   virtual double* vectorized_xolotl_XeConc(std::shared_ptr<xolotlSolver::PetscSolver> solver) const;
@@ -98,12 +95,6 @@ private:
   */
   int **_xolotl_local_index_table;
 
-  /*
-    The table of pairs of ranks for send to or recv from
-    Its size should be np; row: _moose_rank & coulmn: sendRank, recvRank
-  */
-  int **_xolotl_rank_pair;
-
   std::string _ext_lib_path_name; // External dynamic library path variable
   std::string _xolotl_input_path_name;
   Real _matrix_marker_thres;
@@ -116,12 +107,12 @@ private:
   // std::shared_ptr<xolotlCore::Options> _xolotl_options;
   std::shared_ptr<xolotlSolver::PetscSolver> _xolotl_solver;
   double *_xolotl_XeRate;  //Actually, this is an integrated value over the time, so we neet to discritize it to get the actual rate.
-  double *_xolotl_XeConc;
-  double *_xolotl_XeCdot;
+  // double *_xolotl_XeConc;
+  // double *_xolotl_XeCdot;
 
   double *_xolotl_GlobalXeRate;
-  double *_xolotl_GlobalXeConc;
-  double *_xolotl_GlobalXeCdot;
+  // double *_xolotl_GlobalXeConc;
+  // double *_xolotl_GlobalXeCdot;
 };
 
 #endif //XOLOTLUSEROBJECTSYNCED_H
