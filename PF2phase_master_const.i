@@ -75,45 +75,52 @@
 []
 
 [ICs]
-  [./PolycrystalICs]
-    [./PolycrystalVoronoiVoidIC]
-      invalue = 1.0
-      outvalue = 0.0
-    [../]
-  [../]
+  # [./PolycrystalICs]
+  #   [./PolycrystalVoronoiVoidIC]
+  #     invalue = 1.0
+  #     outvalue = 0.0
+  #   [../]
+  # [../]
   # [./]
-  [./bnds]
-    type = ConstantIC
-    variable = bnds
-    value = 1
+  # [./bubble_IC]
+  #   variable = etab0
+  #   type = PolycrystalVoronoiVoidIC
+  #   structure_type = voids
+  #   invalue = 1.0
+  #   outvalue = 0.0
+  # [../]
+
+  [./etam0_IC]
+    type = BoundingBoxIC
+    variable = etam0
+    inside = 1
+    outside = 0
+    x1 = 0
+    x2 = 570
+    y1 = 0
+    y2 = 1200
   [../]
-  # [./etam0_IC]
-  #   type = BoundingBoxIC
-  #   variable = etam0
-  #   inside = 1
-  #   outside = 0
-  #   x1 = 0
-  #   x2 = 498
-  #   y1 = 0
-  #   y2 = 1000
-  # [../]
-  # [./etam1_IC]
-  #   type = BoundingBoxIC
-  #   variable = etam1
-  #   inside = 1
-  #   outside = 0
-  #   x1 = 502
-  #   x2 = 1000
-  #   y1 = 0
-  #   y2 = 1000
-  # [../]
+  [./etam1_IC]
+    type = BoundingBoxIC
+    variable = etam1
+    inside = 1
+    outside = 0
+    x1 = 630
+    x2 = 1200
+    y1 = 0
+    y2 = 1200
+  [../]
   [./bubble_IC]
+    type = BoundingBoxIC
     variable = etab0
-    type = PolycrystalVoronoiVoidIC
-    structure_type = voids
-    invalue = 1.0
-    outvalue = 0.0
+    inside = 1
+    outside = 0
+    x1 = 570
+    x2 = 630
+    y1 = 0
+    y2 = 1200
   [../]
+
   [./IC_wv]
     type = ConstantIC
     variable = wv
@@ -123,6 +130,12 @@
     type = ConstantIC
     variable = wg
     value = 0
+  [../]
+
+  [./bnds]
+    type = ConstantIC
+    variable = bnds
+    value = 1
   [../]
 []
 
@@ -269,12 +282,12 @@
     value = 1
     mask = VacRate0
   [../]
-  # [./Source_v]
-  #   type = MaskedBodyForce
-  #   variable = wv
-  #   value = 1
-  #   mask = VacRate
-  # [../]
+  #[./Source_v]
+  #  type = MaskedBodyForce
+  #  variable = wv
+  3  value = 1
+  #  mask = VacRate
+  #[../]
   [./coupled_v_etab0dot]
     type = CoupledSwitchingTimeDerivative
     variable = wv
@@ -319,12 +332,12 @@
     value = 1
     mask = XeRate0
   [../]
-  # [./Source_g]
-  #   type = MaskedBodyForce
-  #   variable = wg
-  #   value = 1 # for unit conversion between PF app and Xolotl
-  #   mask = XeRate
-  # [../]
+  #[./Source_g]
+  #  type = MaskedBodyForce
+  #  variable = wg
+  #  value = 1 # for unit conversion between PF app and Xolotl
+  #  mask = XeRate
+  #[../]
   [./coupled_g_etab0dot]
     type = CoupledSwitchingTimeDerivative
     variable = wg
@@ -518,18 +531,18 @@
   [./XeRate]
     type = ParsedMaterial
     f_name = XeRate
-    material_property_names = 'Va'
-    args = 'XolotlXeRate'  # XolotlXeRate is in Xe/(nm^3 * s) & Va is in Xe/nm^3
-    function = 'XolotlXeRate'
+    material_property_names = 'hm'
+    args = 'time XolotlXeRate'  # XolotlXeRate is in Xe/(nm^3 * s) & Va is in Xe/nm^3
+    # function = 'if(time < 0, 0, XolotlXeRate * hm)'
+    function = 'if(time < 0, 0, XolotlXeRate)'
     outputs = exodus
   [../]
 
   [./VacRate]
     type = ParsedMaterial
     f_name = VacRate
-    material_property_names = 'YXe Va'
-    args = 'XolotlXeRate'
-    function = 'XolotlXeRate / YXe'
+    material_property_names = 'XeRate YXe'
+    function = 'XeRate / YXe'
     outputs = exodus
   [../]
 

@@ -636,7 +636,7 @@
   nl_rel_tol = 1.0e-8
   start_time = -1e3
   #num_steps = 1000
-  end_time = 1e9
+  end_time = 7e7
   nl_abs_tol = 1e-10
   [./TimeStepper]
     type = SolutionTimeAdaptiveDT
