@@ -285,7 +285,7 @@
   #[./Source_v]
   #  type = MaskedBodyForce
   #  variable = wv
-  3  value = 1
+  #  value = 1
   #  mask = VacRate
   #[../]
   [./coupled_v_etab0dot]
