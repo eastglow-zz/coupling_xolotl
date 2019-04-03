@@ -150,6 +150,7 @@ XolotlUserObjectSynced::initialize()
 
   // Syncing the time stepping
   _xolotl_interface->setTimes(_xolotl_solver, _t, _dt);
+  _xolotl_interface->initGBLocation(_xolotl_solver);
 }
 
 void
