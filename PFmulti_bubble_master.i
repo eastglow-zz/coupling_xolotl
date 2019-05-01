@@ -15,10 +15,10 @@
 []
 
 [GlobalParams]
-  op_num = 2
-  grain_num = 2
+  op_num = 5
+  grain_num = 5
   var_name_base = etam
-  numbub = 2
+  numbub = 14
   bubspac = 150
   radius = 44
   int_width = 30
@@ -115,55 +115,77 @@
     outvalue = 0.0
   [../]
   [./IC_wv]
-    type = ConstantIC
     variable = wv
-    value = 0
+    type = PolycrystalVoronoiVoidIC
+    structure_type = voids
+    invalue = 0.0
+    outvalue = 0.0
   [../]
   [./IC_wg]
-    type = ConstantIC
     variable = wg
-    value = 0
+    type = PolycrystalVoronoiVoidIC
+    structure_type = voids
+    invalue = 0.0
+    outvalue = 0.0
   [../]
 []
 
 
 
 [BCs]
-  # [./Periodic]
-  #   [./All]
-  #     auto_direction = 'y'
-  #   [../]
+  [./Periodic]
+    [./All]
+      auto_direction = 'x y'
+    [../]
+  [../]
+  # [./etam0_adiabatic]
+  #   type = NeumannBC
+  #   boundary = 'left right top bottom'
+  #   variable = etam0
+  #   value = 0
   # [../]
-  [./etam0_adiabatic]
-    type = NeumannBC
-    boundary = 'left right top bottom'
-    variable = etam0
-    value = 0
-  [../]
-  [./etam1_adiabatic]
-    type = NeumannBC
-    boundary = 'left right top bottom'
-    variable = etam1
-    value = 0
-  [../]
-  [./etab0_adiabatic]
-    type = NeumannBC
-    boundary = 'left right top bottom'
-    variable = etab0
-    value = 0
-  [../]
-  [./wg_adiabatic]
-    type = NeumannBC
-    boundary = 'left right top bottom'
-    variable = wg
-    value = 0
-  [../]
-  [./wb_adiabatic]
-    type = NeumannBC
-    boundary = 'left right top bottom'
-    variable = wv
-    value = 0
-  [../]
+  # [./etam1_adiabatic]
+  #   type = NeumannBC
+  #   boundary = 'left right top bottom'
+  #   variable = etam1
+  #   value = 0
+  # [../]
+  # [./etam2_adiabatic]
+  #   type = NeumannBC
+  #   boundary = 'left right top bottom'
+  #   variable = etam2
+  #   value = 0
+  # [../]
+  # [./etam3_adiabatic]
+  #   type = NeumannBC
+  #   boundary = 'left right top bottom'
+  #   variable = etam3
+  #   value = 0
+  # [../]
+  # [./etam4_adiabatic]
+  #   type = NeumannBC
+  #   boundary = 'left right top bottom'
+  #   variable = etam4
+  #   value = 0
+  # [../]
+  # [./etab0_adiabatic]
+  #   type = NeumannBC
+  #   boundary = 'left right top bottom'
+  #   variable = etab0
+  #   value = 0
+  # [../]
+  # [./wg_adiabatic]
+  #   type = NeumannBC
+  #   boundary = 'left right top bottom'
+  #   variable = wg
+  #   value = 0
+  # [../]
+  # [./wb_adiabatic]
+  #   type = NeumannBC
+  #   boundary = 'left right top bottom'
+  #   variable = wv
+  #   value = 0
+  # [../]
 []
 
 [Kernels]
@@ -172,9 +194,8 @@
   [./ACb0_bulk]
     type = ACGrGrMulti
     variable = etab0
-    v =           'etam0 etam1'
-    gamma_names = 'gmb   gmb  '
-    mu = mu
+    v =           'etam0 etam1 etam2 etam3 etam4'
+    gamma_names = 'gmb   gmb   gmb   gmb   gmb'
     mob_name = L
   [../]
   [./ACb0_sw]
@@ -182,7 +203,7 @@
     variable = etab0
     Fj_names  = 'omegab   omegam'
     hj_names  = 'hb       hm'
-    args = 'etam0 etam1 wv wg'
+    args = 'etam0 etam1 etam2 etam3 etam4 wv wg'
     mob_name = L
   [../]
   [./ACb0_int]
@@ -199,9 +220,8 @@
   [./ACm0_bulk]
     type = ACGrGrMulti
     variable = etam0
-    v =           'etab0 etam1'
-    gamma_names = 'gmb   gmm  '
-    mu = mu
+    v =           'etab0 etam1 etam2 etam3 etam4'
+    gamma_names = 'gmb   gmm   gmm   gmm   gmm'
     mob_name = L
   [../]
   [./ACm0_sw]
@@ -209,7 +229,7 @@
     variable = etam0
     Fj_names  = 'omegab   omegam'
     hj_names  = 'hb       hm'
-    args = 'etab0 etam1 wv wg'
+    args = 'etab0 etam1 etam2 etam3 etam4 wv wg'
     mob_name = L
   [../]
   [./ACm0_int]
@@ -226,9 +246,8 @@
   [./ACm1_bulk]
     type = ACGrGrMulti
     variable = etam1
-    v =           'etab0 etam0'
-    gamma_names = 'gmb   gmm  '
-    mu = mu
+    v =           'etab0 etam0 etam2 etam3 etam4'
+    gamma_names = 'gmb   gmm   gmm   gmm   gmm'
     mob_name = L
   [../]
   [./ACm1_sw]
@@ -236,7 +255,7 @@
     variable = etam1
     Fj_names  = 'omegab   omegam'
     hj_names  = 'hb       hm'
-    args = 'etab0 etam0 wv wg'
+    args = 'etab0 etam0 etam2 etam3 etam4 wv wg'
     mob_name = L
   [../]
   [./ACm1_int]
@@ -249,6 +268,85 @@
     type = TimeDerivative
     variable = etam1
   [../]
+
+  # Order parameter eta_m1 for matrix grain 2
+    [./ACm2_bulk]
+      type = ACGrGrMulti
+      variable = etam2
+      v =           'etab0 etam0 etam1 etam3 etam4'
+      gamma_names = 'gmb   gmm   gmm   gmm   gmm'
+      mob_name = L
+    [../]
+    [./ACm2_sw]
+      type = ACSwitching
+      variable = etam2
+      Fj_names  = 'omegab   omegam'
+      hj_names  = 'hb       hm'
+      args = 'etab0 etam0 etam1 etam3 etam4 wv wg'
+      mob_name = L
+    [../]
+    [./ACm2_int]
+      type = ACInterface
+      variable = etam2
+      kappa_name = kappa
+      mob_name = L
+    [../]
+    [./em2_dot]
+      type = TimeDerivative
+      variable = etam2
+    [../]
+  # Order parameter eta_m3 for matrix grain 3
+    [./ACm3_bulk]
+      type = ACGrGrMulti
+      variable = etam3
+      v =           'etab0 etam0 etam1 etam2 etam4'
+      gamma_names = 'gmb   gmm   gmm   gmm   gmm'
+      mob_name = L
+    [../]
+    [./ACm3_sw]
+      type = ACSwitching
+      variable = etam3
+      Fj_names  = 'omegab   omegam'
+      hj_names  = 'hb                   hm'
+      args = 'etab0 etam0 etam1 etam2 etam4 wv wg'
+      mob_name = L
+    [../]
+    [./ACm3_int]
+      type = ACInterface
+      variable = etam3
+      kappa_name = kappa
+      mob_name = L
+    [../]
+    [./em3_dot]
+      type = TimeDerivative
+      variable = etam3
+    [../]
+  # Order parameter eta_m4 for matrix grain 4
+    [./ACm4_bulk]
+      type = ACGrGrMulti
+      variable = etam4
+      v =           'etab0 etam0 etam1 etam2 etam3'
+      gamma_names = 'gmb   gmm   gmm   gmm   gmm'
+      mob_name = L
+    [../]
+    [./ACm4_sw]
+      type = ACSwitching
+      variable = etam4
+      Fj_names  = 'omegab   omegam'
+      hj_names  = 'hb                   hm'
+      args = 'etab0 etam0 etam1 etam2 etam3 wv wg'
+      mob_name = L
+    [../]
+    [./ACm4_int]
+      type = ACInterface
+      variable = etam4
+      kappa_name = kappa
+      mob_name = L
+    [../]
+    [./em4_dot]
+      type = TimeDerivative
+      variable = etam4
+    [../]
 
 #Chemical potential for vacancies
   [./wv_dot]
@@ -281,7 +379,7 @@
     v = etab0
     Fj_names = 'rhovbub rhovmatrix'
     hj_names = 'hb      hm'
-    args = 'etab0 etam0 etam1'
+    args = 'etab0 etam0 etam1 etam2 etam3 etam4'
   [../]
   [./coupled_v_etam0dot]
     type = CoupledSwitchingTimeDerivative
@@ -289,7 +387,7 @@
     v = etam0
     Fj_names = 'rhovbub rhovmatrix'
     hj_names = 'hb      hm'
-    args = 'etab0 etam0 etam1'
+    args = 'etab0 etam0 etam1 etam2 etam3 etam4'
   [../]
   [./coupled_v_etam1dot]
     type = CoupledSwitchingTimeDerivative
@@ -297,7 +395,31 @@
     v = etam1
     Fj_names = 'rhovbub rhovmatrix'
     hj_names = 'hb      hm'
-    args = 'etab0 etam0 etam1'
+    args = 'etab0 etam0 etam1 etam2 etam3 etam4'
+  [../]
+  [./coupled_v_etam2dot]
+    type = CoupledSwitchingTimeDerivative
+    variable = wv
+    v = etam2
+    Fj_names = 'rhovbub rhovmatrix'
+    hj_names = 'hb      hm'
+    args = 'etab0 etam0 etam1 etam2 etam3 etam4'
+  [../]
+  [./coupled_v_etam3dot]
+    type = CoupledSwitchingTimeDerivative
+    variable = wv
+    v = etam3
+    Fj_names = 'rhovbub rhovmatrix'
+    hj_names = 'hb      hm'
+    args = 'etab0 etam0 etam1 etam2 etam3 etam4'
+  [../]
+  [./coupled_v_etam4dot]
+    type = CoupledSwitchingTimeDerivative
+    variable = wv
+    v = etam4
+    Fj_names = 'rhovbub rhovmatrix'
+    hj_names = 'hb      hm'
+    args = 'etab0 etam0 etam1 etam2 etam3 etam4'
   [../]
 
 #Chemical potential for gas atoms
@@ -331,7 +453,7 @@
     v = etab0
     Fj_names = 'rhogbub rhogmatrix'
     hj_names = 'hb      hm'
-    args = 'etab0 etam0 etam1'
+    args = 'etab0 etam0 etam1 etam2 etam3 etam4'
   [../]
   [./coupled_g_etam0dot]
     type = CoupledSwitchingTimeDerivative
@@ -339,7 +461,7 @@
     v = etam0
     Fj_names = 'rhogbub rhogmatrix'
     hj_names = 'hb      hm'
-    args = 'etab0 etam0 etam1'
+    args = 'etab0 etam0 etam1 etam2 etam3 etam4'
   [../]
   [./coupled_g_etam1dot]
     type = CoupledSwitchingTimeDerivative
@@ -347,7 +469,31 @@
     v = etam1
     Fj_names = 'rhogbub rhogmatrix'
     hj_names = 'hb      hm'
-    args = 'etab0 etam0 etam1'
+    args = 'etab0 etam0 etam1 etam2 etam3 etam4'
+  [../]
+  [./coupled_g_etam2dot]
+    type = CoupledSwitchingTimeDerivative
+    variable = wg
+    v = etam2
+    Fj_names = 'rhogbub rhogmatrix'
+    hj_names = 'hb      hm'
+    args = 'etab0 etam0 etam1 etam2 etam3 etam4'
+  [../]
+  [./coupled_g_etam3dot]
+    type = CoupledSwitchingTimeDerivative
+    variable = wg
+    v = etam3
+    Fj_names = 'rhogbub rhogmatrix'
+    hj_names = 'hb      hm'
+    args = 'etab0 etam0 etam1 etam2 etam3 etam4'
+  [../]
+  [./coupled_g_etam4dot]
+    type = CoupledSwitchingTimeDerivative
+    variable = wg
+    v = etam4
+    Fj_names = 'rhogbub rhogmatrix'
+    hj_names = 'hb      hm'
+    args = 'etab0 etam0 etam1 etam2 etam3 etam4'
   [../]
 
 []
@@ -364,15 +510,15 @@
   [./hb]
     type = SwitchingFunctionMultiPhaseMaterial
     h_name = hb
-    all_etas = 'etab0 etam0 etam1'
+    all_etas = 'etab0 etam0 etam1 etam2 etam3 etam4'
     phase_etas = 'etab0'
     outputs = exodus
   [../]
   [./hm]
     type = SwitchingFunctionMultiPhaseMaterial
     h_name = hm
-    all_etas = 'etab0 etam0 etam1'
-    phase_etas = 'etam0 etam1'
+    all_etas = 'etab0 etam0 etam1 etam2 etam3 etam4'
+    phase_etas = 'etam0 etam1 etam2 etam3 etam4'
     outputs = exodus
   [../]
 # Chemical contribution to grand potential of bubble
@@ -487,7 +633,7 @@
     args = 'time'
     function = 'if(time < 0, 0, Db*chiv)'
     derivative_order = 2
-    outputs = exodus
+    # outputs = exodus
   [../]
   [./Mobility_g]
     type = DerivativeParsedMaterial
@@ -496,7 +642,7 @@
     args = 'time'
     function = 'if(time < 0, 0, Dm*chig)'
     derivative_order = 2
-    outputs = exodus
+    # outputs = exodus
   [../]
   [./chiv]
     type = DerivativeParsedMaterial
@@ -504,7 +650,7 @@
     material_property_names = 'Va hb kvbub hm kvmatrix '
     function = '(hm/kvmatrix + hb/kvbub) / Va^2'
     derivative_order = 2
-    outputs = exodus
+    # outputs = exodus
   [../]
   [./chig]
     type = DerivativeParsedMaterial
@@ -512,7 +658,7 @@
     material_property_names = 'Va hb kgbub hm kgmatrix '
     function = '(hm/kgmatrix + hb/kgbub) / Va^2'
     derivative_order = 2
-    outputs = exodus
+    # outputs = exodus
   [../]
 
   [./XeRate]
@@ -597,9 +743,9 @@
   # [./number_DOFs]
   #   type = NumDOFs
   # [../]
-  [./dt]
-    type = TimestepSize
-  [../]
+  # [./dt]
+  #   type = TimestepSize
+  # [../]
 []
 
 [Preconditioning]
@@ -623,7 +769,7 @@
   nl_rel_tol = 1.0e-8
   start_time = -1e3
   #num_steps = 1000
-  end_time = 7e7
+  end_time = 1e9
   nl_abs_tol = 1e-10
   [./TimeStepper]
     type = SolutionTimeAdaptiveDT
@@ -635,7 +781,7 @@
 [Outputs]
   [./exodus]
     type = Exodus
-    interval = 50
+    interval = 10
     # interval = 1
     sync_times = '0'
   [../]
@@ -656,6 +802,7 @@
 [Transfers]
   [./Xolotl_to_PF]
     type = MultiAppInterpolationTransfer
+    # type = MultiAppNearestNodeTransfer
     direction = from_multiapp
     multi_app = XolotlWrapper
     source_variable = Auxv
@@ -664,6 +811,7 @@
   [../]
   [./PF_to_Xolotl]
     type = MultiAppInterpolationTransfer
+    # type = MultiAppNearestNodeTransfer
     direction = to_multiapp
     multi_app = XolotlWrapper
     source_variable = bnds

@@ -28,29 +28,29 @@
     variable = Auxv
     value = 0
   [../]
-  [./Init_Aux_gb]
-    type = BoundingBoxIC
-    variable = Auxv_gb
-    inside = 0
-    outside = 1
-    # x1 = 39999.5
-    # x2 = 60000.5
-    # y1 = 0
-    # y2 = 100000
-    # z1 = 0
-    # z2 = 100000
-    x1 = 0
-    x2 = 100000
-    y1 = 39999.5
-    y2 = 60000.5
-    z1 = 0
-    z2 = 100000
-  [../]
   # [./Init_Aux_gb]
-  #   type = ConstantIC
+  #   type = BoundingBoxIC
   #   variable = Auxv_gb
-  #   value = 1
+  #   inside = 0
+  #   outside = 1
+  #   # x1 = 39999.5
+  #   # x2 = 60000.5
+  #   # y1 = 0
+  #   # y2 = 100000
+  #   # z1 = 0
+  #   # z2 = 100000
+  #   x1 = 0
+  #   x2 = 1200
+  #   y1 = 399.5
+  #   y2 = 600.5
+  #   # z1 = 0
+  #   # z2 = 100000
   # [../]
+  [./Init_Aux_gb]
+    type = ConstantIC
+    variable = Auxv_gb
+    value = 1
+  [../]
 []
 
 [AuxKernels]

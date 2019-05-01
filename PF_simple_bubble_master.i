@@ -15,10 +15,10 @@
 []
 
 [GlobalParams]
-  op_num = 2
-  grain_num = 2
+  op_num = 1
+  grain_num = 1
   var_name_base = etam
-  numbub = 2
+  numbub = 1
   bubspac = 150
   radius = 44
   int_width = 30
@@ -75,12 +75,12 @@
 []
 
 [ICs]
-  [./PolycrystalICs]
-    [./PolycrystalVoronoiVoidIC]
-      invalue = 1.0
-      outvalue = 0.0
-    [../]
-  [../]
+  # [./PolycrystalICs]
+  #   [./PolycrystalVoronoiVoidIC]
+  #     invalue = 1.0
+  #     outvalue = 0.0
+  #   [../]
+  # [../]
   # [./]
   [./bnds]
     type = ConstantIC
@@ -93,10 +93,20 @@
   #   inside = 1
   #   outside = 0
   #   x1 = 0
-  #   x2 = 498
+  #   x2 = 1200
   #   y1 = 0
-  #   y2 = 1000
+  #   y2 = 1200
   # [../]
+  [./etam0_IC]
+    type = SmoothCircleIC
+    variable = etam0
+    invalue = 0
+    outvalue = 1
+    x1 = 600
+    y1 = 600
+    radius = 44
+    int_width = 30
+  [../]
   # [./etam1_IC]
   #   type = BoundingBoxIC
   #   variable = etam1
@@ -107,12 +117,22 @@
   #   y1 = 0
   #   y2 = 1000
   # [../]
+  # [./bubble_IC]
+  #   variable = etab0
+  #   type = PolycrystalVoronoiVoidIC
+  #   structure_type = voids
+  #   invalue = 1.0
+  #   outvalue = 0.0
+  # [../]
   [./bubble_IC]
+    type = SmoothCircleIC
     variable = etab0
-    type = PolycrystalVoronoiVoidIC
-    structure_type = voids
-    invalue = 1.0
-    outvalue = 0.0
+    invalue = 1
+    outvalue = 0
+    x1 = 600
+    y1 = 600
+    radius = 44
+    int_width = 30
   [../]
   [./IC_wv]
     type = ConstantIC
@@ -129,41 +149,41 @@
 
 
 [BCs]
-  # [./Periodic]
-  #   [./All]
-  #     auto_direction = 'y'
-  #   [../]
+  [./Periodic]
+    [./All]
+      auto_direction = 'x y'
+    [../]
+  [../]
+  # [./etam0_adiabatic]
+  #   type = NeumannBC
+  #   boundary = 'left right top bottom'
+  #   variable = etam0
+  #   value = 0
   # [../]
-  [./etam0_adiabatic]
-    type = NeumannBC
-    boundary = 'left right top bottom'
-    variable = etam0
-    value = 0
-  [../]
-  [./etam1_adiabatic]
-    type = NeumannBC
-    boundary = 'left right top bottom'
-    variable = etam1
-    value = 0
-  [../]
-  [./etab0_adiabatic]
-    type = NeumannBC
-    boundary = 'left right top bottom'
-    variable = etab0
-    value = 0
-  [../]
-  [./wg_adiabatic]
-    type = NeumannBC
-    boundary = 'left right top bottom'
-    variable = wg
-    value = 0
-  [../]
-  [./wb_adiabatic]
-    type = NeumannBC
-    boundary = 'left right top bottom'
-    variable = wv
-    value = 0
-  [../]
+  # [./etam1_adiabatic]
+  #   type = NeumannBC
+  #   boundary = 'left right top bottom'
+  #   variable = etam1
+  #   value = 0
+  # [../]
+  # [./etab0_adiabatic]
+  #   type = NeumannBC
+  #   boundary = 'left right top bottom'
+  #   variable = etab0
+  #   value = 0
+  # [../]
+  # [./wg_adiabatic]
+  #   type = NeumannBC
+  #   boundary = 'left right top bottom'
+  #   variable = wg
+  #   value = 0
+  # [../]
+  # [./wb_adiabatic]
+  #   type = NeumannBC
+  #   boundary = 'left right top bottom'
+  #   variable = wv
+  #   value = 0
+  # [../]
 []
 
 [Kernels]
@@ -172,8 +192,8 @@
   [./ACb0_bulk]
     type = ACGrGrMulti
     variable = etab0
-    v =           'etam0 etam1'
-    gamma_names = 'gmb   gmb  '
+    v =           'etam0'
+    gamma_names = 'gmb   '
     mu = mu
     mob_name = L
   [../]
@@ -182,7 +202,7 @@
     variable = etab0
     Fj_names  = 'omegab   omegam'
     hj_names  = 'hb       hm'
-    args = 'etam0 etam1 wv wg'
+    args = 'etam0  wv wg'
     mob_name = L
   [../]
   [./ACb0_int]
@@ -199,8 +219,8 @@
   [./ACm0_bulk]
     type = ACGrGrMulti
     variable = etam0
-    v =           'etab0 etam1'
-    gamma_names = 'gmb   gmm  '
+    v =           'etab0 '
+    gamma_names = 'gmb     '
     mu = mu
     mob_name = L
   [../]
@@ -209,7 +229,7 @@
     variable = etam0
     Fj_names  = 'omegab   omegam'
     hj_names  = 'hb       hm'
-    args = 'etab0 etam1 wv wg'
+    args = 'etab0  wv wg'
     mob_name = L
   [../]
   [./ACm0_int]
@@ -221,33 +241,6 @@
   [./em0_dot]
     type = TimeDerivative
     variable = etam0
-  [../]
-# Order parameter eta_m1 for matrix grain 1
-  [./ACm1_bulk]
-    type = ACGrGrMulti
-    variable = etam1
-    v =           'etab0 etam0'
-    gamma_names = 'gmb   gmm  '
-    mu = mu
-    mob_name = L
-  [../]
-  [./ACm1_sw]
-    type = ACSwitching
-    variable = etam1
-    Fj_names  = 'omegab   omegam'
-    hj_names  = 'hb       hm'
-    args = 'etab0 etam0 wv wg'
-    mob_name = L
-  [../]
-  [./ACm1_int]
-    type = ACInterface
-    variable = etam1
-    kappa_name = kappa
-    mob_name = L
-  [../]
-  [./em1_dot]
-    type = TimeDerivative
-    variable = etam1
   [../]
 
 #Chemical potential for vacancies
@@ -281,7 +274,7 @@
     v = etab0
     Fj_names = 'rhovbub rhovmatrix'
     hj_names = 'hb      hm'
-    args = 'etab0 etam0 etam1'
+    args = 'etab0 etam0 '
   [../]
   [./coupled_v_etam0dot]
     type = CoupledSwitchingTimeDerivative
@@ -289,16 +282,9 @@
     v = etam0
     Fj_names = 'rhovbub rhovmatrix'
     hj_names = 'hb      hm'
-    args = 'etab0 etam0 etam1'
+    args = 'etab0 etam0 '
   [../]
-  [./coupled_v_etam1dot]
-    type = CoupledSwitchingTimeDerivative
-    variable = wv
-    v = etam1
-    Fj_names = 'rhovbub rhovmatrix'
-    hj_names = 'hb      hm'
-    args = 'etab0 etam0 etam1'
-  [../]
+
 
 #Chemical potential for gas atoms
   [./wg_dot]
@@ -331,7 +317,7 @@
     v = etab0
     Fj_names = 'rhogbub rhogmatrix'
     hj_names = 'hb      hm'
-    args = 'etab0 etam0 etam1'
+    args = 'etab0 etam0 '
   [../]
   [./coupled_g_etam0dot]
     type = CoupledSwitchingTimeDerivative
@@ -339,15 +325,7 @@
     v = etam0
     Fj_names = 'rhogbub rhogmatrix'
     hj_names = 'hb      hm'
-    args = 'etab0 etam0 etam1'
-  [../]
-  [./coupled_g_etam1dot]
-    type = CoupledSwitchingTimeDerivative
-    variable = wg
-    v = etam1
-    Fj_names = 'rhogbub rhogmatrix'
-    hj_names = 'hb      hm'
-    args = 'etab0 etam0 etam1'
+    args = 'etab0 etam0 '
   [../]
 
 []
@@ -364,15 +342,15 @@
   [./hb]
     type = SwitchingFunctionMultiPhaseMaterial
     h_name = hb
-    all_etas = 'etab0 etam0 etam1'
+    all_etas = 'etab0 etam0 '
     phase_etas = 'etab0'
     outputs = exodus
   [../]
   [./hm]
     type = SwitchingFunctionMultiPhaseMaterial
     h_name = hm
-    all_etas = 'etab0 etam0 etam1'
-    phase_etas = 'etam0 etam1'
+    all_etas = 'etab0 etam0 '
+    phase_etas = 'etam0 '
     outputs = exodus
   [../]
 # Chemical contribution to grand potential of bubble
@@ -635,7 +613,7 @@
 [Outputs]
   [./exodus]
     type = Exodus
-    interval = 50
+    interval = 10
     # interval = 1
     sync_times = '0'
   [../]
