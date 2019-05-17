@@ -26,21 +26,36 @@ XolotlProblem::XolotlProblem(const InputParameters & params) :
 				getParam < VariableName > ("sync_variable")), _sync_from_var_name(
 				getParam < VariableName > ("sync_GB")), _interface(
 				static_cast<coupling_xolotlApp &>(_app).getInterface()) {
+	PetscInt xs, ys, zs, xm, ym, zm, Mx, My, Mz;
+        _interface.getLocalCoordinates(xs, xm, Mx, ys, ym, My, zs, zm, Mz);
+	
+	// Initialize old rate
+	_old_rate.clear();
+	for (int i = 0; i < max(xm, 1); i++) {
+		std::vector<std::vector<double> > tempTempVector;
+		for (int j = 0; j < max(ym, 1); j++) {
+			std::vector<double> tempVector;
+			for (int k = 0; k < max(zm, 1); k++) {
+				tempVector.push_back(0.0);
+			}
+			tempTempVector.push_back(tempVector);
+		}
+		_old_rate.push_back(tempTempVector);
+	}
 }
 
 void XolotlProblem::externalSolve() {
+	// Make sure the times will be the same for every MPI rank
+//	Real xolotlTime = 0.0, xolotlDT = 0.0;
+//	MPI_Allreduce(&time(), &xolotlTime, 1, MPI_DOUBLE, MPI_MIN, _communicator.get());
+//	MPI_Allreduce(&dt(), &xolotlDT, 1, MPI_DOUBLE, MPI_MIN, _communicator.get());
+
 	// Set the time we want to reach
 	_interface.setTimes(time(), dt());
-
 	// Reset the concentrations where the GBs are
 	_interface.initGBLocation();
-
 	// Save the size of the dt for derivative calculation
 	_dt_for_derivative = dt();
-
-	// Save the current Xe rate
-	_old_rate = *_interface.getLocalXeRate();
-
 	// Run the solver
 	_interface.solveXolotl();
 }
@@ -48,10 +63,7 @@ void XolotlProblem::externalSolve() {
 void XolotlProblem::syncSolutions(Direction direction) {
 	PetscInt i, j, k, xs, ys, zs, xm, ym, zm, Mx, My, Mz;
 	_interface.getLocalCoordinates(xs, xm, Mx, ys, ym, My, zs, zm, Mz);
-
 	if (direction == Direction::FROM_EXTERNAL_APP) {
-		auto localRate = _interface.getLocalXeRate();
-
 		MeshBase & to_mesh = mesh().getMesh();
 		auto & sync_to_var = getVariable(0, _sync_to_var_name,
 				Moose::VarKindType::VAR_ANY,
@@ -68,10 +80,13 @@ void XolotlProblem::syncSolutions(Direction direction) {
 							sync_to_var.sys().number(), sync_to_var.number(),
 							0);
 					// Compute the time derivative
-					Real value = (localRate->at(i - xs)[j - ys][k - zs]
+					Real current_rate = _interface.getLocalXeRate(i - xs, j - ys, k - zs);
+					Real value = (current_rate
 							- _old_rate[i - xs][j - ys][k - zs])
 							/ _dt_for_derivative;
 					sync_to_var.sys().solution().set(dof, value);
+					// Update the old rate
+					_old_rate[i - xs][j - ys][k - zs] = current_rate;
 				}
 
 		sync_to_var.sys().solution().close();
@@ -99,7 +114,7 @@ void XolotlProblem::syncSolutions(Direction direction) {
 					// Get the value
 					Real value = sync_from_var.sys().solution()(dof);
 					// Test if it is a GB
-					if (value < 0.95) {
+					if (value < 0.9) {
 						localGBList.push_back(i);
 						localGBList.push_back(j);
 						localGBList.push_back(k);
@@ -117,7 +132,7 @@ void XolotlProblem::syncSolutions(Direction direction) {
 		for (int m = 0; m < worldSize; m++) {
 			sizes.push_back(0);
 		}
-		int n = localGBList.size();
+		int n = localGBList.size(); 
 		MPI_Allgather(&n, 1, MPI_INT, sizes.data(), 1, MPI_INT, MPI_COMM_WORLD);
 		std::vector<int> offsets;
 		int s = 0;
