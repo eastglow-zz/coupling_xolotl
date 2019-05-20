@@ -2,6 +2,13 @@
 # Time unit: s
 # Energy unit: eV
 
+#Relative path also available when running in the application directory
+XolotlWrapperPath = './xolotl_userobj.i'
+
+#Absolute path is neccessary when running from a remote directory
+#XolotlWrapperPath = '/Users/donguk.kim/projects/coupling_xolotl/xolotl_userobj.i'    #for Mac
+#XolotlWrapperPath = '/home/donguk.kim/projects/coupling_xolotl/xolotl_userobj.i'    #for UF HPG2
+
 [Mesh]
   type = GeneratedMesh
   dim = 2
@@ -626,9 +633,11 @@
   end_time = 7e7
   nl_abs_tol = 1e-10
   [./TimeStepper]
-    type = SolutionTimeAdaptiveDT
+    type = IterationAdaptiveDT
+    growth_factor = 1.2
+    cutback_factor = 0.3
     dt = 0.5
-    adapt_log = true
+    # adapt_log = true
   [../]
 []
 
@@ -647,9 +656,9 @@
   [./XolotlWrapper]
     type = TransientMultiApp
     app_type = coupling_xolotlApp
-    execute_on = TIMESTEP_BEGIN
+    execute_on = TIMESTEP_END
     positions = '0 0 0'
-    input_files = 'xolotl_userobj.i'
+    input_files = ${XolotlWrapperPath}
   [../]
 []
 

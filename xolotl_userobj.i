@@ -2,15 +2,22 @@
 # default time unit: s
 # default mass unit: ?
 
+#Relative path also available when running in the application directory
+XolotlLibPath = '../xolotl-build/lib/libxolotlInter.dylib'
+XolotlInpPath = './params_NE_2D_withPFsimple.txt'
+
+#Absolute path is neccessary when running from a remote directory
+#XolotlLibPath = '/Users/donguk.kim/projects/xolotl-build/lib/libxolotlInter.dylib'    #for Mac
+#XolotlInpPath = '/Users/donguk.kim/projects/coupling_xolotl/params_NE_2D_withPFsimple.txt'   #for Mac
+#XolotlLibPath = '/home/donguk.kim/projects/xolotl-build/lib/libxolotlInter.so'    #for UF HPG2
+#XolotlInpPath = '/home/donguk.kim/projects/coupling_xolotl/params_NE_2D_withPFsimple.txt'   #for UF HPG2
+
 [Mesh]
   type = XolotlMeshSynced
   # type = XolotlMesh
   dim = 2
-  library_path_name ='../xolotl-build/lib/libxolotlInter.dylib'
-  #library_path_name ='../xolotl-build/lib/libxolotlInter.so'
-  XolotlInput_path_name = './params_NE_2D_withPFsimple.txt'
-  # XolotlInput_path_name = './params_NE_2D_simpletest.txt'
-  # XolotlInput_path_name = './params_NE_3D.txt'
+  library_path_name = ${XolotlLibPath}
+  XolotlInput_path_name = ${XolotlInpPath}
 []
 [Variables]
   [./d]
@@ -58,6 +65,7 @@
     type = SpatialUserObjectAux
     variable = Auxv
     user_object = 'Xolotl_driver'
+    execute_on = 'TIMESTEP_END'
   [../]
 []
 [Executioner]
@@ -81,12 +89,8 @@
     variable = Auxv
     variable_gb = Auxv_gb
     gb_marker_threshold = 0.9
-    library_path_name ='../xolotl-build/lib/libxolotlInter.dylib'
-    #library_path_name ='../xolotl-build/lib/libxolotlInter.so'
-    XolotlInput_path_name = './params_NE_2D_withPFsimple.txt'
-    # XolotlInput_path_name = './params_NE_2D_withPF.txt'
-    # XolotlInput_path_name = './params_NE_2D_simpletest.txt'
-    # XolotlInput_path_name = './params_NE_3D.txt'
+    library_path_name = ${XolotlLibPath}
+    XolotlInput_path_name = ${XolotlInpPath}
   [../]
 []
 [Outputs]

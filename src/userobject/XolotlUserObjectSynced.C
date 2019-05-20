@@ -149,6 +149,7 @@ XolotlUserObjectSynced::initialize()
   // This member function is called once at a MOOSE time step (maybe able to be specified by using execute_on parameter in the input file)
 
   // Syncing the time stepping
+  printf("rank = %d, _dt_old = %lf, _t = %lf, _dt = %lf\n", _moose_rank, _dt_old, _t, _dt);
   _xolotl_interface->setTimes(_xolotl_solver, _t, _dt);
   _xolotl_interface->initGBLocation(_xolotl_solver);
 }

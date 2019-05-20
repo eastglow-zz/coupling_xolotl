@@ -2,6 +2,13 @@
 # Time unit: s
 # Energy unit: eV
 
+#Relative path also available when running in the application directory
+XolotlWrapperPath = './xolotl_userobj.i'
+
+#Absolute path is neccessary when running from a remote directory
+#XolotlWrapperPath = '/Users/donguk.kim/projects/coupling_xolotl/xolotl_userobj.i'    #for Mac
+#XolotlWrapperPath = '/home/donguk.kim/projects/coupling_xolotl/xolotl_userobj.i'    #for UF HPG2
+
 [Mesh]
   type = GeneratedMesh
   dim = 2
@@ -587,15 +594,25 @@
   [../]
 []
 
+[Functions]
+  [./dts]
+    type = PiecewiseLinear
+    x = '-3000 0 1 10 100 1000 10000 100000 1000000 100000000'
+    y = '100 0.1 0.1 1 10 100 1000 5000 10000 50000'
+  [../]
+[]
+
 [Executioner]
   # Preconditioned JFNK (default)
   type = Transient
   nl_max_its = 15
   scheme = bdf2
-  #solve_type = NEWTON
+  # solve_type = NEWTON
   solve_type = PJFNK
   petsc_options_iname = '-pc_type -sub_pc_type'
   petsc_options_value = 'asm      lu'
+  # petsc_options_iname = '-pc_type -ksp_type -ksp_gmres_restart'
+  # petsc_options_value = 'bjacobi  gmres     30'  # default is 30, the higher the higher resolution but the slower
   l_max_its = 15
   l_tol = 1.0e-3
   nl_rel_tol = 1.0e-8
@@ -604,9 +621,17 @@
   end_time = 7e7
   nl_abs_tol = 1e-10
   [./TimeStepper]
-    type = SolutionTimeAdaptiveDT
+    # type = SolutionTimeAdaptiveDT
+    # dt = 0.5
+    # adapt_log = true
+    # type = FunctionDT
+    # dt = 0.5
+    # function = dts
+    # min_dt = 0.01
+    type = IterationAdaptiveDT
     dt = 0.5
-    adapt_log = true
+    growth_factor = 1.2
+    cutback_factor = 0.8
   [../]
 []
 
@@ -619,15 +644,16 @@
   [../]
   # checkpoint = true
   csv = true
+  perf_graph = true
 []
 
 [MultiApps]
   [./XolotlWrapper]
     type = TransientMultiApp
     app_type = coupling_xolotlApp
-    execute_on = TIMESTEP_BEGIN
+    execute_on = TIMESTEP_END
     positions = '0 0 0'
-    input_files = 'xolotl_userobj.i'
+    input_files = ${XolotlWrapperPath}
   [../]
 []
 
