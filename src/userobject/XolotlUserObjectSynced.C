@@ -117,7 +117,7 @@ XolotlUserObjectSynced::XolotlUserObjectSynced(const InputParameters & parameter
   }
 
   // Print out the loaded Xolotl grid parameters
-  print_mesh_params();
+  // print_mesh_params();
 
   _xolotl_local_index_table = init_xolotl_local_index_table(6);
   fillout_xolotl_local_index_table(_xolotl_local_index_table, 6);
