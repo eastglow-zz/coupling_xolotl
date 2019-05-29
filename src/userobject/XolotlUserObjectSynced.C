@@ -75,8 +75,11 @@ XolotlUserObjectSynced::XolotlUserObjectSynced(const InputParameters & parameter
   strcpy(_argv[1], _xolotl_input_path_name.c_str());
   _argv[2] = 0; // null-terminate the array
 
+
+  cout<<"XolotlWrapper input file location: "<<_xolotl_input_path_name.c_str()<<endl;
   // Preparing for the external library handle
   _ext_lib_handle = dlopen(_ext_lib_path_name.c_str(), RTLD_LAZY);
+  cout<<"Xolotl library loaded: "<<_ext_lib_path_name.c_str()<<endl;
   if (!_ext_lib_handle) {
     std::cerr << "Cannot open library: " << dlerror() << '\n';
   }

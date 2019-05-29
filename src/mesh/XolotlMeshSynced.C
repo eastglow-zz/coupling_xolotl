@@ -141,7 +141,7 @@ XolotlMeshSynced::XolotlMeshSynced(const InputParameters & parameters)
 
   _xolotl_local_index_table = init_xolotl_local_index_table(6);
   fillout_xolotl_local_index_table(_xolotl_local_index_table, 6);
-  print_xolotl_local_index_table(_xolotl_local_index_table, 6);
+  // print_xolotl_local_index_table(_xolotl_local_index_table, 6);
 
   _xolotl_xi_lb = _xolotl_local_index_table[_moose_rank][0];
   _xolotl_xi_ub = _xolotl_xi_lb + _xolotl_local_index_table[_moose_rank][1] - 1;
