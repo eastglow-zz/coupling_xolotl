@@ -133,6 +133,8 @@ XolotlUserObjectSynced::XolotlUserObjectSynced(const InputParameters & parameter
   _xolotl_localNy = _xolotl_local_index_table[_moose_rank][3];
   _xolotl_localNz = _xolotl_local_index_table[_moose_rank][5];
 
+  _xolotl_current_time = 0.0;
+
   // Syncing the time stepping
   Real dtime = 1.1e-20;
   if (_dt > 1e-20) dtime = _dt;
@@ -150,8 +152,12 @@ XolotlUserObjectSynced::initialize()
 
   // Syncing the time stepping
   // printf("rank = %d, _dt_old = %lf, _t = %lf, _dt = %lf\n", _moose_rank, _dt_old, _t, _dt);
-  _xolotl_interface->setTimes(_xolotl_solver, _t, _dt);
-  _xolotl_interface->initGBLocation(_xolotl_solver);
+  _xolotl_current_time = _xolotl_interface->getXolotlTimeInterface(_xolotl_solver);
+  // printf("_t = %lf, _dt = %lf, XolotlCurrentTime = %lf\n", _t, _dt, _xolotl_current_time);
+  if (_xolotl_current_time < _t) {
+    _xolotl_interface->setTimes(_xolotl_solver, _t, _dt);
+    _xolotl_interface->initGBLocation(_xolotl_solver);
+  }
 }
 
 void
@@ -168,23 +174,26 @@ XolotlUserObjectSynced::execute()
 void
 XolotlUserObjectSynced::finalize()
 {
-  //Get XeRateOld
-  double *XeRateOld = vectorized_xolotl_XeRate(_xolotl_solver);
+  if(_xolotl_current_time < _t) {
+    //Get XeRateOld
+    double *XeRateOld = vectorized_xolotl_XeRate(_xolotl_solver);
 
-  _GBList = get_GlobalGBList(_GBListLocal);
-  _xolotl_interface->setGBLocations(_xolotl_solver, _GBList);
+    _GBList = get_GlobalGBList(_GBListLocal);
+    _xolotl_interface->setGBLocations(_xolotl_solver, _GBList);
 
-  _xolotl_interface->solveXolotl(_xolotl_solver);
+    _xolotl_interface->solveXolotl(_xolotl_solver);
 
-  //Get XeRateNew
-  double *XeRateNew = vectorized_xolotl_XeRate(_xolotl_solver);
+    //Get XeRateNew
+    double *XeRateNew = vectorized_xolotl_XeRate(_xolotl_solver);
 
-  double *Rate = computeTimeDerivativeLocal(XeRateNew, XeRateOld, _dt);
+    double *Rate = computeTimeDerivativeLocal(XeRateNew, XeRateOld, _dt);
 
-  localFill_xolotlGlobalData(_xolotl_GlobalXeRate, Rate);
+    localFill_xolotlGlobalData(_xolotl_GlobalXeRate, Rate);
 
-  std::vector<std::tuple<int, int, int>> GBListLocalClean;
-  _GBListLocal = GBListLocalClean;
+    std::vector<std::tuple<int, int, int>> GBListLocalClean;
+    _GBListLocal = GBListLocalClean;
+  }
+
 }
 
 void

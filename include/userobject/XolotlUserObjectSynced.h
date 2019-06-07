@@ -113,6 +113,8 @@ private:
   double *_xolotl_GlobalXeRate;
   // double *_xolotl_GlobalXeConc;
   // double *_xolotl_GlobalXeCdot;
+
+  double _xolotl_current_time;
 };
 
 #endif //XOLOTLUSEROBJECTSYNCED_H

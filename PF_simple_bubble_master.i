@@ -1,6 +1,6 @@
-# Length unit: nm
-# Time unit: s
-# Energy unit: eV
+# Length scale: 1 nm
+# Time scale: 1 s
+# Energy density scale: 64e9 J/m^3 = 400 eV/nm^3
 
 #Relative path also available when running in the application directory
 XolotlWrapperPath = './xolotl_userobj.i'
@@ -311,6 +311,8 @@ XolotlWrapperPath = './xolotl_userobj.i'
   #   variable = wg
   #   value = 1
   #   mask = XeRate0
+  #   # value = 2.35e-9
+  #   # mask = hm
   # [../]
   [./Source_g]
     type = MaskedBodyForce
@@ -421,8 +423,9 @@ XolotlWrapperPath = './xolotl_userobj.i'
   [../]
   [./const]
     type = GenericConstantMaterial
-    prop_names =  'kappa     mu     L        Dm   Db   Va      cvbubeq  cgbubeq gmb 	 gmm T     YXe'
+    prop_names =  'kappa  mu       L   Dm   Db   Va      cvbubeq  cgbubeq gmb 	  gmm T     YXe'
     prop_values = '2.21125e2 1.875  0.975e-3 0.1  0.1  0.0409  0.546    0.454   0.922  1.5 1200  0.2156'
+    #prop_values = '0.5273 0.004688 0.1 0.1  0.1  0.0409  0.546    0.454   0.922  1.5 1200  0.2156'
   [../]
   [./cvmatrixeq]
     type = ParsedMaterial
@@ -443,7 +446,7 @@ XolotlWrapperPath = './xolotl_userobj.i'
   [./kvmatrix_parabola]
     type = ParsedMaterial
     f_name = kvmatrix
-    args = 'time'
+    #function = '7.516'
     function = '3.00625e3' # in eV/nm^3
     outputs = exodus
   [../]
@@ -456,6 +459,7 @@ XolotlWrapperPath = './xolotl_userobj.i'
   [./kgbub_parabola]
     type = ParsedMaterial
     f_name = kgbub
+  #  function = '1.406'
     function = '0.5625e3' # in eV/nm^3
     outputs = exodus
   [../]
@@ -523,7 +527,7 @@ XolotlWrapperPath = './xolotl_userobj.i'
     f_name = XeRate0
     material_property_names = 'Va hm'
     constant_names = 's0'
-    constant_expressions = '2.35e-9'  # in atoms/(nm^3 * s)
+    constant_expressions = '2.35e-9'
     args = 'time'
     function = 'if(time < 0, 0, s0 * hm)'
     outputs = exodus
@@ -630,9 +634,10 @@ XolotlWrapperPath = './xolotl_userobj.i'
     # min_dt = 0.01
     type = IterationAdaptiveDT
     dt = 0.5
-    growth_factor = 1.2
-    cutback_factor = 0.8
+    #growth_factor = 1.2
+    #cutback_factor = 0.8
   [../]
+  #dtmax = 500
 []
 
 [Outputs]
@@ -651,7 +656,8 @@ XolotlWrapperPath = './xolotl_userobj.i'
   [./XolotlWrapper]
     type = TransientMultiApp
     app_type = coupling_xolotlApp
-    execute_on = TIMESTEP_END
+    #execute_on = TIMESTEP_END
+    execute_on = TIMESTEP_BEGIN
     positions = '0 0 0'
     input_files = ${XolotlWrapperPath}
   [../]

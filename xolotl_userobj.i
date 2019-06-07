@@ -65,7 +65,8 @@ XolotlInpPath = './params_NE_2D_withPFsimple.txt'
     type = SpatialUserObjectAux
     variable = Auxv
     user_object = 'Xolotl_driver'
-    execute_on = 'TIMESTEP_END'
+    #execute_on = 'TIMESTEP_END'
+    execute_on = 'TIMESTEP_BEGIN'
   [../]
 []
 [Executioner]
