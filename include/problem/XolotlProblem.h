@@ -42,6 +42,8 @@ private:
 	Real _dt_for_derivative;
 	std::vector<std::vector<std::vector<double> > > _old_rate;
 	std::vector<int> _gb_list;
+	double _xolotl_current_time;
+	bool _xolotl_has_run;
 };
 
 #endif /* XOLOTLPROBLEM_H */

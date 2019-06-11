@@ -42,28 +42,35 @@ XolotlProblem::XolotlProblem(const InputParameters & params) :
 		}
 		_old_rate.push_back(tempTempVector);
 	}
+
+	// Initialize the current time for Xolotl and has run
+	_xolotl_current_time = 0.0;
+	_xolotl_has_run = false;
 }
 
 void XolotlProblem::externalSolve() {
-	// Make sure the times will be the same for every MPI rank
-//	Real xolotlTime = 0.0, xolotlDT = 0.0;
-//	MPI_Allreduce(&time(), &xolotlTime, 1, MPI_DOUBLE, MPI_MIN, _communicator.get());
-//	MPI_Allreduce(&dt(), &xolotlDT, 1, MPI_DOUBLE, MPI_MIN, _communicator.get());
-
-	// Set the time we want to reach
-	_interface.setTimes(time(), dt());
-	// Reset the concentrations where the GBs are
-	_interface.initGBLocation();
-	// Save the size of the dt for derivative calculation
-	_dt_for_derivative = dt();
-	// Run the solver
-	_interface.solveXolotl();
+	_xolotl_has_run = false;
+	// Check that the next time is larger than the current one
+	if (time() > _xolotl_current_time) { 
+		// Set the time we want to reach
+		_interface.setTimes(time(), dt());
+		// Reset the concentrations where the GBs are
+		_interface.initGBLocation();
+		// Save the size of the dt for derivative calculation
+		_dt_for_derivative = dt();
+		// Run the solver
+		_interface.solveXolotl();
+		// Save the current time
+		_xolotl_current_time = time();
+		// Set Xolotl has run
+		_xolotl_has_run = true;
+	}
 }
 
 void XolotlProblem::syncSolutions(Direction direction) {
 	PetscInt i, j, k, xs, ys, zs, xm, ym, zm, Mx, My, Mz;
 	_interface.getLocalCoordinates(xs, xm, Mx, ys, ym, My, zs, zm, Mz);
-	if (direction == Direction::FROM_EXTERNAL_APP) {
+	if (direction == Direction::FROM_EXTERNAL_APP && _xolotl_has_run) {
 		MeshBase & to_mesh = mesh().getMesh();
 		auto & sync_to_var = getVariable(0, _sync_to_var_name,
 				Moose::VarKindType::VAR_ANY,
@@ -123,32 +130,11 @@ void XolotlProblem::syncSolutions(Direction direction) {
 
 		sync_from_var.sys().solution().close();
 
-		// Clear the GB list
-		_gb_list.clear();
-		// Prepare for all gather v
-		int worldSize = 0;
-		MPI_Comm_size(MPI_COMM_WORLD, &worldSize);
-		std::vector<int> sizes;
-		for (int m = 0; m < worldSize; m++) {
-			sizes.push_back(0);
-		}
-		int n = localGBList.size(); 
-		MPI_Allgather(&n, 1, MPI_INT, sizes.data(), 1, MPI_INT, MPI_COMM_WORLD);
-		std::vector<int> offsets;
-		int s = 0;
-		for (int m = 0; m < worldSize; m++) {
-			offsets.push_back(s);
-			s += sizes[m];
-		}
-		int N = s;
-		_gb_list.resize(N);
+		// Clear the GB list in Xolotl
 		_interface.resetGBVector();
-		// Gather all the GB locations on all the procs
-		MPI_Allgatherv((void*) localGBList.data(), localGBList.size(), MPI_INT,
-				(void*) _gb_list.data(), sizes.data(), offsets.data(), MPI_INT,
-				MPI_COMM_WORLD);
-		for (int m = 0; m < _gb_list.size(); m += 3) {
-			_interface.setGBLocation(_gb_list[m], _gb_list[m + 1], _gb_list[m + 2]);
+		// Pass the local list to Xolotl
+		for (int m = 0; m < localGBList.size(); m+=3) {
+			_interface.setGBLocation(localGBList[m], localGBList[m + 1], localGBList[m + 2]);
 		}
 	}
 }
