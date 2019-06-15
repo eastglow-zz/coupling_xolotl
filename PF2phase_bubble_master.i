@@ -628,9 +628,10 @@ XolotlWrapperPath = './xolotl_userobj.i'
   l_max_its = 15
   l_tol = 1.0e-3
   nl_rel_tol = 1.0e-8
-  start_time = -1e3
+  #start_time = -1e3
+  start_time = 0
   #num_steps = 1000
-  end_time = 7e7
+  end_time = 7e2
   nl_abs_tol = 1e-10
   [./TimeStepper]
     type = IterationAdaptiveDT
@@ -650,6 +651,7 @@ XolotlWrapperPath = './xolotl_userobj.i'
   [../]
   # checkpoint = true
   csv = true
+  perf_graph = true
 []
 
 [MultiApps]

@@ -158,6 +158,7 @@ XolotlUserObjectSynced::initialize()
     _xolotl_interface->setTimes(_xolotl_solver, _t, _dt);
     _xolotl_interface->initGBLocation(_xolotl_solver);
   }
+  _xolotl_interface->resetGBVector(_xolotl_solver);
 }
 
 void
@@ -166,7 +167,8 @@ XolotlUserObjectSynced::execute()
   if (_v[0] <= _matrix_marker_thres) {
     int i, j, k;
     map_MOOSE2XolotlGlob(&i, &j, &k, *_current_node);
-    _GBListLocal.push_back(std::make_tuple(i,j,k));
+    // _GBListLocal.push_back(std::make_tuple(i,j,k));
+    _xolotl_interface->setGBLocation(_xolotl_solver, i, j, k);
   }
 
 }
@@ -178,8 +180,8 @@ XolotlUserObjectSynced::finalize()
     //Get XeRateOld
     double *XeRateOld = vectorized_xolotl_XeRate(_xolotl_solver);
 
-    _GBList = get_GlobalGBList(_GBListLocal);
-    _xolotl_interface->setGBLocations(_xolotl_solver, _GBList);
+    // _GBList = get_GlobalGBList(_GBListLocal);
+    // _xolotl_interface->setGBLocations(_xolotl_solver, _GBList);
 
     _xolotl_interface->solveXolotl(_xolotl_solver);
 
@@ -190,8 +192,8 @@ XolotlUserObjectSynced::finalize()
 
     localFill_xolotlGlobalData(_xolotl_GlobalXeRate, Rate);
 
-    std::vector<std::tuple<int, int, int>> GBListLocalClean;
-    _GBListLocal = GBListLocalClean;
+    // std::vector<std::tuple<int, int, int>> GBListLocalClean;
+    // _GBListLocal = GBListLocalClean;
   }
 
 }
@@ -475,7 +477,7 @@ XolotlUserObjectSynced::allocate_xolotlLocalData() const
 double*
 XolotlUserObjectSynced::vectorized_xolotl_XeRate(std::shared_ptr<xolotlSolver::PetscSolver> solver) const
 {
-  std::vector<std::vector<std::vector<double> > > * buff = _xolotl_interface->getLocalXeRate(solver); // Bringing the Xe rate data (within GB)
+  // std::vector<std::vector<std::vector<double> > > * buff = _xolotl_interface->getLocalXeRate(solver); // Bringing the Xe rate data (within GB)
 
   int nx = _xolotl_localNx;
   int ny = _xolotl_localNy;
@@ -486,7 +488,8 @@ XolotlUserObjectSynced::vectorized_xolotl_XeRate(std::shared_ptr<xolotlSolver::P
   for (int k = 0; k < nz; k++){
     for (int j = 0; j < ny; j++){
       for (int i = 0; i < nx; i++){
-        vecReturn[ii(i,j,k)] = buff->at(i)[j][k];
+        // vecReturn[ii(i,j,k)] = buff->at(i)[j][k];
+        vecReturn[ii(i,j,k)] = _xolotl_interface->getLocalXeRate(solver, i, j, k); // Bringing the Xe rate data (within GB)
       }
     }
   }
@@ -494,25 +497,25 @@ XolotlUserObjectSynced::vectorized_xolotl_XeRate(std::shared_ptr<xolotlSolver::P
   return vecReturn;
 }
 
-double*
-XolotlUserObjectSynced::vectorized_xolotl_XeConc(std::shared_ptr<xolotlSolver::PetscSolver> solver) const
-{
-  std::vector<std::vector<std::vector<double> > > * buff = _xolotl_interface->getLocalXeConc(solver); // Bringing the Xe rate data (within GB)
-  int nx = _xolotl_localNx;
-  int ny = _xolotl_localNy;
-  int nz = _xolotl_localNz;
-  double *vecReturn;
-  vecReturn = new double[nx*ny*nz];
-  for (int k = 0; k < nz; k++){
-    for (int j = 0; j < ny; j++){
-      for (int i = 0; i < nx; i++){
-        vecReturn[ii(i,j,k)] = buff->at(i)[j][k];
-      }
-    }
-  }
-
-  return vecReturn;
-}
+// double*
+// XolotlUserObjectSynced::vectorized_xolotl_XeConc(std::shared_ptr<xolotlSolver::PetscSolver> solver) const
+// {
+//   std::vector<std::vector<std::vector<double> > > * buff = _xolotl_interface->getLocalXeConc(solver); // Bringing the Xe rate data (within GB)
+//   int nx = _xolotl_localNx;
+//   int ny = _xolotl_localNy;
+//   int nz = _xolotl_localNz;
+//   double *vecReturn;
+//   vecReturn = new double[nx*ny*nz];
+//   for (int k = 0; k < nz; k++){
+//     for (int j = 0; j < ny; j++){
+//       for (int i = 0; i < nx; i++){
+//         vecReturn[ii(i,j,k)] = buff->at(i)[j][k];
+//       }
+//     }
+//   }
+//
+//   return vecReturn;
+// }
 
 double*
 XolotlUserObjectSynced::computeTimeDerivativeLocal(double *buff_new, double *buff_old, double timeInterval) const
@@ -573,7 +576,7 @@ XolotlUserObjectSynced::localFill_xolotlGlobalData(double *arr, double *arrLocal
 void
 XolotlUserObjectSynced::localFill_xolotlGlobalXeRate(double *arr, std::shared_ptr<xolotlSolver::PetscSolver> solver) const
 {
-  std::vector<std::vector<std::vector<double> > > * buff = _xolotl_interface->getLocalXeRate(solver); // Bringing the Xe rate data (within GB)
+  // std::vector<std::vector<std::vector<double> > > * buff = _xolotl_interface->getLocalXeRate(solver); // Bringing the Xe rate data (within GB)
 
   int nsize = _xolotl_nx * _xolotl_ny * _xolotl_nz;
   for (int ii = 0; ii < nsize; ii++){
@@ -585,33 +588,34 @@ XolotlUserObjectSynced::localFill_xolotlGlobalXeRate(double *arr, std::shared_pt
         int iGlob = i +_xolotl_xi_lb;
         int jGlob = j +_xolotl_yi_lb;
         int kGlob = k +_xolotl_zi_lb;
-        arr[iiGlob(iGlob,jGlob,kGlob)] = buff->at(i)[j][k];
+        // arr[iiGlob(iGlob,jGlob,kGlob)] = buff->at(i)[j][k];
+        arr[ii(i,j,k)] = _xolotl_interface->getLocalXeRate(solver, i, j, k); // Bringing the Xe rate data (within GB)
       }
     }
   }
 }
 
-void
-XolotlUserObjectSynced::localFill_xolotlGlobalXeConc(double *arr, std::shared_ptr<xolotlSolver::PetscSolver> solver) const
-{
-  std::vector<std::vector<std::vector<double> > > * buff = _xolotl_interface->getLocalXeConc(solver); // Bringing the Xe rate data (within GB)
-
-  // Cleaning up the buffer
-  int nsize = _xolotl_nx * _xolotl_ny * _xolotl_nz;
-  for (int ii = 0; ii < nsize; ii++){
-    arr[ii] = 0.0;
-  }
-  for (int k = 0; k < _xolotl_localNz; k++){
-    for (int j = 0; j < _xolotl_localNy; j++){
-      for (int i = 0; i < _xolotl_localNx; i++){
-        int iGlob = i +_xolotl_xi_lb;
-        int jGlob = j +_xolotl_yi_lb;
-        int kGlob = k +_xolotl_zi_lb;
-        arr[iiGlob(iGlob,jGlob,kGlob)] = buff->at(i)[j][k];
-      }
-    }
-  }
-}
+// void
+// XolotlUserObjectSynced::localFill_xolotlGlobalXeConc(double *arr, std::shared_ptr<xolotlSolver::PetscSolver> solver) const
+// {
+//   std::vector<std::vector<std::vector<double> > > * buff = _xolotl_interface->getLocalXeConc(solver); // Bringing the Xe rate data (within GB)
+//
+//   // Cleaning up the buffer
+//   int nsize = _xolotl_nx * _xolotl_ny * _xolotl_nz;
+//   for (int ii = 0; ii < nsize; ii++){
+//     arr[ii] = 0.0;
+//   }
+//   for (int k = 0; k < _xolotl_localNz; k++){
+//     for (int j = 0; j < _xolotl_localNy; j++){
+//       for (int i = 0; i < _xolotl_localNx; i++){
+//         int iGlob = i +_xolotl_xi_lb;
+//         int jGlob = j +_xolotl_yi_lb;
+//         int kGlob = k +_xolotl_zi_lb;
+//         arr[iiGlob(iGlob,jGlob,kGlob)] = buff->at(i)[j][k];
+//       }
+//     }
+//   }
+// }
 
 void
 XolotlUserObjectSynced::globalFill_xolotlGlobalData(double *arr) const

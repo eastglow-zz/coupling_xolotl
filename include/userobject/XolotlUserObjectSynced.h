@@ -51,13 +51,13 @@ private:
   virtual int max3int(int a, int b, int c) const;
   virtual double* allocate_xolotlLocalData() const;
   virtual double* vectorized_xolotl_XeRate(std::shared_ptr<xolotlSolver::PetscSolver> solver) const;
-  virtual double* vectorized_xolotl_XeConc(std::shared_ptr<xolotlSolver::PetscSolver> solver) const;
+  // virtual double* vectorized_xolotl_XeConc(std::shared_ptr<xolotlSolver::PetscSolver> solver) const;
   virtual double* computeTimeDerivativeLocal(double *bnew, double *bold, double delt) const;
   virtual void superposeArrayLocal(double *ans, double *arr1, double *arr2) const;
   virtual double* allocate_xolotlGlobalData() const;
   virtual void localFill_xolotlGlobalData(double *arr, double *arrLocal) const;
   virtual void localFill_xolotlGlobalXeRate(double *arr, std::shared_ptr<xolotlSolver::PetscSolver> solver) const;
-  virtual void localFill_xolotlGlobalXeConc(double *arr, std::shared_ptr<xolotlSolver::PetscSolver> solver) const;
+  // virtual void localFill_xolotlGlobalXeConc(double *arr, std::shared_ptr<xolotlSolver::PetscSolver> solver) const;
   virtual void globalFill_xolotlGlobalData(double *arr) const;
   virtual std::vector<std::tuple<int, int, int>> get_GlobalGBList(std::vector<std::tuple<int, int, int>> gbLocal) const;
   virtual int iiGlob(int i, int j, int k) const;

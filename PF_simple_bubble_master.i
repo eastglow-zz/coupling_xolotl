@@ -3,7 +3,7 @@
 # Energy density scale: 64e9 J/m^3 = 400 eV/nm^3
 
 #Relative path also available when running in the application directory
-XolotlWrapperPath = './xolotl_userobj.i'
+XolotlWrapperPath = './xolotl_userobj_new.i'
 
 #Absolute path is neccessary when running from a remote directory
 #XolotlWrapperPath = '/Users/donguk.kim/projects/coupling_xolotl/xolotl_userobj.i'    #for Mac

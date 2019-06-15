@@ -44,7 +44,9 @@ POROUS_FLOW         := no
 include $(MOOSE_DIR)/modules/modules.mk
 ###############################################################################
 #External non-MOOSE shared library linking - not necessary
-xolotlincludepath    :=/Users/donguk.kim/projects/xolotl-build/include  #for Mac
+#xolotlincludepath    :=/Users/donguk.kim/projects/xolotl-build/include  #for Mac
+#xolotlincludepath    :=/home/donguk.kim/projects/xolotl-build/include  #for UF HPG2
+xolotlincludepath    :=/Users/donguk.kim/projects/xolotl-dlload/include  #for Mac
 #xolotlincludepath    :=/home/donguk.kim/projects/xolotl-build/include  #for UF HPG2
 ADDITIONAL_INCLUDES:= -I$(xolotlincludepath)
 ###############################################################################
