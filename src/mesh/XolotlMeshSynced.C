@@ -141,7 +141,7 @@ XolotlMeshSynced::XolotlMeshSynced(const InputParameters & parameters)
 
   _xolotl_local_index_table = init_xolotl_local_index_table(6);
   fillout_xolotl_local_index_table(_xolotl_local_index_table, 6);
-  print_xolotl_local_index_table(_xolotl_local_index_table, 6);
+  //print_xolotl_local_index_table(_xolotl_local_index_table, 6);
 
   _xolotl_xi_lb = _xolotl_local_index_table[_moose_rank][0];
   _xolotl_xi_ub = _xolotl_xi_lb + _xolotl_local_index_table[_moose_rank][1] - 1;
@@ -154,7 +154,7 @@ XolotlMeshSynced::XolotlMeshSynced(const InputParameters & parameters)
   _xolotl_localNz = _xolotl_local_index_table[_moose_rank][5];
 
   count_num_partition_along_each_xyz(&_xnp, &_ynp, &_znp, _xolotl_local_index_table);
-  printf("_xnp = %d, _ynp = %d, _znp = %d\n", _xnp, _ynp, _znp);
+  //printf("_xnp = %d, _ynp = %d, _znp = %d\n", _xnp, _ynp, _znp);
 
   get_current_process_coord(&_xpid, &_ypid, &_zpid, _moose_rank);
 
@@ -168,6 +168,8 @@ XolotlMeshSynced::XolotlMeshSynced(const InputParameters & parameters)
   _ymax = _xolotl_ly;
   _zmin = 0,0;
   _zmax = _xolotl_lz;
+
+  _xolotl_interface->finalizeXolotl(_xolotl_solver, ISSTANDALONE); 
 
 }
 
@@ -997,7 +999,7 @@ XolotlMeshSynced::build_square_Quad4(UnstructuredMesh & mesh, const ElemType typ
   Mx = _xolotl_nx;
   My = _xolotl_ny;
 
-  printf("pid = %d, xs = %d, xm = %d, ys = %d,  ym = %d\n", pid, xs, xm, ys, ym);
+  //printf("pid = %d, xs = %d, xm = %d, ys = %d,  ym = %d\n", pid, xs, xm, ys, ym);
 
   for (PetscInt j = ys; j < ys + ym; j++)
     for (PetscInt i = xs; i < xs + xm; i++)
