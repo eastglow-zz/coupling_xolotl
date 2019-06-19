@@ -14,22 +14,29 @@
 
 class coupling_xolotlApp;
 
-template <>
+template<>
 InputParameters validParams<coupling_xolotlApp>();
 
-class coupling_xolotlApp : public MooseApp
-{
+class coupling_xolotlApp: public MooseApp {
 public:
-  coupling_xolotlApp(InputParameters parameters);
-  virtual ~coupling_xolotlApp();
+	coupling_xolotlApp(InputParameters parameters);
+	virtual ~coupling_xolotlApp();
 
-  XolotlInterface & getInterface() {return _interface;}
-  TS & getXolotlTS() {return _interface.getTS();}
-  static void registerApps();
-  static void registerAll(Factory & f, ActionFactory & af, Syntax & s);
+	XolotlInterface & getInterface() {
+		return _interface;
+	}
+	TS & getXolotlTS() {
+		return _interface.getTS();
+	}
+	static void registerApps();
+	static void registerAll(Factory & f, ActionFactory & af, Syntax & s);
+
+	// For restart capabilities
+	std::shared_ptr<Backup> backup();
+	void restore(std::shared_ptr<Backup> backup, bool for_restart = false);
 
 private:
-  XolotlInterface _interface;
+	XolotlInterface _interface;
 };
 
 #endif /* COUPLING_XOLOTLAPP_H */

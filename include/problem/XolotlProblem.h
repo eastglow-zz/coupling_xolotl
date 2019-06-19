@@ -34,16 +34,23 @@ public:
 		return true;
 	}
 
+	// Methods for restart
+	void saveState();
+	void setState();
+
 private:
 /// The name of the variable to transfer to
 	const VariableName & _sync_to_var_name;
 	const VariableName & _sync_from_var_name;
 	XolotlInterface &_interface;
 	Real _dt_for_derivative;
-	std::vector<std::vector<std::vector<double> > > _old_rate;
+	std::vector<std::vector<std::vector<Real> > > _old_rate;
 	std::vector<int> _gb_list;
-	double _xolotl_current_time;
+	Real _xolotl_current_time;
 	bool _xolotl_has_run;
+
+	// Variables for restart
+	std::vector<std::vector<std::vector<std::vector<std::pair<int, Real> > > > > & _conc_vector;
 };
 
 #endif /* XOLOTLPROBLEM_H */

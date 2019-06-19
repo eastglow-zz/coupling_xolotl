@@ -25,14 +25,20 @@ XolotlProblem::XolotlProblem(const InputParameters & params) :
 		ExternalProblem(params), _sync_to_var_name(
 				getParam < VariableName > ("sync_variable")), _sync_from_var_name(
 				getParam < VariableName > ("sync_GB")), _interface(
-				static_cast<coupling_xolotlApp &>(_app).getInterface()) {
+				static_cast<coupling_xolotlApp &>(_app).getInterface()), _conc_vector(
+				declareRestartableData
+						< std::vector<
+								std::vector<
+										std::vector<
+												std::vector<std::pair<int, Real> > > > >
+						> ("conc_vector")) {
 	PetscInt xs, ys, zs, xm, ym, zm, Mx, My, Mz;
-        _interface.getLocalCoordinates(xs, xm, Mx, ys, ym, My, zs, zm, Mz);
-	
+	_interface.getLocalCoordinates(xs, xm, Mx, ys, ym, My, zs, zm, Mz);
+
 	// Initialize old rate
 	_old_rate.clear();
 	for (int i = 0; i < max(xm, 1); i++) {
-		std::vector<std::vector<double> > tempTempVector;
+		std::vector < std::vector<double> > tempTempVector;
 		for (int j = 0; j < max(ym, 1); j++) {
 			std::vector<double> tempVector;
 			for (int k = 0; k < max(zm, 1); k++) {
@@ -51,7 +57,7 @@ XolotlProblem::XolotlProblem(const InputParameters & params) :
 void XolotlProblem::externalSolve() {
 	_xolotl_has_run = false;
 	// Check that the next time is larger than the current one
-	if (time() > _xolotl_current_time) { 
+	if (time() > _xolotl_current_time) {
 		// Set the time we want to reach
 		_interface.setTimes(time(), dt());
 		// Reset the concentrations where the GBs are
@@ -87,7 +93,8 @@ void XolotlProblem::syncSolutions(Direction direction) {
 							sync_to_var.sys().number(), sync_to_var.number(),
 							0);
 					// Compute the time derivative
-					Real current_rate = _interface.getLocalXeRate(i - xs, j - ys, k - zs);
+					Real current_rate = _interface.getLocalXeRate(i - xs,
+							j - ys, k - zs);
 					Real value = (current_rate
 							- _old_rate[i - xs][j - ys][k - zs])
 							/ _dt_for_derivative;
@@ -133,8 +140,19 @@ void XolotlProblem::syncSolutions(Direction direction) {
 		// Clear the GB list in Xolotl
 		_interface.resetGBVector();
 		// Pass the local list to Xolotl
-		for (int m = 0; m < localGBList.size(); m+=3) {
-			_interface.setGBLocation(localGBList[m], localGBList[m + 1], localGBList[m + 2]);
+		for (int m = 0; m < localGBList.size(); m += 3) {
+			_interface.setGBLocation(localGBList[m], localGBList[m + 1],
+					localGBList[m + 2]);
 		}
 	}
+}
+
+void XolotlProblem::saveState() {
+	// Update the conc vector
+	_conc_vector = _interface.getConcVector();
+}
+
+void XolotlProblem::setState() {
+	// Set it in Xolotl
+	_interface.setConcVector(_conc_vector);
 }
