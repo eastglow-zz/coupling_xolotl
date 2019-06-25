@@ -44,13 +44,19 @@ private:
 	const VariableName & _sync_from_var_name;
 	XolotlInterface &_interface;
 	Real _dt_for_derivative;
-	std::vector<std::vector<std::vector<Real> > > _old_rate;
+	std::vector<std::vector<std::vector<Real> > > & _old_rate;
 	std::vector<int> _gb_list;
-	Real _xolotl_current_time;
+	Real & _current_time;
 	bool _xolotl_has_run;
 
 	// Variables for restart
+	Real & _current_dt;
+	Real & _previous_time;
+	Real & _n_xenon;
+	std::vector<std::vector<std::vector<Real> > > & _previous_xe_flux;
+	std::vector<std::vector<std::vector<Real> > > & _local_rate;
 	std::vector<std::vector<std::vector<std::vector<std::pair<int, Real> > > > > & _conc_vector;
+
 };
 
 #endif /* XOLOTLPROBLEM_H */

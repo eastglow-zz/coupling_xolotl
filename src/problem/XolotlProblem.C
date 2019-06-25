@@ -25,7 +25,20 @@ XolotlProblem::XolotlProblem(const InputParameters & params) :
 		ExternalProblem(params), _sync_to_var_name(
 				getParam < VariableName > ("sync_variable")), _sync_from_var_name(
 				getParam < VariableName > ("sync_GB")), _interface(
-				static_cast<coupling_xolotlApp &>(_app).getInterface()), _conc_vector(
+				static_cast<coupling_xolotlApp &>(_app).getInterface()), _old_rate(
+				declareRestartableData
+						< std::vector<std::vector<std::vector<Real> > >
+						> ("old_rate")), _current_time(
+				declareRestartableData < Real > ("current_time", 0.0)), _current_dt(
+				declareRestartableData < Real > ("current_dt", 0.0)), _previous_time(
+				declareRestartableData < Real > ("previous_time", 0.0)), _n_xenon(
+				declareRestartableData < Real > ("n_xenon", 0.0)), _previous_xe_flux(
+				declareRestartableData
+						< std::vector<std::vector<std::vector<Real> > >
+						> ("previous_xe_flux")), _local_rate(
+				declareRestartableData
+						< std::vector<std::vector<std::vector<Real> > >
+						> ("local_rate")), _conc_vector(
 				declareRestartableData
 						< std::vector<
 								std::vector<
@@ -49,15 +62,14 @@ XolotlProblem::XolotlProblem(const InputParameters & params) :
 		_old_rate.push_back(tempTempVector);
 	}
 
-	// Initialize the current time for Xolotl and has run
-	_xolotl_current_time = 0.0;
+	// Initialize has run for Xolotl
 	_xolotl_has_run = false;
 }
 
 void XolotlProblem::externalSolve() {
 	_xolotl_has_run = false;
 	// Check that the next time is larger than the current one
-	if (time() > _xolotl_current_time) {
+	if (time() > _current_time) {
 		// Set the time we want to reach
 		_interface.setTimes(time(), dt());
 		// Reset the concentrations where the GBs are
@@ -67,7 +79,7 @@ void XolotlProblem::externalSolve() {
 		// Run the solver
 		_interface.solveXolotl();
 		// Save the current time
-		_xolotl_current_time = time();
+		_current_time = time();
 		// Set Xolotl has run
 		_xolotl_has_run = true;
 	}
@@ -82,6 +94,9 @@ void XolotlProblem::syncSolutions(Direction direction) {
 				Moose::VarKindType::VAR_ANY,
 				Moose::VarFieldType::VAR_FIELD_STANDARD);
 
+		// Get the rate vector
+		auto rate_vector = _interface.getLocalXeRate();
+
 		for (k = zs; k < zs + max(zm, 1); k++)
 			for (j = ys; j < ys + max(ym, 1); j++)
 				for (i = xs; i < xs + max(xm, 1); i++) {
@@ -93,15 +108,15 @@ void XolotlProblem::syncSolutions(Direction direction) {
 							sync_to_var.sys().number(), sync_to_var.number(),
 							0);
 					// Compute the time derivative
-					Real current_rate = _interface.getLocalXeRate(i - xs,
-							j - ys, k - zs);
+					Real current_rate = rate_vector[i - xs][j - ys][k - zs];
 					Real value = (current_rate
 							- _old_rate[i - xs][j - ys][k - zs])
 							/ _dt_for_derivative;
 					sync_to_var.sys().solution().set(dof, value);
-					// Update the old rate
-					_old_rate[i - xs][j - ys][k - zs] = current_rate;
 				}
+
+		// Update the old rate
+		_old_rate = rate_vector;
 
 		sync_to_var.sys().solution().close();
 	}
@@ -148,11 +163,22 @@ void XolotlProblem::syncSolutions(Direction direction) {
 }
 
 void XolotlProblem::saveState() {
-	// Update the conc vector
+	// Update the values from Xolotl
 	_conc_vector = _interface.getConcVector();
+	_local_rate = _interface.getLocalXeRate();
+	_previous_xe_flux = _interface.getPreviousXeFlux();
+	_current_dt = _interface.getCurrentDt();
+	_previous_time = _interface.getPreviousTime();
+	_n_xenon = _interface.getNXeGB();
+	_old_rate = _interface.getLocalXeRate();
 }
 
 void XolotlProblem::setState() {
-	// Set it in Xolotl
+	// Set them in Xolotl
 	_interface.setConcVector(_conc_vector);
+	_interface.setLocalXeRate(_local_rate);
+	_interface.setPreviousXeFlux(_previous_xe_flux);
+	_interface.setCurrentTimes(_current_time, _current_dt);
+	_interface.setPreviousTime(_previous_time);
+	_interface.setNXeGB(_n_xenon);
 }
