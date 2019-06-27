@@ -3,7 +3,11 @@ coupling_xolotl
 
 "Fork coupling_xolotl" to create a new MOOSE-based application.
 
-To use this application, MOOSE framework (https://mooseframework.inl.gov/getting_started/index.html) and Xolotl (look for URLs in following sections) should be already installed. When you install PETSc for MOOSE on Linux machine, petsc-3.10.2 (https://github.com/petsc/petsc , commit#: 2960cdc8ad2c61e9f0df8570deb766ef301642a0) which is the same one for Xolotl is recommended.
+-README update is coming up soon.
+
+
+-Below lines are deprecated as of June 27th 2019: 
+To use this application, MOOSE framework (https://mooseframework.inl.gov/getting_started/index.html) and Xolotl (look for URLs in following sections) should be already installed. When you install PETSc for MOOSE on Linux machine, petsc-3.11.2 (https://github.com/petsc/petsc , commit#: 2960cdc8ad2c61e9f0df8570deb766ef301642a0) which is the same one for Xolotl is recommended.
 
 Xolotl is built into a dynamic library, and each branch of this application uses different method to implement the classes and functions from Xolotl.
 
