@@ -124,9 +124,11 @@ XolotlMeshSynced::XolotlMeshSynced(const InputParameters & parameters)
 
   // create an instance of the class
   _xolotl_interface = create_interface();
+  //XolotlDLinterface* xolotl_interface_tmp = create_interface();
 
   // Get Xolotl grid information
   _xolotl_interface->getXolotlGlobalGridInfo(&_xolotl_dim, &_xolotl_regulargrid,
+  //xolotl_interface_tmp->getXolotlGlobalGridInfo(&_xolotl_dim, &_xolotl_regulargrid,
     &_xolotl_nx, &_xolotl_ny, &_xolotl_nz,
     &_xolotl_dx, &_xolotl_dy, &_xolotl_dz, &_xolotl_lx, &_xolotl_ly, &_xolotl_lz, _argc, _argv);
 
@@ -135,8 +137,11 @@ XolotlMeshSynced::XolotlMeshSynced(const InputParameters & parameters)
   _xolotl_zc = build_xolotl_axis(_xolotl_nz, _xolotl_dz);
 
   _xolotl_solver = _xolotl_interface->initializeXolotl(_argc, _argv, MPI_COMM_WORLD, ISSTANDALONE);
+  //std::shared_ptr<xolotlSolver::PetscSolver> xolotl_solver_tmp = xolotl_interface_tmp->initializeXolotl(_argc, _argv, MPI_COMM_WORLD, ISSTANDALONE);
+
   if (!_xolotl_regulargrid) {
     _xolotl_xcNR = _xolotl_interface->getXolotlXgrid(_xolotl_solver);
+    //_xolotl_xcNR = xolotl_interface_tmp->getXolotlXgrid(xolotl_solver_tmp);
   }
 
   _xolotl_local_index_table = init_xolotl_local_index_table(6);
@@ -170,6 +175,7 @@ XolotlMeshSynced::XolotlMeshSynced(const InputParameters & parameters)
   _zmax = _xolotl_lz;
 
   _xolotl_interface->finalizeXolotl(_xolotl_solver, ISSTANDALONE); 
+  //xolotl_interface_tmp->finalizeXolotl(xolotl_solver_tmp, ISSTANDALONE); 
 
 }
 

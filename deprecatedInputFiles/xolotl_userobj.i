@@ -3,14 +3,14 @@
 # default mass unit: ?
 
 #Relative path also available when running in the application directory
-XolotlLibPath = '../xolotl-build/lib/libxolotlInter.dylib'
-XolotlInpPath = './params_NE_2D_withPFsimple.txt'
+#XolotlLibPath = '../xolotl-build/lib/libxolotlInter.dylib'
+#XolotlInpPath = './params_NE_2D_withPFsimple.txt'
 
 #Absolute path is neccessary when running from a remote directory
 #XolotlLibPath = '/Users/donguk.kim/projects/xolotl-build/lib/libxolotlInter.dylib'    #for Mac
 #XolotlInpPath = '/Users/donguk.kim/projects/coupling_xolotl/params_NE_2D_withPFsimple.txt'   #for Mac
-#XolotlLibPath = '/home/donguk.kim/projects/xolotl-build/lib/libxolotlInter.so'    #for UF HPG2
-#XolotlInpPath = '/home/donguk.kim/projects/coupling_xolotl/params_NE_2D_withPFsimple.txt'   #for UF HPG2
+XolotlLibPath = '/home/donguk.kim/projects/xolotl-dlload06232019/lib/libxolotlInter.so'    #for UF HPG2
+XolotlInpPath = '/home/donguk.kim/projects/coupling_xolotl/params_NE_2D_withPFsimple.txt'   #for UF HPG2
 
 [Mesh]
   type = XolotlMeshSynced
