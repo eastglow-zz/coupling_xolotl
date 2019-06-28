@@ -13,3 +13,4 @@ process=diff reaction resolution
 voidPortion=0.0
 regularGrid=yes
 initialV=0.0
+zeta=0.5
