@@ -40,8 +40,10 @@ public:
 
 private:
 /// The name of the variable to transfer to
-	const VariableName & _sync_to_var_name;
-	const VariableName & _sync_from_var_name;
+	const VariableName & _sync_rate;
+	const VariableName & _sync_gb;
+	const VariableName & _sync_mono;
+	const VariableName & _sync_frac;
 	XolotlInterface &_interface;
 	Real _dt_for_derivative;
 	std::vector<std::vector<std::vector<Real> > > & _old_rate;
@@ -53,8 +55,7 @@ private:
 	Real & _current_dt;
 	Real & _previous_time;
 	Real & _n_xenon;
-	std::vector<std::vector<std::vector<Real> > > & _previous_xe_flux;
-	std::vector<std::vector<std::vector<Real> > > & _local_rate;
+	std::vector<std::vector<std::vector<std::tuple<Real, Real, Real, Real> > > > & _local_NE;
 	std::vector<std::vector<std::vector<std::vector<std::pair<int, Real> > > > > & _conc_vector;
 
 };

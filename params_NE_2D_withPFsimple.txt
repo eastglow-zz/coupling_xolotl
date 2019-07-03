@@ -1,13 +1,17 @@
 petscArgs=-ts_max_steps 1000 -xenon_retention -ts_final_time 7.0e7 -ts_adapt_dt_max 5.0e3 -ts_dt 1.0e-1 -ts_exact_final_time matchstep -fieldsplit_0_pc_type sor -ts_max_snes_failures -1 -pc_fieldsplit_detect_coupling -ts_monitor -pc_type fieldsplit -fieldsplit_1_pc_type gamg -fieldsplit_1_ksp_type gmres -ksp_type fgmres
+#-snes_test_display -snes_test_jacobian_view -snes_test_jacobian 1.0e-10
 vizHandler=dummy
 flux=8.0e-9
 boundary=0 0 0 0 
-netParam=100 0 0 0 0
-grid=121 10 121 10
+netParam=1000 0 0 0 0
+grid=126 160 126 160
+#grid=21 1000 21 1000
 material=Fuel
 dimensions=2
-perfHandler=std
+perfHandler=dummy
 startTemp=1800
+radiusSize=15
 grouping=101 10
-process=diff reaction resolution
+process=diff reaction
 regularGrid=yes
+#zeta=0.5

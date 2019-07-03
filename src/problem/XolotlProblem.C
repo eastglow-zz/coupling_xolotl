@@ -15,16 +15,22 @@ template<>
 InputParameters validParams<XolotlProblem>() {
 	InputParameters params = validParams<ExternalProblem>();
 	params.addRequiredParam < VariableName
-			> ("sync_variable", "The variable the solution will be synced to");
+			> ("sync_rate", "The variable the rate will be synced to");
 	params.addRequiredParam < VariableName
 			> ("sync_GB", "The variable the GB will be synced to");
+        params.addRequiredParam < VariableName
+                        > ("sync_mono", "The variable the monomer will be synced to");
+        params.addRequiredParam < VariableName
+                        > ("sync_frac", "The variable the V fraction will be synced to");
 	return params;
 }
 
 XolotlProblem::XolotlProblem(const InputParameters & params) :
-		ExternalProblem(params), _sync_to_var_name(
-				getParam < VariableName > ("sync_variable")), _sync_from_var_name(
-				getParam < VariableName > ("sync_GB")), _interface(
+		ExternalProblem(params), _sync_rate(
+				getParam < VariableName > ("sync_rate")), _sync_gb(
+				getParam < VariableName > ("sync_GB")), _sync_mono(
+                                getParam < VariableName > ("sync_mono")), _sync_frac(
+                                getParam < VariableName > ("sync_frac")), _interface(
 				static_cast<coupling_xolotlApp &>(_app).getInterface()), _old_rate(
 				declareRestartableData
 						< std::vector<std::vector<std::vector<Real> > >
@@ -32,13 +38,11 @@ XolotlProblem::XolotlProblem(const InputParameters & params) :
 				declareRestartableData < Real > ("current_time", 0.0)), _current_dt(
 				declareRestartableData < Real > ("current_dt", 0.0)), _previous_time(
 				declareRestartableData < Real > ("previous_time", 0.0)), _n_xenon(
-				declareRestartableData < Real > ("n_xenon", 0.0)), _previous_xe_flux(
+				declareRestartableData < Real > ("n_xenon", 0.0)), _local_NE(
 				declareRestartableData
-						< std::vector<std::vector<std::vector<Real> > >
-						> ("previous_xe_flux")), _local_rate(
-				declareRestartableData
-						< std::vector<std::vector<std::vector<Real> > >
-						> ("local_rate")), _conc_vector(
+						< std::vector<std::vector<std::vector<std::tuple<Real,
+						Real, Real, Real> > > >
+						> ("local_NE")), _conc_vector(
 				declareRestartableData
 						< std::vector<
 								std::vector<
@@ -90,40 +94,56 @@ void XolotlProblem::syncSolutions(Direction direction) {
 	_interface.getLocalCoordinates(xs, xm, Mx, ys, ym, My, zs, zm, Mz);
 	if (direction == Direction::FROM_EXTERNAL_APP && _xolotl_has_run) {
 		MeshBase & to_mesh = mesh().getMesh();
-		auto & sync_to_var = getVariable(0, _sync_to_var_name,
+		auto & sync_rate = getVariable(0, _sync_rate,
 				Moose::VarKindType::VAR_ANY,
 				Moose::VarFieldType::VAR_FIELD_STANDARD);
+                auto & sync_mono = getVariable(0, _sync_mono,
+                                Moose::VarKindType::VAR_ANY,
+                                Moose::VarFieldType::VAR_FIELD_STANDARD);
+                auto & sync_frac = getVariable(0, _sync_frac,
+                                Moose::VarKindType::VAR_ANY,
+                                Moose::VarFieldType::VAR_FIELD_STANDARD);
 
 		// Get the rate vector
-		auto rate_vector = _interface.getLocalXeRate();
+		auto ne_vector = _interface.getLocalNE();
 
 		for (k = zs; k < zs + max(zm, 1); k++)
 			for (j = ys; j < ys + max(ym, 1); j++)
 				for (i = xs; i < xs + max(xm, 1); i++) {
 					Node * to_node = to_mesh.node_ptr(i + (j + k * My) * Mx);
-					if (to_node->n_comp(sync_to_var.sys().number(),
-							sync_to_var.number()) > 1)
+					if (to_node->n_comp(sync_rate.sys().number(),
+							sync_rate.number()) > 1)
 						mooseError("Does not support multiple components");
-					dof_id_type dof = to_node->dof_number(
-							sync_to_var.sys().number(), sync_to_var.number(),
+					dof_id_type dof_rate = to_node->dof_number(
+							sync_rate.sys().number(), sync_rate.number(),
 							0);
+                                        dof_id_type dof_mono = to_node->dof_number(
+                                                        sync_mono.sys().number(), sync_mono.number(),
+                                                        0);
+                                        dof_id_type dof_frac = to_node->dof_number(
+                                                        sync_frac.sys().number(), sync_frac.number(),
+                                                        0);
 					// Compute the time derivative
-					Real current_rate = rate_vector[i - xs][j - ys][k - zs];
+					Real current_rate = std::get<0> (ne_vector[i - xs][j - ys][k - zs]);
 					Real value = (current_rate
 							- _old_rate[i - xs][j - ys][k - zs])
 							/ _dt_for_derivative;
-					sync_to_var.sys().solution().set(dof, value);
+					sync_rate.sys().solution().set(dof_rate, value);
+					sync_mono.sys().solution().set(dof_mono, std::get<2> (ne_vector[i - xs][j - ys][k - zs]));				
+                                        sync_frac.sys().solution().set(dof_frac, std::get<3> (ne_vector[i - xs][j - ys][k - zs])); 
+
+					// Update the old rate
+					_old_rate[i - xs][j - ys][k - zs] = current_rate;
 				}
 
-		// Update the old rate
-		_old_rate = rate_vector;
-
-		sync_to_var.sys().solution().close();
+		sync_rate.sys().solution().close();
+		sync_mono.sys().solution().close();
+		sync_frac.sys().solution().close();
 	}
 
 	if (direction == Direction::TO_EXTERNAL_APP) {
 		MeshBase & to_mesh = mesh().getMesh();
-		auto & sync_from_var = getVariable(0, _sync_from_var_name,
+		auto & sync_gb = getVariable(0, _sync_gb,
 				Moose::VarKindType::VAR_ANY,
 				Moose::VarFieldType::VAR_FIELD_STANDARD);
 
@@ -134,14 +154,14 @@ void XolotlProblem::syncSolutions(Direction direction) {
 			for (j = ys; j < ys + max(ym, 1); j++)
 				for (i = xs; i < xs + max(xm, 1); i++) {
 					Node * to_node = to_mesh.node_ptr(i + (j + k * My) * Mx);
-					if (to_node->n_comp(sync_from_var.sys().number(),
-							sync_from_var.number()) > 1)
+					if (to_node->n_comp(sync_gb.sys().number(),
+							sync_gb.number()) > 1)
 						mooseError("Does not support multiple components");
 					dof_id_type dof = to_node->dof_number(
-							sync_from_var.sys().number(),
-							sync_from_var.number(), 0);
+							sync_gb.sys().number(),
+							sync_gb.number(), 0);
 					// Get the value
-					Real value = sync_from_var.sys().solution()(dof);
+					Real value = sync_gb.sys().solution()(dof);
 					// Test if it is a GB
 					if (value < 0.9) {
 						localGBList.push_back(i);
@@ -150,7 +170,7 @@ void XolotlProblem::syncSolutions(Direction direction) {
 					}
 				}
 
-		sync_from_var.sys().solution().close();
+		sync_gb.sys().solution().close();
 
 		// Clear the GB list in Xolotl
 		_interface.resetGBVector();
@@ -165,19 +185,25 @@ void XolotlProblem::syncSolutions(Direction direction) {
 void XolotlProblem::saveState() {
 	// Update the values from Xolotl
 	_conc_vector = _interface.getConcVector();
-	_local_rate = _interface.getLocalXeRate();
-	_previous_xe_flux = _interface.getPreviousXeFlux();
+	_local_NE = _interface.getLocalNE();
 	_current_dt = _interface.getCurrentDt();
 	_previous_time = _interface.getPreviousTime();
 	_n_xenon = _interface.getNXeGB();
-	_old_rate = _interface.getLocalXeRate();
+
+	PetscInt i, j, k, xs, ys, zs, xm, ym, zm, Mx, My, Mz;
+        _interface.getLocalCoordinates(xs, xm, Mx, ys, ym, My, zs, zm, Mz);
+	// Set old rate from local NE
+	for (k = zs; k < zs + max(zm, 1); k++)
+                        for (j = ys; j < ys + max(ym, 1); j++)
+                                for (i = xs; i < xs + max(xm, 1); i++) {
+				_old_rate[i - xs][j - ys][k - zs] = std::get<0>(_local_NE[i - xs][j - ys][k - zs]);
+		}
 }
 
 void XolotlProblem::setState() {
 	// Set them in Xolotl
 	_interface.setConcVector(_conc_vector);
-	_interface.setLocalXeRate(_local_rate);
-	_interface.setPreviousXeFlux(_previous_xe_flux);
+	_interface.setLocalNE(_local_NE);
 	_interface.setCurrentTimes(_current_time, _current_dt);
 	_interface.setPreviousTime(_previous_time);
 	_interface.setNXeGB(_n_xenon);
