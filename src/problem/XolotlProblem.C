@@ -24,6 +24,27 @@ InputParameters validParams<XolotlProblem>() {
                         > ("sync_frac", "The variable the V fraction will be synced to");
 	return params;
 }
+template <>
+void
+dataStore(std::ostream & stream, std::tuple<Real,
+	Real, Real, Real>& foo, void * context)
+{
+	storeHelper(stream, std::get<0>(foo), context);
+  	storeHelper(stream, std::get<1>(foo), context);
+  	storeHelper(stream, std::get<2>(foo), context);
+        storeHelper(stream, std::get<3>(foo), context);
+}
+
+template <>
+void
+dataLoad(std::istream & stream, std::tuple<Real,
+	Real, Real, Real> & foo, void * context)
+{
+        loadHelper(stream, std::get<0>(foo), context);
+        loadHelper(stream, std::get<1>(foo), context);
+        loadHelper(stream, std::get<2>(foo), context);
+        loadHelper(stream, std::get<3>(foo), context);
+}
 
 XolotlProblem::XolotlProblem(const InputParameters & params) :
 		ExternalProblem(params), _sync_rate(
