@@ -705,20 +705,22 @@ XolotlWrapperPath = '/home/donguk.kim/projects/coupling_xolotl/xolotl_userobj_20
   [./XeRate_ref]
     type = ParsedMaterial
     f_name = XeRate0
-    material_property_names = 'Va hm'
-    constant_names = 's0'
+    material_property_names = 'VacRate0 YXe'
+    #constant_names = 's0'
     #constant_expressions = '2.35e-9'  # in atoms/(nm^3 * s)
-    constant_expressions = '8.0e-9'  # in atoms/(nm^3 * s), brought from Xolotl
+    #constant_expressions = '8.0e-9'  # in atoms/(nm^3 * s), brought from Xolotl
     args = 'time'
-    function = 'if(time < 0, 0, s0 * hm)'
+    function = 'if(time < 0, 0, VacRate0*0.25)'
     outputs = exodus
   [../]
   [./VacRate_ref]
     type = ParsedMaterial
     f_name = VacRate0
-    material_property_names = 'YXe XeRate0'
+    material_property_names = 'hm'
+    constant_names = 's0'
+    constant_expressions = '8.0e-9'  # in atoms/(nm^3 * s), brought from Xolotl
     args = 'time'
-    function = 'if(time < 0, 0, XeRate0 / YXe)'
+    function = 'if(time < 0, 0, s0*hm)'
     outputs = exodus
   [../]
 
