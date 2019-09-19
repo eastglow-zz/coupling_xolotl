@@ -9,6 +9,7 @@
 
 #include "XolotlUserObjectSynced.h"
 #include <dlfcn.h>
+// #include <tuple>
 //MOOSE includes
 
 #ifdef __APPLE__
@@ -477,7 +478,9 @@ XolotlUserObjectSynced::allocate_xolotlLocalData() const
 double*
 XolotlUserObjectSynced::vectorized_xolotl_XeRate(std::shared_ptr<xolotlSolver::PetscSolver> solver) const
 {
-  std::vector<std::vector<std::vector<double> > > * buff = _xolotl_interface->getLocalXeRate(solver); // Bringing the Xe rate data (within GB)
+  //std::vector<std::vector<std::vector<double> > > * buff = _xolotl_interface->getLocalXeRate(solver); // Bringing the Xe rate data (within GB)
+  // std::vector<std::vector<std::vector<std::tuple<double, double, double, double> > > > buff = _xolotl_interface->getLocalNE(solver); // Bringing the Xe rate data (within GB)
+  //auto XeRateLocal = get<0>(buff);
 
   int nx = _xolotl_localNx;
   int ny = _xolotl_localNy;
@@ -488,8 +491,10 @@ XolotlUserObjectSynced::vectorized_xolotl_XeRate(std::shared_ptr<xolotlSolver::P
   for (int k = 0; k < nz; k++){
     for (int j = 0; j < ny; j++){
       for (int i = 0; i < nx; i++){
-        vecReturn[ii(i,j,k)] = buff->at(i)[j][k];
-        // vecReturn[ii(i,j,k)] = _xolotl_interface->getLocalXeRate(solver, i, j, k); // Bringing the Xe rate data (within GB)
+        //vecReturn[ii(i,j,k)] = buff->at(i)[j][k];
+        //vecReturn[ii(i,j,k)] = buff->at(0)[i][j][k];
+        // vecReturn[ii(i,j,k)] = get<0>(buff[i][j][k]);
+        vecReturn[ii(i,j,k)] = _xolotl_interface->getLocalXeRatePoint(solver, i, j, k); // Bringing the Xe rate data (within GB)
       }
     }
   }
@@ -576,7 +581,8 @@ XolotlUserObjectSynced::localFill_xolotlGlobalData(double *arr, double *arrLocal
 void
 XolotlUserObjectSynced::localFill_xolotlGlobalXeRate(double *arr, std::shared_ptr<xolotlSolver::PetscSolver> solver) const
 {
-  std::vector<std::vector<std::vector<double> > > * buff = _xolotl_interface->getLocalXeRate(solver); // Bringing the Xe rate data (within GB)
+  // std::vector<std::vector<std::vector<double> > > * buff = _xolotl_interface->getLocalXeRate(solver); // Bringing the Xe rate data (within GB)
+  // std::vector<std::vector<std::vector<std::tuple<double, double, double, double> > > > buff = _xolotl_interface->getLocalNE(solver); // Bringing the Xe rate data (within GB)
 
   int nsize = _xolotl_nx * _xolotl_ny * _xolotl_nz;
   for (int ii = 0; ii < nsize; ii++){
@@ -588,8 +594,8 @@ XolotlUserObjectSynced::localFill_xolotlGlobalXeRate(double *arr, std::shared_pt
         int iGlob = i +_xolotl_xi_lb;
         int jGlob = j +_xolotl_yi_lb;
         int kGlob = k +_xolotl_zi_lb;
-        arr[iiGlob(iGlob,jGlob,kGlob)] = buff->at(i)[j][k];
-        // arr[ii(i,j,k)] = _xolotl_interface->getLocalXeRate(solver, i, j, k); // Bringing the Xe rate data (within GB)
+        // arr[iiGlob(iGlob,jGlob,kGlob)] = buff->at(i)[j][k];
+        arr[ii(i,j,k)] = _xolotl_interface->getLocalXeRatePoint(solver, i, j, k); // Bringing the Xe rate data (within GB)
       }
     }
   }
