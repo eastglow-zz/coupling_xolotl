@@ -24,8 +24,8 @@ XolotlWrapperPath = './XolotlWrapp_Sc_x4_CnR.i'
 []
 
 [GlobalParams]
-  op_num = 9
-  grain_num = 35
+  op_num = 12
+  grain_num = 144
   var_name_base = etam
   numbub = 16
   bubspac = 2500
@@ -113,6 +113,18 @@ XolotlWrapperPath = './XolotlWrapp_Sc_x4_CnR.i'
     family = MONOMIAL
   [../]
   [./halo8]
+    order = FIRST
+    family = MONOMIAL
+  [../]
+  [./halo9]
+    order = FIRST
+    family = MONOMIAL
+  [../]
+  [./halo10]
+    order = FIRST
+    family = MONOMIAL
+  [../]
+  [./halo11]
     order = FIRST
     family = MONOMIAL
   [../]
@@ -212,7 +224,28 @@ XolotlWrapperPath = './XolotlWrapp_Sc_x4_CnR.i'
   [./halo8]
     type = FeatureFloodCountAux
     variable = halo8
-    map_index = 7
+    map_index = 8
+    field_display = HALOS
+    flood_counter = grain_tracker
+  [../]
+  [./halo9]
+    type = FeatureFloodCountAux
+    variable = halo9
+    map_index = 9
+    field_display = HALOS
+    flood_counter = grain_tracker
+  [../]
+  [./halo10]
+    type = FeatureFloodCountAux
+    variable = halo10
+    map_index = 10
+    field_display = HALOS
+    flood_counter = grain_tracker
+  [../]
+  [./halo11]
+    type = FeatureFloodCountAux
+    variable = halo11
+    map_index = 11
     field_display = HALOS
     flood_counter = grain_tracker
   [../]
@@ -419,7 +452,7 @@ XolotlWrapperPath = './XolotlWrapp_Sc_x4_CnR.i'
   [./hb]
     type = SwitchingFunctionMultiPhaseMaterial
     h_name = hb
-    all_etas = 'etab0 etam0 etam1 etam2 etam3 etam4 etam5 etam6 etam7 etam8'
+    all_etas = 'etab0 etam0 etam1 etam2 etam3 etam4 etam5 etam6 etam7 etam8 etam9 etam10 etam11'
     # all_etas = 'etab0 etam0 etam1 etam2 etam3 etam4 etam5 etam6 etam7 etam8 etam9'
     phase_etas = 'etab0'
     #outputs = exodus
@@ -427,10 +460,10 @@ XolotlWrapperPath = './XolotlWrapp_Sc_x4_CnR.i'
   [./hm]
     type = SwitchingFunctionMultiPhaseMaterial
     h_name = hm
-    all_etas = 'etab0 etam0 etam1 etam2 etam3 etam4 etam5 etam6 etam7 etam8'
+    all_etas = 'etab0 etam0 etam1 etam2 etam3 etam4 etam5 etam6 etam7 etam8 etam9 etam10 etam11'
     # phase_etas = 'etam0 etam1 etam2 etam3 etam4'
     #all_etas = 'etab0 etam0 etam1 etam2 etam3 etam4 etam5 etam6 etam7 etam8 etam9 etam10 etam11 etam12 etam13 etam14 etam15'
-    phase_etas = 'etam0 etam1 etam2 etam3 etam4 etam5 etam6 etam7 etam8'
+    phase_etas = 'etam0 etam1 etam2 etam3 etam4 etam5 etam6 etam7 etam8 etam9 etam10 etam11'
     #outputs = exodus
   [../]
 # Chemical contribution to grand potential of bubble
