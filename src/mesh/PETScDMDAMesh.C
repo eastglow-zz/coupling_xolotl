@@ -71,14 +71,13 @@ PETScDMDAMesh::PETScDMDAMesh(const InputParameters & parameters) :
 		auto & interface = xolotl_app->getInterface();
 		// This has to be done here because the base app cannot take parameters
 		// from the input file
-		int argc = 3;
+		int argc = 2;
 		char ** argv = new char*[argc];
 		std::string parameterFile = "bla";
 		argv[0] = new char[parameterFile.length() + 1];
 		strcpy(argv[0], parameterFile.c_str());
 		argv[1] = new char[_xolotl_input_path_name.length() + 1];
 		strcpy(argv[1], _xolotl_input_path_name.c_str());
-		argv[2] = 0; // null-terminate the array
 
 		interface.initializeXolotl(argc, argv, _communicator.get(), false);
 		// Now we can get the TS from the app
