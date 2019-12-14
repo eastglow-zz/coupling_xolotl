@@ -2,20 +2,8 @@
 # default time unit: s
 # default mass unit: ?
 
-#Relative path also available when running in the application directory
-#XolotlLibPath = '../xolotl-build/lib/libxolotlInter.dylib'
-# XolotlInpPath = './params_NE_2D_withPFsimple.txt'
-# XolotlInpPath = './params_NE_2D_simple_12umsq_10dx0.txt'
-
-#Absolute path is neccessary when running from a remote directory
-#XolotlLibPath = '/Users/donguk.kim/projects/xolotl-dlload09042019/lib/libxolotlInter.dylib'    #for Mac
-#XolotlLibPath = '/Users/donguk.kim/projects/xolotl-build/lib/libxolotlInter.dylib'    #for Mac
-#XolotlInpPath = '/Users/donguk.kim/projects/coupling_xolotl/params_NE_2D_withPFsimple.txt'   #for Mac
-#XolotlLibPath = '/home/donguk.kim/projects/xolotl-dlload/lib/libxolotlInter.so'    #for UF HPG2
-#XolotlLibPath = '/home/donguk.kim/projects/xolotl-dlload06232019/lib/libxolotlInter.so'    #for UF HPG2
-#XolotlInpPath = '/home/donguk.kim/projects/coupling_xolotl/params_NE_2D_simple_20umsq_10dx0.txt'   #for UF HPG2
 XolotlLibPath = '/home/donguk.kim/gcc_moose/projects/xolotl-dlload-gcc/lib/libxolotlInter.so'    #for UF HPG2
-XolotlInpPath = './XolotlInput_Sc_x4_CnR.txt'   #for UF HPG2
+XolotlInpPath = '/home/donguk.kim/gcc_moose/projects/coupling_xolotl/Demo3D/graintracker/small_cube3D/XolotlInput_NoCL.txt'   #for UF HPG2
 
 [Mesh]
   type = XolotlMeshSynced
@@ -80,7 +68,8 @@ XolotlInpPath = './XolotlInput_Sc_x4_CnR.txt'   #for UF HPG2
     dt = 5000.0
   [../]
   start_time = 0
-  end_time = 2e8
+  #end_time = 2e8
+  end_time = 1e6
   # end_time = 20000.0
 []
 [Problem]

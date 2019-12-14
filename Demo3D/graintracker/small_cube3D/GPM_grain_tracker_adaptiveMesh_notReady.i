@@ -9,25 +9,28 @@
 #XolotlWrapperPath = '/Users/donguk.kim/projects/coupling_xolotl/xolotl_userobj.i'    #for Mac
 #XolotlWrapperPath = '/home/donguk.kim/projects/coupling_xolotl/xolotl_userobj.i'    #for UF HPG2
 #XolotlWrapperPath = '/home/donguk.kim/projects/coupling_xolotl/xolotl_userobj_20umsq_10dx0.i'    #for UF HPG2
-XolotlWrapperPath = './xolotl_userobj_20umsq_10dx0.i'    #for UF HPG2
+XolotlWrapperPath = './XolotlWrapp_Sc_x4_CnR.i'
 
 [Mesh]
   type = GeneratedMesh
-  dim = 2
-  nx = 125
-  ny = 125
+  dim = 3
+  nx = 15
+  ny = 15
+  nz = 15
   xmin = 0
-  xmax = 20000
+  xmax = 10800
   ymin = 0
-  ymax = 20000
-  #uniform_refine = 3
+  ymax = 10800
+  zmin = 0
+  zmax = 10800
+  uniform_refine = 2
 []
 
 [GlobalParams]
-  op_num = 5
-  grain_num = 5
+  op_num = 25
+  grain_num = 64
   var_name_base = etam
-  numbub = 14
+  numbub = 16
   bubspac = 2500
   radius = 733
   int_width = 480
@@ -65,6 +68,121 @@ XolotlWrapperPath = './xolotl_userobj_20umsq_10dx0.i'    #for UF HPG2
     order = FIRST
     family = MONOMIAL
   [../]
+
+  #For use of Grain Tracker
+  [./unique_grains]
+    order = FIRST
+    family = MONOMIAL
+  [../]
+  [./var_indices]
+    order = FIRST
+    family = MONOMIAL
+  [../]
+
+  [./halos]
+    order = FIRST
+    family = MONOMIAL
+  [../]
+  [./halo0] #We need the 'op_num' number of halos here; so we need 8 halo variables
+    order = FIRST
+    family = MONOMIAL
+  [../]
+  [./halo1]
+    order = FIRST
+    family = MONOMIAL
+  [../]
+  [./halo2]
+    order = FIRST
+    family = MONOMIAL
+  [../]
+  [./halo3]
+    order = FIRST
+    family = MONOMIAL
+  [../]
+  [./halo4]
+    order = FIRST
+    family = MONOMIAL
+  [../]
+  [./halo5]
+    order = FIRST
+    family = MONOMIAL
+  [../]
+  [./halo6]
+    order = FIRST
+    family = MONOMIAL
+  [../]
+  [./halo7]
+    order = FIRST
+    family = MONOMIAL
+  [../]
+  [./halo8]
+    order = FIRST
+    family = MONOMIAL
+  [../]
+  [./halo9]
+    order = FIRST
+    family = MONOMIAL
+  [../]
+  [./halo10]
+    order = FIRST
+    family = MONOMIAL
+  [../]
+  [./halo11]
+    order = FIRST
+    family = MONOMIAL
+  [../]
+  [./halo12]
+    order = FIRST
+    family = MONOMIAL
+  [../]
+  [./halo13]
+    order = FIRST
+    family = MONOMIAL
+  [../]
+  [./halo14]
+    order = FIRST
+    family = MONOMIAL
+  [../]
+  [./halo15]
+    order = FIRST
+    family = MONOMIAL
+  [../]
+  [./halo16]
+    order = FIRST
+    family = MONOMIAL
+  [../]
+  [./halo17]
+    order = FIRST
+    family = MONOMIAL
+  [../]
+  [./halo18]
+    order = FIRST
+    family = MONOMIAL
+  [../]
+  [./halo19]
+    order = FIRST
+    family = MONOMIAL
+  [../]
+  [./halo20]
+    order = FIRST
+    family = MONOMIAL
+  [../]
+  [./halo21]
+    order = FIRST
+    family = MONOMIAL
+  [../]
+  [./halo22]
+    order = FIRST
+    family = MONOMIAL
+  [../]
+  [./halo23]
+    order = FIRST
+    family = MONOMIAL
+  [../]
+  [./halo24]
+    order = FIRST
+    family = MONOMIAL
+  [../]
 []
 
 [AuxKernels]
@@ -83,9 +201,208 @@ XolotlWrapperPath = './xolotl_userobj_20umsq_10dx0.i'    #for UF HPG2
     variable = cv
     property = cv_from_rhov
   [../]
+
+  #For use of Grain Tracker
+  [./BndsCalc]
+    type = BndsCalcAux
+    variable = bnds
+    execute_on = 'initial timestep_end'
+  [../]
+  [./unique_grains]
+    type = FeatureFloodCountAux
+    variable = unique_grains
+    flood_counter = grain_tracker
+    field_display = UNIQUE_REGION
+  [../]
+  [./var_indices]
+    type = FeatureFloodCountAux
+    variable = var_indices
+    flood_counter = grain_tracker
+    field_display = VARIABLE_COLORING
+  [../]
+  [./halo0]
+    type = FeatureFloodCountAux
+    variable = halo0
+    map_index = 0
+    field_display = HALOS
+    flood_counter = grain_tracker
+  [../]
+  [./halo1]
+    type = FeatureFloodCountAux
+    variable = halo1
+    map_index = 1
+    field_display = HALOS
+    flood_counter = grain_tracker
+  [../]
+  [./halo2]
+    type = FeatureFloodCountAux
+    variable = halo2
+    map_index = 2
+    field_display = HALOS
+    flood_counter = grain_tracker
+  [../]
+  [./halo3]
+    type = FeatureFloodCountAux
+    variable = halo3
+    map_index = 3
+    field_display = HALOS
+    flood_counter = grain_tracker
+  [../]
+  [./halo4]
+    type = FeatureFloodCountAux
+    variable = halo4
+    map_index = 4
+    field_display = HALOS
+    flood_counter = grain_tracker
+  [../]
+  [./halo5]
+    type = FeatureFloodCountAux
+    variable = halo5
+    map_index = 5
+    field_display = HALOS
+    flood_counter = grain_tracker
+  [../]
+  [./halo6]
+    type = FeatureFloodCountAux
+    variable = halo6
+    map_index = 6
+    field_display = HALOS
+    flood_counter = grain_tracker
+  [../]
+  [./halo7]
+    type = FeatureFloodCountAux
+    variable = halo7
+    map_index = 7
+    field_display = HALOS
+    flood_counter = grain_tracker
+  [../]
+  [./halo8]
+    type = FeatureFloodCountAux
+    variable = halo8
+    map_index = 8
+    field_display = HALOS
+    flood_counter = grain_tracker
+  [../]
+  [./halo9]
+    type = FeatureFloodCountAux
+    variable = halo9
+    map_index = 9
+    field_display = HALOS
+    flood_counter = grain_tracker
+  [../]
+  [./halo10]
+    type = FeatureFloodCountAux
+    variable = halo10
+    map_index = 10
+    field_display = HALOS
+    flood_counter = grain_tracker
+  [../]
+  [./halo11]
+    type = FeatureFloodCountAux
+    variable = halo11
+    map_index = 11
+    field_display = HALOS
+    flood_counter = grain_tracker
+  [../]
+  [./halo12]
+    type = FeatureFloodCountAux
+    variable = halo12
+    map_index = 12
+    field_display = HALOS
+    flood_counter = grain_tracker
+  [../]
+  [./halo13]
+    type = FeatureFloodCountAux
+    variable = halo13
+    map_index = 13
+    field_display = HALOS
+    flood_counter = grain_tracker
+  [../]
+  [./halo14]
+    type = FeatureFloodCountAux
+    variable = halo14
+    map_index = 14
+    field_display = HALOS
+    flood_counter = grain_tracker
+  [../]
+  [./halo15]
+    type = FeatureFloodCountAux
+    variable = halo15
+    map_index = 15
+    field_display = HALOS
+    flood_counter = grain_tracker
+  [../]
+  [./halo16]
+    type = FeatureFloodCountAux
+    variable = halo16
+    map_index = 16
+    field_display = HALOS
+    flood_counter = grain_tracker
+  [../]
+  [./halo17]
+    type = FeatureFloodCountAux
+    variable = halo17
+    map_index = 17
+    field_display = HALOS
+    flood_counter = grain_tracker
+  [../]
+  [./halo18]
+    type = FeatureFloodCountAux
+    variable = halo18
+    map_index = 18
+    field_display = HALOS
+    flood_counter = grain_tracker
+  [../]
+  [./halo19]
+    type = FeatureFloodCountAux
+    variable = halo19
+    map_index = 19
+    field_display = HALOS
+    flood_counter = grain_tracker
+  [../]
+  [./halo20]
+    type = FeatureFloodCountAux
+    variable = halo20
+    map_index = 20
+    field_display = HALOS
+    flood_counter = grain_tracker
+  [../]
+  [./halo21]
+    type = FeatureFloodCountAux
+    variable = halo21
+    map_index = 21
+    field_display = HALOS
+    flood_counter = grain_tracker
+  [../]
+  [./halo22]
+    type = FeatureFloodCountAux
+    variable = halo22
+    map_index = 22
+    field_display = HALOS
+    flood_counter = grain_tracker
+  [../]
+  [./halo23]
+    type = FeatureFloodCountAux
+    variable = halo23
+    map_index = 23
+    field_display = HALOS
+    flood_counter = grain_tracker
+  [../]
+  [./halo24]
+    type = FeatureFloodCountAux
+    variable = halo24
+    map_index = 24
+    field_display = HALOS
+    flood_counter = grain_tracker
+  [../]
 []
 
 [ICs]
+  # [./bnds]
+  #   type = ConstantIC
+  #   variable = bnds
+  #   value = 1
+  # [../]
   [./PolycrystalICs]
     [./PolycrystalVoronoiVoidIC]
       invalue = 1.0
@@ -93,32 +410,6 @@ XolotlWrapperPath = './xolotl_userobj_20umsq_10dx0.i'    #for UF HPG2
       polycrystal_ic_uo = voronoi
     [../]
   [../]
-  # [./]
-  [./bnds]
-    type = ConstantIC
-    variable = bnds
-    value = 1
-  [../]
-  # [./etam0_IC]
-  #   type = BoundingBoxIC
-  #   variable = etam0
-  #   inside = 1
-  #   outside = 0
-  #   x1 = 0
-  #   x2 = 498
-  #   y1 = 0
-  #   y2 = 1000
-  # [../]
-  # [./etam1_IC]
-  #   type = BoundingBoxIC
-  #   variable = etam1
-  #   inside = 1
-  #   outside = 0
-  #   x1 = 502
-  #   x2 = 1000
-  #   y1 = 0
-  #   y2 = 1000
-  # [../]
   [./bubble_IC]
     variable = etab0
     type = PolycrystalVoronoiVoidIC
@@ -143,6 +434,37 @@ XolotlWrapperPath = './xolotl_userobj_20umsq_10dx0.i'    #for UF HPG2
     outvalue = 0.0
     polycrystal_ic_uo = voronoi
   [../]
+
+  #[./etab0_IC]
+  #  type = SmoothCircleIC
+  #  variable = etab0
+  #  invalue = 1
+  #  outvalue = 0
+  #  x1 = 4500
+  #  y1 = 4500
+  #  radius = 733
+  #  int_width = 480
+  #[../]
+  #[./etam0_IC]
+  #  type = SmoothCircleIC
+  #  variable = etam0
+  #  invalue = 0
+  #  outvalue = 1
+  #  x1 = 4500
+  #  y1 = 4500
+  #  radius = 733
+  #  int_width = 480
+  #[../]
+  #[./IC_wv]
+  #  type = ConstantIC
+  #  variable = wv
+  #  value = 0
+  #[../]
+  #[./IC_wg]
+  #  type = ConstantIC
+  #  variable = wg
+  #  value = 0
+  #[../]
 []
 
 
@@ -203,321 +525,64 @@ XolotlWrapperPath = './xolotl_userobj_20umsq_10dx0.i'    #for UF HPG2
   # [../]
 []
 
+[Modules]
+  [./PhaseField]
+    [./GrandPotential]
+      switching_function_names = 'hb hm'
+      anisotropic = false
+
+      chemical_potentials = 'wv wg'
+      mobilities = 'Dchiv Dchig'
+      susceptibilities = 'chiv chig'
+      free_energies_w = 'rhovbub rhovmatrix rhogbub rhogmatrix'
+
+      # chemical_potentials = 'wg'
+      # mobilities = 'Dchig'
+      # susceptibilities = 'chig'
+      # free_energies_w = 'rhogbub rhogmatrix'
+
+      # gamma_gr = gamma
+      gamma_gr = gmm
+      mobility_name_gr = L
+      kappa_gr = kappa
+      free_energies_gr = 'omegab omegam'
+
+      additional_ops = 'etab0'
+      gamma_grxop = gmb
+      mobility_name_op = L
+      kappa_op = kappa
+      free_energies_op = 'omegab omegam'
+    [../]
+  [../]
+[]
+
 [Kernels]
 
-# Order parameter eta_b0 for bubble phase
-  [./ACb0_bulk]
-    type = ACGrGrMulti
-    variable = etab0
-    v =           'etam0 etam1 etam2 etam3 etam4'
-    gamma_names = 'gmb   gmb   gmb   gmb   gmb'
-    mob_name = L
-  [../]
-  [./ACb0_sw]
-    type = ACSwitching
-    variable = etab0
-    Fj_names  = 'omegab   omegam'
-    hj_names  = 'hb       hm'
-    args = 'etam0 etam1 etam2 etam3 etam4 wv wg'
-    mob_name = L
-  [../]
-  [./ACb0_int]
-    type = ACInterface
-    variable = etab0
-    kappa_name = kappa
-    mob_name = L
-  [../]
-  [./eb0_dot]
-    type = TimeDerivative
-    variable = etab0
-  [../]
-# Order parameter eta_m0 for matrix grain 0
-  [./ACm0_bulk]
-    type = ACGrGrMulti
-    variable = etam0
-    v =           'etab0 etam1 etam2 etam3 etam4'
-    gamma_names = 'gmb   gmm   gmm   gmm   gmm'
-    mob_name = L
-  [../]
-  [./ACm0_sw]
-    type = ACSwitching
-    variable = etam0
-    Fj_names  = 'omegab   omegam'
-    hj_names  = 'hb       hm'
-    args = 'etab0 etam1 etam2 etam3 etam4 wv wg'
-    mob_name = L
-  [../]
-  [./ACm0_int]
-    type = ACInterface
-    variable = etam0
-    kappa_name = kappa
-    mob_name = L
-  [../]
-  [./em0_dot]
-    type = TimeDerivative
-    variable = etam0
-  [../]
-# Order parameter eta_m1 for matrix grain 1
-  [./ACm1_bulk]
-    type = ACGrGrMulti
-    variable = etam1
-    v =           'etab0 etam0 etam2 etam3 etam4'
-    gamma_names = 'gmb   gmm   gmm   gmm   gmm'
-    mob_name = L
-  [../]
-  [./ACm1_sw]
-    type = ACSwitching
-    variable = etam1
-    Fj_names  = 'omegab   omegam'
-    hj_names  = 'hb       hm'
-    args = 'etab0 etam0 etam2 etam3 etam4 wv wg'
-    mob_name = L
-  [../]
-  [./ACm1_int]
-    type = ACInterface
-    variable = etam1
-    kappa_name = kappa
-    mob_name = L
-  [../]
-  [./em1_dot]
-    type = TimeDerivative
-    variable = etam1
-  [../]
 
-  # Order parameter eta_m1 for matrix grain 2
-    [./ACm2_bulk]
-      type = ACGrGrMulti
-      variable = etam2
-      v =           'etab0 etam0 etam1 etam3 etam4'
-      gamma_names = 'gmb   gmm   gmm   gmm   gmm'
-      mob_name = L
-    [../]
-    [./ACm2_sw]
-      type = ACSwitching
-      variable = etam2
-      Fj_names  = 'omegab   omegam'
-      hj_names  = 'hb       hm'
-      args = 'etab0 etam0 etam1 etam3 etam4 wv wg'
-      mob_name = L
-    [../]
-    [./ACm2_int]
-      type = ACInterface
-      variable = etam2
-      kappa_name = kappa
-      mob_name = L
-    [../]
-    [./em2_dot]
-      type = TimeDerivative
-      variable = etam2
-    [../]
-  # Order parameter eta_m3 for matrix grain 3
-    [./ACm3_bulk]
-      type = ACGrGrMulti
-      variable = etam3
-      v =           'etab0 etam0 etam1 etam2 etam4'
-      gamma_names = 'gmb   gmm   gmm   gmm   gmm'
-      mob_name = L
-    [../]
-    [./ACm3_sw]
-      type = ACSwitching
-      variable = etam3
-      Fj_names  = 'omegab   omegam'
-      hj_names  = 'hb                   hm'
-      args = 'etab0 etam0 etam1 etam2 etam4 wv wg'
-      mob_name = L
-    [../]
-    [./ACm3_int]
-      type = ACInterface
-      variable = etam3
-      kappa_name = kappa
-      mob_name = L
-    [../]
-    [./em3_dot]
-      type = TimeDerivative
-      variable = etam3
-    [../]
-  # Order parameter eta_m4 for matrix grain 4
-    [./ACm4_bulk]
-      type = ACGrGrMulti
-      variable = etam4
-      v =           'etab0 etam0 etam1 etam2 etam3'
-      gamma_names = 'gmb   gmm   gmm   gmm   gmm'
-      mob_name = L
-    [../]
-    [./ACm4_sw]
-      type = ACSwitching
-      variable = etam4
-      Fj_names  = 'omegab   omegam'
-      hj_names  = 'hb                   hm'
-      args = 'etab0 etam0 etam1 etam2 etam3 wv wg'
-      mob_name = L
-    [../]
-    [./ACm4_int]
-      type = ACInterface
-      variable = etam4
-      kappa_name = kappa
-      mob_name = L
-    [../]
-    [./em4_dot]
-      type = TimeDerivative
-      variable = etam4
-    [../]
-
-#Chemical potential for vacancies
-  [./wv_dot]
-    type = SusceptibilityTimeDerivative
-    variable = wv
-    f_name = chiv
-    args = '' # in this case chi (the susceptibility) is simply a constant
-  [../]
-  [./Diffusion_v]
-    type = MatDiffusion
-    variable = wv
-    D_name = Dchiv
-    args = ''
-  [../]
-  [./Source_v]
-    type = MaskedBodyForce
-    variable = wv
-    value = 1
-    mask = VacRate0
-  [../]
   #[./Source_v]
   #  type = MaskedBodyForce
   #  variable = wv
   #  value = 1
-  #  mask = VacRate
+  #  mask = VacRate0
   #[../]
-  [./coupled_v_etab0dot]
-    type = CoupledSwitchingTimeDerivative
+  [./Source_v]
+    type = MaskedBodyForce
     variable = wv
-    v = etab0
-    Fj_names = 'rhovbub rhovmatrix'
-    hj_names = 'hb      hm'
-    args = 'etab0 etam0 etam1 etam2 etam3 etam4'
-  [../]
-  [./coupled_v_etam0dot]
-    type = CoupledSwitchingTimeDerivative
-    variable = wv
-    v = etam0
-    Fj_names = 'rhovbub rhovmatrix'
-    hj_names = 'hb      hm'
-    args = 'etab0 etam0 etam1 etam2 etam3 etam4'
-  [../]
-  [./coupled_v_etam1dot]
-    type = CoupledSwitchingTimeDerivative
-    variable = wv
-    v = etam1
-    Fj_names = 'rhovbub rhovmatrix'
-    hj_names = 'hb      hm'
-    args = 'etab0 etam0 etam1 etam2 etam3 etam4'
-  [../]
-  [./coupled_v_etam2dot]
-    type = CoupledSwitchingTimeDerivative
-    variable = wv
-    v = etam2
-    Fj_names = 'rhovbub rhovmatrix'
-    hj_names = 'hb      hm'
-    args = 'etab0 etam0 etam1 etam2 etam3 etam4'
-  [../]
-  [./coupled_v_etam3dot]
-    type = CoupledSwitchingTimeDerivative
-    variable = wv
-    v = etam3
-    Fj_names = 'rhovbub rhovmatrix'
-    hj_names = 'hb      hm'
-    args = 'etab0 etam0 etam1 etam2 etam3 etam4'
-  [../]
-  [./coupled_v_etam4dot]
-    type = CoupledSwitchingTimeDerivative
-    variable = wv
-    v = etam4
-    Fj_names = 'rhovbub rhovmatrix'
-    hj_names = 'hb      hm'
-    args = 'etab0 etam0 etam1 etam2 etam3 etam4'
+    value = 1
+    mask = VacRate
   [../]
 
-#Chemical potential for gas atoms
-  [./wg_dot]
-    type = SusceptibilityTimeDerivative
-    variable = wg
-    f_name = chig
-    args = '' # in this case chi (the susceptibility) is simply a constant
-  [../]
-  [./Diffusion_g]
-    type = MatDiffusion
-    variable = wg
-    D_name = Dchig
-    args = ''
-  [../]
-  [./Source_g]
-    type = MaskedBodyForce
-    variable = wg
-    value = 1
-    mask = XeRate0
-  [../]
   #[./Source_g]
   #  type = MaskedBodyForce
   #  variable = wg
-  #  value = 1 # for unit conversion between PF app and Xolotl
-  #  mask = XeRate
+  #  value = 1
+  #  mask = XeRate0
   #[../]
-  [./coupled_g_etab0dot]
-    type = CoupledSwitchingTimeDerivative
+  [./Source_g]
+    type = MaskedBodyForce
     variable = wg
-    v = etab0
-    Fj_names = 'rhogbub rhogmatrix'
-    hj_names = 'hb      hm'
-    args = 'etab0 etam0 etam1 etam2 etam3 etam4'
-  [../]
-  [./coupled_g_etam0dot]
-    type = CoupledSwitchingTimeDerivative
-    variable = wg
-    v = etam0
-    Fj_names = 'rhogbub rhogmatrix'
-    hj_names = 'hb      hm'
-    args = 'etab0 etam0 etam1 etam2 etam3 etam4'
-  [../]
-  [./coupled_g_etam1dot]
-    type = CoupledSwitchingTimeDerivative
-    variable = wg
-    v = etam1
-    Fj_names = 'rhogbub rhogmatrix'
-    hj_names = 'hb      hm'
-    args = 'etab0 etam0 etam1 etam2 etam3 etam4'
-  [../]
-  [./coupled_g_etam2dot]
-    type = CoupledSwitchingTimeDerivative
-    variable = wg
-    v = etam2
-    Fj_names = 'rhogbub rhogmatrix'
-    hj_names = 'hb      hm'
-    args = 'etab0 etam0 etam1 etam2 etam3 etam4'
-  [../]
-  [./coupled_g_etam3dot]
-    type = CoupledSwitchingTimeDerivative
-    variable = wg
-    v = etam3
-    Fj_names = 'rhogbub rhogmatrix'
-    hj_names = 'hb      hm'
-    args = 'etab0 etam0 etam1 etam2 etam3 etam4'
-  [../]
-  [./coupled_g_etam4dot]
-    type = CoupledSwitchingTimeDerivative
-    variable = wg
-    v = etam4
-    Fj_names = 'rhogbub rhogmatrix'
-    hj_names = 'hb      hm'
-    args = 'etab0 etam0 etam1 etam2 etam3 etam4'
-  [../]
-
-[]
-
-[AuxKernels]
-  [./BndsCalc]
-    type = BndsCalcAux
-    variable = bnds
-    execute_on = timestep_end
+    value = 1 # for unit conversion between PF app and Xolotl
+    mask = XeRate
   [../]
 []
 
@@ -525,15 +590,18 @@ XolotlWrapperPath = './xolotl_userobj_20umsq_10dx0.i'    #for UF HPG2
   [./hb]
     type = SwitchingFunctionMultiPhaseMaterial
     h_name = hb
-    all_etas = 'etab0 etam0 etam1 etam2 etam3 etam4'
+    all_etas = 'etab0 etam0 etam1 etam2 etam3 etam4 etam5 etam6 etam7 etam8 etam9 etam10 etam11 etam12 etam13 etam14 etam15 etam16 etam17 etam18 etam19 etam20 etam21 etam22 etam23 etam24'
+    #all_etas = 'etab0 etam0 etam1 etam2 etam3 etam4 etam5 etam6 etam7 etam8 etam9'
     phase_etas = 'etab0'
     #outputs = exodus
   [../]
   [./hm]
     type = SwitchingFunctionMultiPhaseMaterial
     h_name = hm
-    all_etas = 'etab0 etam0 etam1 etam2 etam3 etam4'
-    phase_etas = 'etam0 etam1 etam2 etam3 etam4'
+    #all_etas = 'etab0 etam0 etam1 etam2 etam3 etam4 etam5 etam6 etam7 etam8 etam9'
+    # phase_etas = 'etam0 etam1 etam2 etam3 etam4'
+    all_etas = 'etab0 etam0 etam1 etam2 etam3 etam4 etam5 etam6 etam7 etam8 etam9 etam10 etam11 etam12 etam13 etam14 etam15 etam16 etam17 etam18 etam19 etam20 etam21 etam22 etam23 etam24'
+    phase_etas = 'etam0 etam1 etam2 etam3 etam4 etam5 etam6 etam7 etam8 etam9 etam10 etam11 etam12 etam13 etam14 etam15 etam16 etam17 etam18 etam19 etam20 etam21 etam22 etam23 etam24'
     #outputs = exodus
   [../]
 # Chemical contribution to grand potential of bubble
@@ -706,22 +774,19 @@ XolotlWrapperPath = './xolotl_userobj_20umsq_10dx0.i'    #for UF HPG2
   [./XeRate_ref]
     type = ParsedMaterial
     f_name = XeRate0
-    material_property_names = 'VacRate0 YXe'
-    #constant_names = 's0'
-    #constant_expressions = '2.35e-9'  # in atoms/(nm^3 * s)
-    #constant_expressions = '8.0e-9'  # in atoms/(nm^3 * s), brought from Xolotl
+    material_property_names = 'Va hm'
+    constant_names = 's0'
+    constant_expressions = '2.35e-9'  # in atoms/(nm^3 * s)
     args = 'time'
-    function = 'if(time < 0, 0, VacRate0*0.25)'
+    function = 'if(time < 0, 0, s0 * hm)'
     outputs = exodus
   [../]
   [./VacRate_ref]
     type = ParsedMaterial
     f_name = VacRate0
-    material_property_names = 'hm'
-    constant_names = 's0'
-    constant_expressions = '8.0e-9'  # in atoms/(nm^3 * s), brought from Xolotl
+    material_property_names = 'YXe XeRate0'
     args = 'time'
-    function = 'if(time < 0, 0, s0*hm)'
+    function = 'if(time < 0, 0, XeRate0 / YXe)'
     outputs = exodus
   [../]
 
@@ -744,37 +809,47 @@ XolotlWrapperPath = './xolotl_userobj_20umsq_10dx0.i'    #for UF HPG2
 [UserObjects]
   [./voronoi]
     type = PolycrystalVoronoi
-    rand_seed = 1
-    int_width = 480
+    rand_seed = 2
+    # int_width = 480
+    coloring_algorithm = jp
+    output_adjacency_matrix = false
+  [../]
+
+  [./grain_tracker]
+    type = GrainTracker
+    threshold = 0.5
+    connecting_threshold = 0.5
+    compute_halo_maps = true
+    remap_grains = true
   [../]
 []
 
-#[Adaptivity]
-#  marker = errorfrac
-#  max_h_level = 3
-#  [./Indicators]
-#    [./error]
-#      type = GradientJumpIndicator
-#      variable = bnds
-#    [../]
-#  [../]
-#  [./Markers]
-#    [./bound_adapt]
-#      type = ValueThresholdMarker
-#      third_state = DO_NOTHING
-#      coarsen = 1.0
-#      refine = 0.99
-#      variable = bnds
-#      invert = true
-#    [../]
-#    [./errorfrac]
-#      type = ErrorFractionMarker
-#      coarsen = 0.1
-#      indicator = error
-#      refine = 0.7
-#    [../]
-#  [../]
-#[]
+[Adaptivity]
+  marker = errorfrac
+  max_h_level = 2
+  [./Indicators]
+    [./error]
+      type = GradientJumpIndicator
+      variable = bnds
+    [../]
+  [../]
+  [./Markers]
+    [./bound_adapt]
+      type = ValueThresholdMarker
+      third_state = DO_NOTHING
+      coarsen = 1.0
+      refine = 0.99
+      variable = bnds
+      invert = true
+    [../]
+    [./errorfrac]
+      type = ErrorFractionMarker
+      coarsen = 0.1
+      indicator = error
+      refine = 0.7
+    [../]
+  [../]
+[]
 
 [Postprocessors]
   # [./number_DOFs]
@@ -811,7 +886,7 @@ XolotlWrapperPath = './xolotl_userobj_20umsq_10dx0.i'    #for UF HPG2
   start_time = -2e3
   #num_steps = 1000
   end_time = 1.2e8
-  #end_time = 1.2e6
+  #end_time = 1.0e6
   nl_abs_tol = 1e-10
   [./TimeStepper]
     type = IterationAdaptiveDT
@@ -828,7 +903,7 @@ XolotlWrapperPath = './xolotl_userobj_20umsq_10dx0.i'    #for UF HPG2
     interval = 10
     # interval = 1
     sync_times = '0 1.2e8'
-    #sync_times = '0 1.2e6'
+    #sync_times = '0 1.0e6'
   [../]
   # checkpoint = true
   csv = true

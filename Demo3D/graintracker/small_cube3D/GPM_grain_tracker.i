@@ -2,35 +2,28 @@
 # Time unit: s
 # Energy unit: eV
 
-#Relative path also available when running in the application directory
-#XolotlWrapperPath = './xolotl_userobj.i'
-
-#Absolute path is neccessary when running from a remote directory
-#XolotlWrapperPath = '/Users/donguk.kim/projects/coupling_xolotl/xolotl_userobj.i'    #for Mac
-#XolotlWrapperPath = '/home/donguk.kim/projects/coupling_xolotl/xolotl_userobj.i'    #for UF HPG2
-#XolotlWrapperPath = '/home/donguk.kim/projects/coupling_xolotl/xolotl_userobj_20umsq_10dx0.i'    #for UF HPG2
-XolotlWrapperPath = './XolotlWrapp_Sc_x4_CnR.i'
+XolotlWrapperPath = '/home/donguk.kim/gcc_moose/projects/coupling_xolotl/Demo3D/graintracker/small_cube3D/XolotlWrapp.i'
 
 [Mesh]
   type = GeneratedMesh
   dim = 3
-  nx = 15
-  ny = 15
-  nz = 15
+  nx = 59
+  ny = 59
+  nz = 59
   xmin = 0
-  xmax = 10800
+  xmax = 10620
   ymin = 0
-  ymax = 10800
+  ymax = 10620
   zmin = 0
-  zmax = 10800
-  uniform_refine = 2
+  zmax = 10620
+  #uniform_refine = 2
 []
 
 [GlobalParams]
   op_num = 25
-  grain_num = 64
+  grain_num = 32
   var_name_base = etam
-  numbub = 16
+  numbub = 8
   bubspac = 2500
   radius = 733
   int_width = 480
@@ -824,32 +817,32 @@ XolotlWrapperPath = './XolotlWrapp_Sc_x4_CnR.i'
   [../]
 []
 
-[Adaptivity]
-  marker = errorfrac
-  max_h_level = 2
-  [./Indicators]
-    [./error]
-      type = GradientJumpIndicator
-      variable = bnds
-    [../]
-  [../]
-  [./Markers]
-    [./bound_adapt]
-      type = ValueThresholdMarker
-      third_state = DO_NOTHING
-      coarsen = 1.0
-      refine = 0.99
-      variable = bnds
-      invert = true
-    [../]
-    [./errorfrac]
-      type = ErrorFractionMarker
-      coarsen = 0.1
-      indicator = error
-      refine = 0.7
-    [../]
-  [../]
-[]
+#[Adaptivity]
+#  marker = errorfrac
+#  max_h_level = 2
+#  [./Indicators]
+#    [./error]
+#      type = GradientJumpIndicator
+#      variable = bnds
+#    [../]
+#  [../]
+#  [./Markers]
+#    [./bound_adapt]
+#      type = ValueThresholdMarker
+#      third_state = DO_NOTHING
+#      coarsen = 1.0
+#      refine = 0.99
+#      variable = bnds
+#      invert = true
+#    [../]
+#    [./errorfrac]
+#      type = ErrorFractionMarker
+#      coarsen = 0.1
+#      indicator = error
+#      refine = 0.7
+#    [../]
+#  [../]
+#[]
 
 [Postprocessors]
   # [./number_DOFs]
@@ -883,10 +876,10 @@ XolotlWrapperPath = './XolotlWrapp_Sc_x4_CnR.i'
   l_max_its = 15
   l_tol = 1.0e-5
   nl_rel_tol = 1.0e-8
-  start_time = -2e3
+  start_time = 0
   #num_steps = 1000
-  end_time = 1.2e8
-  #end_time = 1.0e6
+  #end_time = 1.2e8
+  end_time = 1.0e6
   nl_abs_tol = 1e-10
   [./TimeStepper]
     type = IterationAdaptiveDT
@@ -902,8 +895,8 @@ XolotlWrapperPath = './XolotlWrapp_Sc_x4_CnR.i'
     type = Exodus
     interval = 10
     # interval = 1
-    sync_times = '0 1.2e8'
-    #sync_times = '0 1.0e6'
+    #sync_times = '0 1.2e8'
+    sync_times = '0 1.0e6'
   [../]
   # checkpoint = true
   csv = true

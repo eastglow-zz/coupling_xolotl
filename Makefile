@@ -47,9 +47,8 @@ include $(MOOSE_DIR)/modules/modules.mk
 #xolotlincludepath    :=/Users/donguk.kim/projects/xolotl-build/include  #for Mac
 #xolotlincludepath    :=/home/donguk.kim/projects/xolotl-build/include  #for UF HPG2
 #xolotlincludepath    :=/Users/donguk.kim/projects/xolotl-dlload09042019/include  #for Mac
-xolotlincludepath    :=/Users/donguk.kim/projects/xolotl-dlload/include  #for Mac
-#xolotlincludepath    :=/home/donguk.kim/projects/xolotl-dlload/include  #for UF HPG2
-#xolotlincludepath    :=/home/donguk.kim/projects/xolotl-dlload06232019/include  #for UF HPG2
+#xolotlincludepath    :=/Users/donguk.kim/projects/xolotl-dlload/include  #for Mac
+xolotlincludepath    :=/home/donguk.kim/gcc_moose/projects/xolotl-dlload-gcc/include  #for UF HPG2
 ADDITIONAL_INCLUDES:= -I$(xolotlincludepath)
 ###############################################################################
 

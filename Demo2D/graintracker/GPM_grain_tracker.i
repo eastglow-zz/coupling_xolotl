@@ -25,7 +25,7 @@ XolotlWrapperPath = './XolotlWrapp_Sc_x4_CnR.i'
 
 [GlobalParams]
   op_num = 10
-  grain_num = 64
+  grain_num = 120
   var_name_base = etam
   numbub = 16
   bubspac = 2500
