@@ -383,7 +383,7 @@ XolotlWrapperPath = './XolotlWrapp_Sc_x4_CnR.i'
   [./PhaseField]
     [./GrandPotential]
       switching_function_names = 'hb hm'
-      anisotropic = false
+      anisotropic ='false false'
 
       chemical_potentials = 'wv wg'
       mobilities = 'Dchiv Dchig'

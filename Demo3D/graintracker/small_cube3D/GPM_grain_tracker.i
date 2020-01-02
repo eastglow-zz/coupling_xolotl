@@ -522,7 +522,7 @@ XolotlWrapperPath = '/home/donguk.kim/gcc_moose/projects/coupling_xolotl/Demo3D/
   [./PhaseField]
     [./GrandPotential]
       switching_function_names = 'hb hm'
-      anisotropic = false
+      anisotropic = 'false false'
 
       chemical_potentials = 'wv wg'
       mobilities = 'Dchiv Dchig'
