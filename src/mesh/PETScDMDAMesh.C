@@ -431,7 +431,7 @@ void add_element_Hex8(DM da, const dof_id_type nx, const dof_id_type ny,
 					static_cast<Real>(k + 1) * hz),
 			node_id_Hex8(type, nx, ny, i, j, k + 1));
 	node4_ptr->set_unique_id() = node_id_Hex8(type, nx, ny, i, j, k + 1);
-	node4_ptr->set_id() = node0_ptr->unique_id();
+	node4_ptr->set_id() = node4_ptr->unique_id();
 	node4_ptr->processor_id() = xpid + (ypid + zpidplus * yp) * xp;
 
 // Bottom Right Front
@@ -440,7 +440,7 @@ void add_element_Hex8(DM da, const dof_id_type nx, const dof_id_type ny,
 					static_cast<Real>(k + 1) * hz),
 			node_id_Hex8(type, nx, ny, i + 1, j, k + 1));
 	node5_ptr->set_unique_id() = node_id_Hex8(type, nx, ny, i + 1, j, k + 1);
-	node5_ptr->set_id() = node1_ptr->unique_id();
+	node5_ptr->set_id() = node5_ptr->unique_id();
 	node5_ptr->processor_id() = xpidplus + (ypid + zpidplus * yp) * xp;
 
 // Top Right Front
@@ -450,7 +450,7 @@ void add_element_Hex8(DM da, const dof_id_type nx, const dof_id_type ny,
 			node_id_Hex8(type, nx, ny, i + 1, j + 1, k + 1));
 	node6_ptr->set_unique_id() = node_id_Hex8(type, nx, ny, i + 1, j + 1,
 			k + 1);
-	node6_ptr->set_id() = node2_ptr->unique_id();
+	node6_ptr->set_id() = node6_ptr->unique_id();
 	node6_ptr->processor_id() = xpidplus + (ypidplus + zpidplus * yp) * xp;
 
 // Top Left Front
@@ -459,7 +459,7 @@ void add_element_Hex8(DM da, const dof_id_type nx, const dof_id_type ny,
 					static_cast<Real>(k + 1) * hz),
 			node_id_Hex8(type, nx, ny, i, j + 1, k + 1));
 	node7_ptr->set_unique_id() = node_id_Hex8(type, nx, ny, i, j + 1, k + 1);
-	node7_ptr->set_id() = node3_ptr->unique_id();
+	node7_ptr->set_id() = node7_ptr->unique_id();
 	node7_ptr->processor_id() = xpid + (ypidplus + zpidplus * yp) * xp;
 
 // New an element and attach eight nodes to it
@@ -515,7 +515,7 @@ void set_boundary_names_Hex8(BoundaryInfo & boundary_info) {
 	boundary_info.sideset_name(2) = "right";
 	boundary_info.sideset_name(3) = "top";
 	boundary_info.sideset_name(4) = "left";
-	boundary_info.sideset_name(5) = "fron";
+	boundary_info.sideset_name(5) = "front";
 }
 
 void add_node_Edge2(dof_id_type i, processor_id_type pid,
