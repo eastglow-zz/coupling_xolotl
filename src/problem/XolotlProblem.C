@@ -111,6 +111,11 @@ void XolotlProblem::externalSolve() {
 	}
 }
 
+bool XolotlProblem::converged() {
+	bool conv = _interface.getConvergenceStatus();
+	return conv;
+}
+
 void XolotlProblem::syncSolutions(Direction direction) {
 	PetscInt i, j, k, xs, ys, zs, xm, ym, zm, Mx, My, Mz;
 	_interface.getLocalCoordinates(xs, xm, Mx, ys, ym, My, zs, zm, Mz);

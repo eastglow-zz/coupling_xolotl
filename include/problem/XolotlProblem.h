@@ -30,9 +30,7 @@ public:
 	virtual void externalSolve() override;
 	virtual void syncSolutions(Direction /*direction*/) override;
 
-	virtual bool converged() override {
-		return true;
-	}
+	virtual bool converged() override;
 
 	// Methods for restart
 	void saveState();
