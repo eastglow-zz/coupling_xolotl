@@ -6,22 +6,22 @@
 //*
 //* Licensed under LGPL 2.1, please see LICENSE for details
 //* https://www.gnu.org/licenses/lgpl-2.1.html
+
 #include "coupling_xolotlTestApp.h"
 #include "coupling_xolotlApp.h"
 #include "Moose.h"
 #include "AppFactory.h"
 #include "MooseSyntax.h"
-#include "ModulesApp.h"
 
-template <>
 InputParameters
-validParams<coupling_xolotlTestApp>()
+coupling_xolotlTestApp::validParams()
 {
-  InputParameters params = validParams<coupling_xolotlApp>();
+  InputParameters params = coupling_xolotlApp::validParams();
   return params;
 }
 
-coupling_xolotlTestApp::coupling_xolotlTestApp(InputParameters parameters) : MooseApp(parameters)
+coupling_xolotlTestApp::coupling_xolotlTestApp(InputParameters parameters)
+ : MooseApp(parameters)
 {
   coupling_xolotlTestApp::registerAll(
       _factory, _action_factory, _syntax, getParam<bool>("allow_test_objects"));

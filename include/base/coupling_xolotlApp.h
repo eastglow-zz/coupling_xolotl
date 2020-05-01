@@ -6,19 +6,15 @@
 //*
 //* Licensed under LGPL 2.1, please see LICENSE for details
 //* https://www.gnu.org/licenses/lgpl-2.1.html
-#ifndef COUPLING_XOLOTLAPP_H
-#define COUPLING_XOLOTLAPP_H
+#pragma once
 
 #include "MooseApp.h"
 #include <interface.h>
 
-class coupling_xolotlApp;
-
-template<>
-InputParameters validParams<coupling_xolotlApp>();
-
 class coupling_xolotlApp: public MooseApp {
 public:
+	static InputParameters validParams();
+
 	coupling_xolotlApp(InputParameters parameters);
 	virtual ~coupling_xolotlApp();
 
@@ -38,5 +34,3 @@ public:
 private:
 	XolotlInterface _interface;
 };
-
-#endif /* COUPLING_XOLOTLAPP_H */
