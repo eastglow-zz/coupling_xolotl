@@ -87,9 +87,6 @@ protected:
   std::string _xolotl_input_path_name;
   void* _ext_lib_handle; // External dynamic library handle variable
   XolotlDLinterface* _xolotl_interface;
-  int _argc = 3;
-  char ** _argv = new char*[_argc];
-  std::string _parameterFile = "crap";
   std::shared_ptr<xolotlSolver::PetscSolver> _xolotl_solver;
 };
 

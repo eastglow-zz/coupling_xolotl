@@ -101,9 +101,6 @@ private:
 
   void* _ext_lib_handle; // External dynamic library handle variable
   XolotlDLinterface* _xolotl_interface;
-  int _argc = 3;
-  char ** _argv = new char*[_argc];
-  std::string _parameterFile = "crap";
   // std::shared_ptr<xolotlCore::Options> _xolotl_options;
   std::shared_ptr<xolotlSolver::PetscSolver> _xolotl_solver;
   double *_xolotl_XeRate;  //Actually, this is an integrated value over the time, so we neet to discritize it to get the actual rate.

@@ -118,11 +118,13 @@ XolotlMesh::XolotlMesh(const InputParameters & parameters)
     ======= Xolotl related routines below =======
   */
   // Loading a fake Xolotl command line arguments
-  _argv[0] = new char[_parameterFile.length()+1];
+  int _argc = 2;
+  char ** _argv = new char*[_argc];
+  std::string _parameterFile = "dummystring";
+  _argv[0] = new char[_parameterFile.length() + 1];
   strcpy(_argv[0], _parameterFile.c_str());
   _argv[1] = new char[_xolotl_input_path_name.length() + 1];
   strcpy(_argv[1], _xolotl_input_path_name.c_str());
-  _argv[2] = 0; // null-terminate the array
 
   // Preparing for the external library handle
   _ext_lib_handle = dlopen(_ext_lib_path_name.c_str(), RTLD_LAZY);

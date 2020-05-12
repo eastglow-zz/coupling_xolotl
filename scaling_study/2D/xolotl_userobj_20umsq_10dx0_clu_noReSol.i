@@ -2,8 +2,16 @@
 # default time unit: s
 # default mass unit: ?
 
+#Relative path also available when running in the application directory
+#XolotlLibPath = '../xolotl-build/lib/libxolotlInter.dylib'
+# XolotlInpPath = './params_NE_2D_withPFsimple.txt'
+# XolotlInpPath = './params_NE_2D_simple_12umsq_10dx0.txt'
+
+#Absolute path is neccessary when running from a remote directory
+#XolotlLibPath = '/Users/donguk.kim/projects/xolotl-build/lib/libxolotlInter.dylib'    #for Mac
+#XolotlInpPath = '/Users/donguk.kim/projects/coupling_xolotl/params_NE_2D_withPFsimple.txt'   #for Mac
 XolotlLibPath = '/home/donguk.kim/gcc_moose/projects/xolotl-dlload-gcc/lib/libxolotlInter.so'    #for UF HPG2
-XolotlInpPath = '/home/donguk.kim/gcc_moose/projects/coupling_xolotl/Demo3D/graintracker/small_cube3D/XolotlInputNoCL.txt'   #for UF HPG2
+XolotlInpPath = '/home/donguk.kim/gcc_moose/projects/coupling_xolotl/params_NE_2D_simple_20umsq_10dx0_clu_noReSol.txt'   #for UF HPG2
 
 [Mesh]
   type = XolotlMeshSynced
@@ -68,8 +76,7 @@ XolotlInpPath = '/home/donguk.kim/gcc_moose/projects/coupling_xolotl/Demo3D/grai
     dt = 5000.0
   [../]
   start_time = 0
-  #end_time = 2e8
-  end_time = 1e6
+  end_time = 1.2e8
   # end_time = 20000.0
 []
 [Problem]

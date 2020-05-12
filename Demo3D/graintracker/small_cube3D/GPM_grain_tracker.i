@@ -879,7 +879,7 @@ XolotlWrapperPath = '/home/donguk.kim/gcc_moose/projects/coupling_xolotl/Demo3D/
   start_time = 0
   #num_steps = 1000
   #end_time = 1.2e8
-  end_time = 1.0e6
+  end_time = 1.0e4
   nl_abs_tol = 1e-10
   [./TimeStepper]
     type = IterationAdaptiveDT
@@ -893,10 +893,10 @@ XolotlWrapperPath = '/home/donguk.kim/gcc_moose/projects/coupling_xolotl/Demo3D/
 [Outputs]
   [./exodus]
     type = Exodus
-    interval = 10
-    # interval = 1
+    #interval = 10
+    interval = 1
     #sync_times = '0 1.2e8'
-    sync_times = '0 1.0e6'
+    sync_times = '0 1.0e4'
   [../]
   # checkpoint = true
   csv = true

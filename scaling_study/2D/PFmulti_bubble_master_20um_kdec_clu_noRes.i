@@ -8,17 +8,17 @@
 #Absolute path is neccessary when running from a remote directory
 #XolotlWrapperPath = '/Users/donguk.kim/projects/coupling_xolotl/xolotl_userobj.i'    #for Mac
 #XolotlWrapperPath = '/home/donguk.kim/projects/coupling_xolotl/xolotl_userobj.i'    #for UF HPG2
-XolotlWrapperPath = '/home/donguk.kim/gcc_moose/projects/coupling_xolotl/deprecatedInputFiles/xolotl_userobj_12umsq_10dx0.i'    #for UF HPG2
+XolotlWrapperPath = '/home/donguk.kim/projects/coupling_xolotl/xolotl_userobj_20umsq_10dx0_clu_noReSol.i'    #for UF HPG2
 
 [Mesh]
   type = GeneratedMesh
   dim = 2
-  nx = 120
-  ny = 120
+  nx = 125
+  ny = 125
   xmin = 0
-  xmax = 12000
+  xmax = 20000
   ymin = 0
-  ymax = 12000
+  ymax = 20000
   #uniform_refine = 3
 []
 
@@ -27,9 +27,11 @@ XolotlWrapperPath = '/home/donguk.kim/gcc_moose/projects/coupling_xolotl/depreca
   grain_num = 5
   var_name_base = etam
   numbub = 14
-  bubspac = 1500
-  radius = 440
-  int_width = 300
+  bubspac = 2500
+  radius = 733
+  int_width = 480
+  invalue = 1
+  outvalue = 0
 []
 
 [Variables]
@@ -87,6 +89,7 @@ XolotlWrapperPath = '/home/donguk.kim/gcc_moose/projects/coupling_xolotl/depreca
     [./PolycrystalVoronoiVoidIC]
       invalue = 1.0
       outvalue = 0.0
+      polycrystal_ic_uo = voronoi
     [../]
   [../]
   # [./]
@@ -121,6 +124,7 @@ XolotlWrapperPath = '/home/donguk.kim/gcc_moose/projects/coupling_xolotl/depreca
     structure_type = voids
     invalue = 1.0
     outvalue = 0.0
+    polycrystal_ic_uo = voronoi
   [../]
   [./IC_wv]
     variable = wv
@@ -128,6 +132,7 @@ XolotlWrapperPath = '/home/donguk.kim/gcc_moose/projects/coupling_xolotl/depreca
     structure_type = voids
     invalue = 0.0
     outvalue = 0.0
+    polycrystal_ic_uo = voronoi
   [../]
   [./IC_wg]
     variable = wg
@@ -135,6 +140,7 @@ XolotlWrapperPath = '/home/donguk.kim/gcc_moose/projects/coupling_xolotl/depreca
     structure_type = voids
     invalue = 0.0
     outvalue = 0.0
+    polycrystal_ic_uo = voronoi
   [../]
 []
 
@@ -369,12 +375,12 @@ XolotlWrapperPath = '/home/donguk.kim/gcc_moose/projects/coupling_xolotl/depreca
     D_name = Dchiv
     args = ''
   [../]
-  # [./Source_v]
-  #   type = MaskedBodyForce
-  #   variable = wv
-  #   value = 1
-  #   mask = VacRate0
-  # [../]
+  #[./Source_v]
+  #  type = MaskedBodyForce
+  #  variable = wv
+  #  value = 1
+  #  mask = VacRate0
+  #[../]
   [./Source_v]
     type = MaskedBodyForce
     variable = wv
@@ -443,12 +449,12 @@ XolotlWrapperPath = '/home/donguk.kim/gcc_moose/projects/coupling_xolotl/depreca
     D_name = Dchig
     args = ''
   [../]
-  # [./Source_g]
-  #   type = MaskedBodyForce
-  #   variable = wg
-  #   value = 1
-  #   mask = XeRate0
-  # [../]
+  #[./Source_g]
+  #  type = MaskedBodyForce
+  #  variable = wg
+  #  value = 1
+  #  mask = XeRate0
+  #[../]
   [./Source_g]
     type = MaskedBodyForce
     variable = wg
@@ -520,14 +526,14 @@ XolotlWrapperPath = '/home/donguk.kim/gcc_moose/projects/coupling_xolotl/depreca
     h_name = hb
     all_etas = 'etab0 etam0 etam1 etam2 etam3 etam4'
     phase_etas = 'etab0'
-    outputs = exodus
+    #outputs = exodus
   [../]
   [./hm]
     type = SwitchingFunctionMultiPhaseMaterial
     h_name = hm
     all_etas = 'etab0 etam0 etam1 etam2 etam3 etam4'
     phase_etas = 'etam0 etam1 etam2 etam3 etam4'
-    outputs = exodus
+    #outputs = exodus
   [../]
 # Chemical contribution to grand potential of bubble
   [./omegab]
@@ -590,8 +596,10 @@ XolotlWrapperPath = '/home/donguk.kim/gcc_moose/projects/coupling_xolotl/depreca
   [../]
   [./const]
     type = GenericConstantMaterial
-    prop_names =  'kappa     mu     L        Dm   Db   Va      cvbubeq  cgbubeq gmb 	 gmm T     YXe'
-    prop_values = '0.5273e1 0.004688e-1 1    2.3398 2.3398  0.0409  0.546    0.454   0.922  1.5 1200  0.2156'
+    prop_names =  'kappa     mu      L   Dm      Db     Va      cvbubeq  cgbubeq gmb 	gmm T     YXe'
+    #prop_values = '0.84368e2 0.00293 0.1   2.3398  2.3398 0.0409  0.546    0.454   0.922  1.5 1200  0.2156'
+    #prop_values = '0.84368e1 0.00293e-1 0.5   4.6796  4.6796  0.0409  0.546    0.454   0.922  1.5 1200  0.2156'
+    prop_values = '0.84368e1 0.00293e-1 1    2.3398 2.3398  0.0409  0.546    0.454   0.922  1.5 1200  0.2156'
     #prop_values = '2.21125e2 1.875  0.975e-3 0.1  0.1  0.0409  0.546    0.454   0.922  1.5 1200  0.2156'
   [../]
   [./cvmatrixeq]
@@ -615,8 +623,9 @@ XolotlWrapperPath = '/home/donguk.kim/gcc_moose/projects/coupling_xolotl/depreca
     f_name = kvmatrix
     args = 'time'
     #function = '3.00625e3' # in eV/nm^3
-    function = '7.516' # in eV/nm^3
-    outputs = exodus
+    #function = '7.516' # in eV/nm^3
+    function = '7.516e-2' # in eV/nm^3, decreased
+    #outputs = exodus
   [../]
   [./kgmatrix_parabola]
     type = ParsedMaterial
@@ -628,8 +637,9 @@ XolotlWrapperPath = '/home/donguk.kim/gcc_moose/projects/coupling_xolotl/depreca
     type = ParsedMaterial
     f_name = kgbub
     #function = '0.5625e3' # in eV/nm^3
-    function = '1.406' # in eV/nm^3
-    outputs = exodus
+    #function = '1.406' # in eV/nm^3
+    function = '1.406e-2' # in eV/nm^3, decreased
+    #outputs = exodus
   [../]
   [./kvbub_parabola]
     type = ParsedMaterial
@@ -642,8 +652,8 @@ XolotlWrapperPath = '/home/donguk.kim/gcc_moose/projects/coupling_xolotl/depreca
     f_name = Dchiv
     material_property_names = 'Db chiv'
     args = 'time'
-    #function = 'if(time < 0, 0, Db*chiv)'
-    function = 'Db*chiv'
+    function = 'if(time < 0, 100*Db*chiv, Db*chiv)'
+    #function = 'Db*chiv'
     derivative_order = 2
     # outputs = exodus
   [../]
@@ -652,8 +662,8 @@ XolotlWrapperPath = '/home/donguk.kim/gcc_moose/projects/coupling_xolotl/depreca
     f_name = Dchig
     material_property_names = 'Dm chig'
     args = 'time'
-    #function = 'if(time < 0, 0, Dm*chig)'
-    function = 'Dm*chig'
+    function = 'if(time < 0, 100*Dm*chig, Dm*chig)'
+    #function = 'Dm*chig'
     derivative_order = 2
     # outputs = exodus
   [../]
@@ -716,12 +726,22 @@ XolotlWrapperPath = '/home/donguk.kim/gcc_moose/projects/coupling_xolotl/depreca
     f_name = cg_from_rhog
     material_property_names = 'Va rhogbub rhogmatrix hm hb'
     function = 'hb*Va*rhogbub + hm*Va*rhogmatrix'
+    outputs = exodus
   [../]
   [./cv]
     type = ParsedMaterial
     f_name = cv_from_rhov
     material_property_names = 'Va rhovbub rhovmatrix hm hb'
     function = 'hb*Va*rhovbub + hm*Va*rhovmatrix'
+    outputs = exodus
+  [../]
+[]
+
+[UserObjects]
+  [./voronoi]
+    type = PolycrystalVoronoi
+    rand_seed = 1
+    int_width = 480
   [../]
 []
 
@@ -773,16 +793,21 @@ XolotlWrapperPath = '/home/donguk.kim/gcc_moose/projects/coupling_xolotl/depreca
   type = Transient
   nl_max_its = 15
   scheme = bdf2
-  #solve_type = NEWTON
-  solve_type = PJFNK
-  petsc_options_iname = '-pc_type -sub_pc_type'
-  petsc_options_value = 'asm      lu'
+  solve_type = NEWTON
+  #solve_type = PJFNK
+  #petsc_options_iname = '-pc_type -sub_pc_type'
+  #petsc_options_value = 'asm      lu'
+  # Use with solve_type = NEWTON in Executioner block
+  petsc_options_iname = '-pc_type -ksp_type -ksp_gmres_restart'
+  petsc_options_value = 'bjacobi  gmres     30'  # default is 30, the higher the higher resolution but the slower
+
   l_max_its = 15
-  l_tol = 1.0e-4
+  l_tol = 1.0e-5
   nl_rel_tol = 1.0e-8
   start_time = -2e3
   #num_steps = 1000
-  end_time = 2e8
+  end_time = 1.2e8
+  #end_time = 1.2e6
   nl_abs_tol = 1e-10
   [./TimeStepper]
     type = IterationAdaptiveDT
@@ -798,10 +823,12 @@ XolotlWrapperPath = '/home/donguk.kim/gcc_moose/projects/coupling_xolotl/depreca
     type = Exodus
     interval = 10
     # interval = 1
-    sync_times = '0'
+    sync_times = '0 1.2e8'
+    #sync_times = '0 1.2e6'
   [../]
   # checkpoint = true
   csv = true
+  perf_graph = true
 []
 
 [MultiApps]
