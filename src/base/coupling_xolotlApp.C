@@ -4,9 +4,11 @@
 #include "MooseSyntax.h"
 #include "XolotlProblem.h"
 #include "Executioner.h"
+#include "ModulesApp.h"
 
 InputParameters coupling_xolotlApp::validParams() {
 	InputParameters params = MooseApp::validParams();
+
 	return params;
 }
 
@@ -20,6 +22,7 @@ coupling_xolotlApp::~coupling_xolotlApp() {
 
 void coupling_xolotlApp::registerAll(Factory & f, ActionFactory & af,
 		Syntax & s) {
+	ModulesApp::registerAll(f, af, s);
 	Registry::registerObjectsTo(f, { "coupling_xolotlApp" });
 	Registry::registerActionsTo(af, { "coupling_xolotlApp" });
 
