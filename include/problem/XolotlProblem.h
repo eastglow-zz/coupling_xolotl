@@ -25,6 +25,7 @@ class XolotlProblem: public ExternalProblem {
 public:
 	XolotlProblem(const InputParameters & params);
 	~XolotlProblem() {
+		_interface.finalizeXolotl(false);
 	}
 
 	virtual void externalSolve() override;
