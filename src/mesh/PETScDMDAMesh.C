@@ -58,7 +58,7 @@ InputParameters validParams<PETScDMDAMesh>() {
 	return params;
 }
 
-PETScDMDAMesh::PETScDMDAMesh(const InputParameters & parameters) :
+PETScDMDAMesh::PETScDMDAMesh(const InputParameters &parameters) :
 		MooseMesh(parameters), _xolotl_input_path_name(
 				getParam < FileName > ("XolotlInput_path_name")), _dim(
 				getParam < MooseEnum > ("dim")) {
@@ -66,13 +66,13 @@ PETScDMDAMesh::PETScDMDAMesh(const InputParameters & parameters) :
 	_regular_orthogonal_mesh = true;
 
 	// Get the external app to create the interface and its grid
-	coupling_xolotlApp * xolotl_app = dynamic_cast<coupling_xolotlApp *>(&_app);
+	coupling_xolotlApp *xolotl_app = dynamic_cast<coupling_xolotlApp*>(&_app);
 	if (xolotl_app) {
-		auto & interface = xolotl_app->getInterface();
+		auto &interface = xolotl_app->getInterface();
 		// This has to be done here because the base app cannot take parameters
 		// from the input file
 		int argc = 2;
-		char ** argv = new char*[argc];
+		char **argv = new char*[argc];
 		std::string parameterFile = "bla";
 		argv[0] = new char[parameterFile.length() + 1];
 		strcpy(argv[0], parameterFile.c_str());
@@ -81,7 +81,7 @@ PETScDMDAMesh::PETScDMDAMesh(const InputParameters & parameters) :
 
 		interface.initializeXolotl(argc, argv, _communicator.get(), false);
 		// Now we can get the TS from the app
-		TS & ts = xolotl_app->getXolotlTS();
+		TS &ts = xolotl_app->getXolotlTS();
 		// Retrieve mesh from TS
 		TSGetDM(ts, &_dmda);
 	} else
@@ -147,8 +147,8 @@ inline dof_id_type node_id_Hex8(const ElemType /*type*/, const dof_id_type nx,
 
 void add_element_Edge2(DM da, const dof_id_type nx, const dof_id_type i,
 		const dof_id_type elem_id, const processor_id_type pid,
-		const ElemType type, MeshBase & mesh, XolotlInterface & interface) {
-	BoundaryInfo & boundary_info = mesh.get_boundary_info();
+		const ElemType type, MeshBase &mesh, XolotlInterface &interface) {
+	BoundaryInfo &boundary_info = mesh.get_boundary_info();
 	// Mx: number of grid points in x direction for all processors
 	// xp: number of processors in x direction
 	PetscInt Mx, xp;
@@ -199,10 +199,11 @@ void add_element_Edge2(DM da, const dof_id_type nx, const dof_id_type i,
 	node1_ptr->processor_id() = xpidplus;
 
 	// New an element and attach two nodes to it
-	Elem * elem = new Edge2;
+	Elem *elem = new Edge2;
 	elem->set_id(elem_id);
 	elem->processor_id() = pid;
-	elem->set_unique_id() = elem_id;
+	// Make sure our unique_id doesn't overlap any nodes'
+	elem->set_unique_id() = elem_id + (nx + 1);
 	elem = mesh.add_elem(elem);
 	elem->set_node(0) = node0_ptr;
 	elem->set_node(1) = node1_ptr;
@@ -217,9 +218,9 @@ void add_element_Edge2(DM da, const dof_id_type nx, const dof_id_type i,
 
 void add_element_Quad4(DM da, const dof_id_type nx, const dof_id_type ny,
 		const dof_id_type i, const dof_id_type j, const dof_id_type elem_id,
-		const processor_id_type pid, const ElemType type, MeshBase & mesh,
-		XolotlInterface & interface) {
-	BoundaryInfo & boundary_info = mesh.get_boundary_info();
+		const processor_id_type pid, const ElemType type, MeshBase &mesh,
+		XolotlInterface &interface) {
+	BoundaryInfo &boundary_info = mesh.get_boundary_info();
 	// Mx: number of grid points in x direction for all processors
 	// My: number of grid points in y direction for all processors
 	// xp: number of processors in x direction
@@ -300,10 +301,11 @@ void add_element_Quad4(DM da, const dof_id_type nx, const dof_id_type ny,
 	node3_ptr->processor_id() = xpid + ypidplus * xp;
 
 	// New an element and attach four nodes to it
-	Elem * elem = new Quad4;
+	Elem *elem = new Quad4;
 	elem->set_id(elem_id);
 	elem->processor_id() = pid;
-	elem->set_unique_id() = elem_id;
+	// Make sure our unique_id doesn't overlap any nodes'
+	elem->set_unique_id() = elem_id + (nx + 1) * (ny + 1);
 	elem = mesh.add_elem(elem);
 	elem->set_node(0) = node0_ptr;
 	elem->set_node(1) = node1_ptr;
@@ -328,9 +330,9 @@ void add_element_Quad4(DM da, const dof_id_type nx, const dof_id_type ny,
 void add_element_Hex8(DM da, const dof_id_type nx, const dof_id_type ny,
 		const dof_id_type nz, const dof_id_type i, const dof_id_type j,
 		const dof_id_type k, const dof_id_type elem_id,
-		const processor_id_type pid, const ElemType type, MeshBase & mesh,
-		XolotlInterface & interface) {
-	BoundaryInfo & boundary_info = mesh.get_boundary_info();
+		const processor_id_type pid, const ElemType type, MeshBase &mesh,
+		XolotlInterface &interface) {
+	BoundaryInfo &boundary_info = mesh.get_boundary_info();
 // Mx: number of grid points in x direction for all processors
 // My: number of grid points in y direction for all processors
 // Mz: number of grid points in z direction for all processors
@@ -463,10 +465,11 @@ void add_element_Hex8(DM da, const dof_id_type nx, const dof_id_type ny,
 	node7_ptr->processor_id() = xpid + (ypidplus + zpidplus * yp) * xp;
 
 // New an element and attach eight nodes to it
-	Elem * elem = new Hex8;
+	Elem *elem = new Hex8;
 	elem->set_id(elem_id);
 	elem->processor_id() = pid;
-	elem->set_unique_id() = elem_id;
+	// Make sure our unique_id doesn't overlap any nodes'
+	elem->set_unique_id() = elem_id + (nx + 1) * (ny + 1) * (nz + 1);
 	elem = mesh.add_elem(elem);
 	elem->set_node(0) = node0_ptr;
 	elem->set_node(1) = node1_ptr;
@@ -497,19 +500,19 @@ void add_element_Hex8(DM da, const dof_id_type nx, const dof_id_type ny,
 		boundary_info.add_side(elem, 5, 5);
 }
 
-void set_boundary_names_Edge2(BoundaryInfo & boundary_info) {
+void set_boundary_names_Edge2(BoundaryInfo &boundary_info) {
 	boundary_info.sideset_name(0) = "right";
 	boundary_info.sideset_name(1) = "left";
 }
 
-void set_boundary_names_Quad4(BoundaryInfo & boundary_info) {
+void set_boundary_names_Quad4(BoundaryInfo &boundary_info) {
 	boundary_info.sideset_name(0) = "bottom";
 	boundary_info.sideset_name(1) = "right";
 	boundary_info.sideset_name(2) = "top";
 	boundary_info.sideset_name(3) = "left";
 }
 
-void set_boundary_names_Hex8(BoundaryInfo & boundary_info) {
+void set_boundary_names_Hex8(BoundaryInfo &boundary_info) {
 	boundary_info.sideset_name(0) = "back";
 	boundary_info.sideset_name(1) = "bottom";
 	boundary_info.sideset_name(2) = "right";
@@ -518,8 +521,8 @@ void set_boundary_names_Hex8(BoundaryInfo & boundary_info) {
 	boundary_info.sideset_name(5) = "front";
 }
 
-void add_node_Edge2(dof_id_type i, processor_id_type pid,
-		ElemType type, MeshBase & mesh, XolotlInterface & interface) {
+void add_node_Edge2(dof_id_type i, processor_id_type pid, ElemType type,
+		MeshBase &mesh, XolotlInterface &interface) {
 // Get the geometry of the Xolotl grid information
 	double hy = 0.0, hz = 0.0;
 	auto xolotlGrid = interface.getGridInfo(hy, hz);
@@ -532,8 +535,8 @@ void add_node_Edge2(dof_id_type i, processor_id_type pid,
 }
 
 void add_node_Quad4(dof_id_type nx, dof_id_type i, dof_id_type j,
-		processor_id_type pid, ElemType type, MeshBase & mesh,
-		XolotlInterface & interface) {
+		processor_id_type pid, ElemType type, MeshBase &mesh,
+		XolotlInterface &interface) {
 // Get the geometry of the Xolotl grid information
 	double hy = 0.0, hz = 0.0;
 	auto xolotlGrid = interface.getGridInfo(hy, hz);
@@ -546,9 +549,9 @@ void add_node_Quad4(dof_id_type nx, dof_id_type i, dof_id_type j,
 	node0_ptr->processor_id() = pid;
 }
 
-void add_node_Hex8(dof_id_type nx, dof_id_type ny,
-		dof_id_type i, dof_id_type j, dof_id_type k, processor_id_type pid,
-		ElemType type, MeshBase & mesh, XolotlInterface & interface) {
+void add_node_Hex8(dof_id_type nx, dof_id_type ny, dof_id_type i, dof_id_type j,
+		dof_id_type k, processor_id_type pid, ElemType type, MeshBase &mesh,
+		XolotlInterface &interface) {
 // Get the geometry of the Xolotl grid information
 	double hy = 0.0, hz = 0.0;
 	auto xolotlGrid = interface.getGridInfo(hy, hz);
@@ -562,11 +565,11 @@ void add_node_Hex8(dof_id_type nx, dof_id_type ny,
 	node0_ptr->processor_id() = pid;
 }
 
-void build_cube_Edge2(UnstructuredMesh & mesh, DM da, const ElemType type,
-		XolotlInterface & interface) {
+void build_cube_Edge2(UnstructuredMesh &mesh, DM da, const ElemType type,
+		XolotlInterface &interface) {
 	const auto pid = mesh.comm().rank();
 
-	BoundaryInfo & boundary_info = mesh.get_boundary_info();
+	BoundaryInfo &boundary_info = mesh.get_boundary_info();
 // xs: start grid point (not element) index on local in x direction
 // xm: number of grid points owned by the local processor in x direction
 // Mx: number of grid points on all processors in x direction
@@ -607,16 +610,19 @@ void build_cube_Edge2(UnstructuredMesh & mesh, DM da, const ElemType type,
 	mesh.find_neighbors(true);
 
 // Set RemoteElem neighbors
-	for (auto & elem_ptr : mesh.element_ptr_range())
+	for (auto &elem_ptr : mesh.element_ptr_range())
 		for (unsigned int s = 0; s < elem_ptr->n_sides(); s++)
 			if (!elem_ptr->neighbor_ptr(s)
 					&& !boundary_info.n_boundary_ids(elem_ptr, s))
-				elem_ptr->set_neighbor(s,
-						const_cast<RemoteElem *>(remote_elem));
+				elem_ptr->set_neighbor(s, const_cast<RemoteElem*>(remote_elem));
 
 	set_boundary_names_Edge2(boundary_info);
 // Already partitioned!
 	mesh.skip_partitioning(true);
+
+	// We've already set our own unique_id values; now make sure that
+	// future mesh modifications use subsequent values.
+	mesh.set_next_unique_id(Mx + (Mx - 1));
 
 // No need to renumber or find neighbors - done did it.
 // Avoid deprecation message/error by _also_ setting
@@ -628,11 +634,11 @@ void build_cube_Edge2(UnstructuredMesh & mesh, DM da, const ElemType type,
 	/*skip_find_neighbors = */true);
 }
 
-void build_cube_Quad4(UnstructuredMesh & mesh, DM da, const ElemType type,
-		XolotlInterface & interface) {
+void build_cube_Quad4(UnstructuredMesh &mesh, DM da, const ElemType type,
+		XolotlInterface &interface) {
 	const auto pid = mesh.comm().rank();
 
-	BoundaryInfo & boundary_info = mesh.get_boundary_info();
+	BoundaryInfo &boundary_info = mesh.get_boundary_info();
 // xs: start grid point (not element) index on local in x direction
 // ys: start grid point index on local in y direction
 // xm: number of grid points owned by the local processor in x direction
@@ -678,16 +684,19 @@ void build_cube_Quad4(UnstructuredMesh & mesh, DM da, const ElemType type,
 	mesh.find_neighbors(true);
 
 // Set RemoteElem neighbors
-	for (auto & elem_ptr : mesh.element_ptr_range())
+	for (auto &elem_ptr : mesh.element_ptr_range())
 		for (unsigned int s = 0; s < elem_ptr->n_sides(); s++)
 			if (!elem_ptr->neighbor_ptr(s)
 					&& !boundary_info.n_boundary_ids(elem_ptr, s))
-				elem_ptr->set_neighbor(s,
-						const_cast<RemoteElem *>(remote_elem));
+				elem_ptr->set_neighbor(s, const_cast<RemoteElem*>(remote_elem));
 
 	set_boundary_names_Quad4(boundary_info);
 // Already partitioned!
 	mesh.skip_partitioning(true);
+
+	// We've already set our own unique_id values; now make sure that
+	// future mesh modifications use subsequent values.
+	mesh.set_next_unique_id(Mx * My + (Mx - 1) * (My - 1));
 
 // No need to renumber or find neighbors - done did it.
 // Avoid deprecation message/error by _also_ setting
@@ -699,11 +708,11 @@ void build_cube_Quad4(UnstructuredMesh & mesh, DM da, const ElemType type,
 	/*skip_find_neighbors = */true);
 }
 
-void build_cube_Hex8(UnstructuredMesh & mesh, DM da, const ElemType type,
-		XolotlInterface & interface) {
+void build_cube_Hex8(UnstructuredMesh &mesh, DM da, const ElemType type,
+		XolotlInterface &interface) {
 	const auto pid = mesh.comm().rank();
 
-	BoundaryInfo & boundary_info = mesh.get_boundary_info();
+	BoundaryInfo &boundary_info = mesh.get_boundary_info();
 // xs: start grid point (not element) index on local in x direction
 // ys: start grid point index on local in y direction
 // zs: start grid point index on local in z direction
@@ -756,16 +765,18 @@ void build_cube_Hex8(UnstructuredMesh & mesh, DM da, const ElemType type,
 	mesh.find_neighbors(true);
 
 // Set RemoteElem neighbors
-	for (auto & elem_ptr : mesh.element_ptr_range())
+	for (auto &elem_ptr : mesh.element_ptr_range())
 		for (unsigned int s = 0; s < elem_ptr->n_sides(); s++)
 			if (!elem_ptr->neighbor_ptr(s)
 					&& !boundary_info.n_boundary_ids(elem_ptr, s))
-				elem_ptr->set_neighbor(s,
-						const_cast<RemoteElem *>(remote_elem));
+				elem_ptr->set_neighbor(s, const_cast<RemoteElem*>(remote_elem));
 
 	set_boundary_names_Hex8(boundary_info);
 // Already partitioned!
 	mesh.skip_partitioning(true);
+	// We've already set our own unique_id values; now make sure that
+	// future mesh modifications use subsequent values.
+	mesh.set_next_unique_id(Mx * My * Mz + (Mx - 1) * (My - 1) * (Mz - 1));
 
 // No need to renumber or find neighbors - done did it.
 // Avoid deprecation message/error by _also_ setting
@@ -779,7 +790,9 @@ void build_cube_Hex8(UnstructuredMesh & mesh, DM da, const ElemType type,
 
 void PETScDMDAMesh::buildMesh() {
 // Reference to the libmesh mesh
-	MeshBase & mesh = getMesh();
+	MeshBase &mesh = getMesh();
+
+	std::cout << "building" << std::endl;
 
 	MooseEnum elem_type_enum = getParam < MooseEnum > ("elem_type");
 
@@ -807,25 +820,27 @@ void PETScDMDAMesh::buildMesh() {
 	mesh.set_spatial_dimension(_dim);
 
 // Get the app to get the interface for the geometry of the grid
-	coupling_xolotlApp * xolotl_app = dynamic_cast<coupling_xolotlApp *>(&_app);
-	auto & interface = xolotl_app->getInterface();
+	coupling_xolotlApp *xolotl_app = dynamic_cast<coupling_xolotlApp*>(&_app);
+	auto &interface = xolotl_app->getInterface();
 
 // Switching on MooseEnum
 	switch (_dim) {
 	case 1:
-		build_cube_Edge2(dynamic_cast<UnstructuredMesh &>(getMesh()), _dmda,
+		build_cube_Edge2(dynamic_cast<UnstructuredMesh&>(getMesh()), _dmda,
 				_elem_type, interface);
 		break;
 	case 2:
-		build_cube_Quad4(dynamic_cast<UnstructuredMesh &>(getMesh()), _dmda,
+		build_cube_Quad4(dynamic_cast<UnstructuredMesh&>(getMesh()), _dmda,
 				_elem_type, interface);
 		break;
-        case 3:
-                build_cube_Hex8(dynamic_cast<UnstructuredMesh &>(getMesh()), _dmda,
-                                _elem_type, interface);
-                break;
+	case 3:
+		build_cube_Hex8(dynamic_cast<UnstructuredMesh&>(getMesh()), _dmda,
+				_elem_type, interface);
+		break;
 	default:
 		mooseError("Does not support dimension ", _dim, "yet");
 	}
+
+	std::cout << "Done building" << std::endl;
 }
 
