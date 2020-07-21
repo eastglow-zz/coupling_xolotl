@@ -1,8 +1,16 @@
 [Tests]
-  [./test]
+  [./PF_as_master]
     type = 'Exodiff'
     input = 'PFmulti_master_2D_noCnoR.i'
     exodiff = 'PFmulti_master_2D_noCnoR_exodus.e'
+    allow_unused = True
+    allow_warnings = True
+  [../]
+  [./Xolotl_standalone]
+    type = 'CheckFiles'
+    input = 'xolotl_standalone_2D_noCnoR.i'
+    check_files = 'retentionOut.txt'
+    cli_args = '--xolotl-as-master'
     allow_unused = True
     allow_warnings = True
   [../]

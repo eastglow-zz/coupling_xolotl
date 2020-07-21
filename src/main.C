@@ -25,8 +25,12 @@ main(int argc, char * argv[])
   // Register this application's MooseApp and any it depends on
   coupling_xolotlTestApp::registerApps();
 
+  bool xolotl_master = libMesh::on_command_line("--xolotl-as-master");
+
   // Create an instance of the application and store it in a smart pointer for easy cleanup
-  std::shared_ptr<MooseApp> app = AppFactory::createAppShared("coupling_xolotlTestApp", argc, argv);
+  std::shared_ptr<MooseApp> app;
+  if (xolotl_master) app = AppFactory::createAppShared("coupling_xolotlApp", argc, argv);
+  else app = AppFactory::createAppShared("coupling_xolotlTestApp", argc, argv);
 
   // Execute the application
   app->run();
