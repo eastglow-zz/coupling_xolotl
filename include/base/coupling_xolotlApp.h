@@ -8,8 +8,12 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 #pragma once
 
+#include <memory>
+
 #include "MooseApp.h"
-#include <interface.h>
+#include <xolotl/interface/Interface.h>
+
+using XolotlInterface = xolotl::interface::XolotlInterface;
 
 class coupling_xolotlApp: public MooseApp {
 public:
@@ -18,11 +22,11 @@ public:
 	coupling_xolotlApp(InputParameters parameters);
 	virtual ~coupling_xolotlApp();
 
-	XolotlInterface & getInterface() {
+	std::shared_ptr<XolotlInterface> getInterface() {
 		return _interface;
 	}
 	TS & getXolotlTS() {
-		return _interface.getTS();
+		return _interface->getTS();
 	}
 	static void registerApps();
 	static void registerAll(Factory & f, ActionFactory & af, Syntax & s);
@@ -32,5 +36,5 @@ public:
 	void restore(std::shared_ptr<Backup> backup, bool for_restart = false);
 
 private:
-	XolotlInterface _interface;
+	std::shared_ptr<XolotlInterface> _interface;
 };

@@ -17,7 +17,7 @@ InputParameters coupling_xolotlApp::validParams() {
 }
 
 coupling_xolotlApp::coupling_xolotlApp(InputParameters parameters) :
-		MooseApp(parameters) {
+		MooseApp(parameters), _interface(std::make_shared<XolotlInterface>()) {
 	coupling_xolotlApp::registerAll(_factory, _action_factory, _syntax);
 }
 

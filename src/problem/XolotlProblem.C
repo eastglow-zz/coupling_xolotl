@@ -7,8 +7,11 @@
 //* Licensed under LGPL 2.1, please see LICENSE for details
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
+#include <cmath>
 #include "XolotlProblem.h"
 #include "SystemBase.h"
+
+using std::max;
 
 registerMooseObject("coupling_xolotlApp", XolotlProblem);
 
@@ -72,7 +75,7 @@ XolotlProblem::XolotlProblem(const InputParameters & params) :
 												std::vector<std::pair<int, Real> > > > >
 						> ("conc_vector")) {
 	PetscInt xs, ys, zs, xm, ym, zm, Mx, My, Mz;
-	_interface.getLocalCoordinates(xs, xm, Mx, ys, ym, My, zs, zm, Mz);
+	_interface->getLocalCoordinates(xs, xm, Mx, ys, ym, My, zs, zm, Mz);
 
 	// Initialize old rate
 	_old_rate.clear();
@@ -97,13 +100,13 @@ void XolotlProblem::externalSolve() {
 	// Check that the next time is larger than the current one
 	if (time() > _current_time) {
 		// Set the time we want to reach
-		_interface.setTimes(time(), dt());
+		_interface->setTimes(time(), dt());
 		// Reset the concentrations where the GBs are
-		_interface.initGBLocation();
+		_interface->initGBLocation();
 		// Save the size of the dt for derivative calculation
 		_dt_for_derivative = dt();
 		// Run the solver
-		_interface.solveXolotl();
+		_interface->solveXolotl();
 		// Save the current time
 		_current_time = time();
 		// Set Xolotl has run
@@ -112,13 +115,13 @@ void XolotlProblem::externalSolve() {
 }
 
 bool XolotlProblem::converged() {
-	bool conv = _interface.getConvergenceStatus();
+	bool conv = _interface->getConvergenceStatus();
 	return conv;
 }
 
 void XolotlProblem::syncSolutions(Direction direction) {
 	PetscInt i, j, k, xs, ys, zs, xm, ym, zm, Mx, My, Mz;
-	_interface.getLocalCoordinates(xs, xm, Mx, ys, ym, My, zs, zm, Mz);
+	_interface->getLocalCoordinates(xs, xm, Mx, ys, ym, My, zs, zm, Mz);
 	if (direction == Direction::FROM_EXTERNAL_APP && _xolotl_has_run) {
 		MeshBase & to_mesh = mesh().getMesh();
 		auto & sync_rate = getVariable(0, _sync_rate,
@@ -132,7 +135,7 @@ void XolotlProblem::syncSolutions(Direction direction) {
                                 Moose::VarFieldType::VAR_FIELD_STANDARD);
 
 		// Get the rate vector
-		auto ne_vector = _interface.getLocalNE();
+		auto ne_vector = _interface->getLocalNE();
 
 		for (k = zs; k < zs + max(zm, 1); k++)
 			for (j = ys; j < ys + max(ym, 1); j++)
@@ -200,10 +203,10 @@ void XolotlProblem::syncSolutions(Direction direction) {
 		sync_gb.sys().solution().close();
 
 		// Clear the GB list in Xolotl
-		_interface.resetGBVector();
+		_interface->resetGBVector();
 		// Pass the local list to Xolotl
 		for (int m = 0; m < localGBList.size(); m += 3) {
-			_interface.setGBLocation(localGBList[m], localGBList[m + 1],
+			_interface->setGBLocation(localGBList[m], localGBList[m + 1],
 					localGBList[m + 2]);
 		}
 	}
@@ -211,14 +214,14 @@ void XolotlProblem::syncSolutions(Direction direction) {
 
 void XolotlProblem::saveState() {
 	// Update the values from Xolotl
-	_conc_vector = _interface.getConcVector();
-	_local_NE = _interface.getLocalNE();
-	_current_dt = _interface.getCurrentDt();
-	_previous_time = _interface.getPreviousTime();
-	_n_xenon = _interface.getNXeGB();
+	_conc_vector = _interface->getConcVector();
+	_local_NE = _interface->getLocalNE();
+	_current_dt = _interface->getCurrentDt();
+	_previous_time = _interface->getPreviousTime();
+	_n_xenon = _interface->getNXeGB();
 
 	PetscInt i, j, k, xs, ys, zs, xm, ym, zm, Mx, My, Mz;
-        _interface.getLocalCoordinates(xs, xm, Mx, ys, ym, My, zs, zm, Mz);
+        _interface->getLocalCoordinates(xs, xm, Mx, ys, ym, My, zs, zm, Mz);
 	// Set old rate from local NE
 	for (k = zs; k < zs + max(zm, 1); k++)
                         for (j = ys; j < ys + max(ym, 1); j++)
@@ -229,9 +232,9 @@ void XolotlProblem::saveState() {
 
 void XolotlProblem::setState() {
 	// Set them in Xolotl
-	_interface.setConcVector(_conc_vector);
-	_interface.setLocalNE(_local_NE);
-	_interface.setCurrentTimes(_current_time, _current_dt);
-	_interface.setPreviousTime(_previous_time);
-	_interface.setNXeGB(_n_xenon);
+	_interface->setConcVector(_conc_vector);
+	_interface->setLocalNE(_local_NE);
+	_interface->setCurrentTimes(_current_time, _current_dt);
+	_interface->setPreviousTime(_previous_time);
+	_interface->setNXeGB(_n_xenon);
 }

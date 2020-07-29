@@ -68,7 +68,7 @@ PETScDMDAMesh::PETScDMDAMesh(const InputParameters &parameters) :
 	// Get the external app to create the interface and its grid
 	coupling_xolotlApp *xolotl_app = dynamic_cast<coupling_xolotlApp*>(&_app);
 	if (xolotl_app) {
-		auto &interface = xolotl_app->getInterface();
+		auto interface = xolotl_app->getInterface();
 		// This has to be done here because the base app cannot take parameters
 		// from the input file
 		int argc = 2;
@@ -79,7 +79,7 @@ PETScDMDAMesh::PETScDMDAMesh(const InputParameters &parameters) :
 		argv[1] = new char[_xolotl_input_path_name.length() + 1];
 		strcpy(argv[1], _xolotl_input_path_name.c_str());
 
-		interface.initializeXolotl(argc, argv, _communicator.get(), false);
+		interface->initializeXolotl(argc, argv, _communicator.get());
 		// Now we can get the TS from the app
 		TS &ts = xolotl_app->getXolotlTS();
 		// Retrieve mesh from TS
@@ -821,21 +821,21 @@ void PETScDMDAMesh::buildMesh() {
 
 // Get the app to get the interface for the geometry of the grid
 	coupling_xolotlApp *xolotl_app = dynamic_cast<coupling_xolotlApp*>(&_app);
-	auto &interface = xolotl_app->getInterface();
+	auto interface = xolotl_app->getInterface();
 
 // Switching on MooseEnum
 	switch (_dim) {
 	case 1:
 		build_cube_Edge2(dynamic_cast<UnstructuredMesh&>(getMesh()), _dmda,
-				_elem_type, interface);
+				_elem_type, *interface);
 		break;
 	case 2:
 		build_cube_Quad4(dynamic_cast<UnstructuredMesh&>(getMesh()), _dmda,
-				_elem_type, interface);
+				_elem_type, *interface);
 		break;
 	case 3:
 		build_cube_Hex8(dynamic_cast<UnstructuredMesh&>(getMesh()), _dmda,
-				_elem_type, interface);
+				_elem_type, *interface);
 		break;
 	default:
 		mooseError("Does not support dimension ", _dim, "yet");

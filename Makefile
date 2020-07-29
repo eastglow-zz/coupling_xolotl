@@ -44,8 +44,8 @@ POROUS_FLOW         := no
 include $(MOOSE_DIR)/modules/modules.mk
 ###############################################################################
 #External non-MOOSE shared library linking - not necessary
-extlibpath          :=/projects/NE_SciDAC/dependencies/xolotl-sophie/build/lib
-extheaderpath       :=/projects/NE_SciDAC/dependencies/xolotl-sophie/build/include
+extlibpath          :=/home2/bqo/xolotl/xolotl-plsm-build/xolotl/install/lib
+extheaderpath       :=/home2/bqo/xolotl/xolotl-plsm-build/xolotl/install/include
 #ADDITIONAL_INCLUDES    +=/Users/sophie/Code/petsc/include/
 #ADDITIONAL_INCLUDES    +=/Users/sophie/Code/petsc/20180509/include
 #ADDITIONAL_DEPEND_LIBS    +=$(extlibpath)
@@ -58,7 +58,7 @@ APPLICATION_NAME   := coupling_xolotl
 BUILD_EXEC         := yes
 GEN_REVISION       := no
 include            $(FRAMEWORK_DIR)/app.mk
-export EXTERNAL_FLAGS += -std=c++11 -L$(extlibpath) -lxolotlInter -L/projects/NE_SciDAC/dependencies/boost_1_70_0-install/lib/ -lboost_unit_test_framework -lboost_program_options -lboost_timer -lboost_system -lboost_chrono
+export EXTERNAL_FLAGS += -std=c++11 -L$(extlibpath) -lxolotlInterface
 
 ###############################################################################
 # Additional special case targets should be added here
