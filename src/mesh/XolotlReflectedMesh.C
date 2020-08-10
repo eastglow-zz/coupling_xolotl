@@ -7,7 +7,7 @@
 //* Licensed under LGPL 2.1, please see LICENSE for details
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
-#include "PETScDMDAMesh.h"
+#include "XolotlReflectedMesh.h"
 
 #include "libmesh/mesh_generation.h"
 #include "libmesh/string_to_enum.h"
@@ -26,10 +26,10 @@
 // C++ includes
 #include <cmath> // provides round, not std::round (see http://www.cplusplus.com/reference/cmath/round/)
 
-registerMooseObject("coupling_xolotlApp", PETScDMDAMesh);
+registerMooseObject("coupling_xolotlApp", XolotlReflectedMesh);
 
 template<>
-InputParameters validParams<PETScDMDAMesh>() {
+InputParameters validParams<XolotlReflectedMesh>() {
 	InputParameters params = validParams<MooseMesh>();
 
 	MooseEnum elem_types("EDGE2  QUAD4  HEX8"); // no default
@@ -58,7 +58,7 @@ InputParameters validParams<PETScDMDAMesh>() {
 	return params;
 }
 
-PETScDMDAMesh::PETScDMDAMesh(const InputParameters &parameters) :
+XolotlReflectedMesh::XolotlReflectedMesh(const InputParameters &parameters) :
 		MooseMesh(parameters), _xolotl_input_path_name(
 				getParam < FileName > ("XolotlInput_path_name")), _dim(
 				getParam < MooseEnum > ("dim")) {
@@ -66,7 +66,8 @@ PETScDMDAMesh::PETScDMDAMesh(const InputParameters &parameters) :
 	_regular_orthogonal_mesh = true;
 	if (&_app) {
 		// Get the external app to create the interface and its grid
-		coupling_xolotlApp *xolotl_app = dynamic_cast<coupling_xolotlApp*>(&_app);
+		coupling_xolotlApp *xolotl_app =
+				dynamic_cast<coupling_xolotlApp*>(&_app);
 		// Create the interface to initialiaze the DMDA
 		xolotl_app->createInterface(_xolotl_input_path_name);
 		// Now we can get the TS from the app
@@ -77,7 +78,7 @@ PETScDMDAMesh::PETScDMDAMesh(const InputParameters &parameters) :
 		mooseError("Missing the Xolotl App");
 }
 
-Real PETScDMDAMesh::getMinInDimension(unsigned int component) const {
+Real XolotlReflectedMesh::getMinInDimension(unsigned int component) const {
 	switch (component) {
 	case 0:
 		return _xmin;
@@ -90,7 +91,7 @@ Real PETScDMDAMesh::getMinInDimension(unsigned int component) const {
 	}
 }
 
-Real PETScDMDAMesh::getMaxInDimension(unsigned int component) const {
+Real XolotlReflectedMesh::getMaxInDimension(unsigned int component) const {
 	switch (component) {
 	case 0:
 		return _xmax;
@@ -103,8 +104,8 @@ Real PETScDMDAMesh::getMaxInDimension(unsigned int component) const {
 	}
 }
 
-std::unique_ptr<MooseMesh> PETScDMDAMesh::safeClone() const {
-	return libmesh_make_unique < PETScDMDAMesh > (*this);
+std::unique_ptr<MooseMesh> XolotlReflectedMesh::safeClone() const {
+	return libmesh_make_unique < XolotlReflectedMesh > (*this);
 }
 
 inline dof_id_type node_id_Edge2(const ElemType /*type*/, const dof_id_type i)
@@ -767,7 +768,7 @@ void build_cube_Hex8(UnstructuredMesh &mesh, DM da, const ElemType type,
 	mesh.allow_find_neighbors(true);
 }
 
-void PETScDMDAMesh::buildMesh() {
+void XolotlReflectedMesh::buildMesh() {
 // Reference to the libmesh mesh
 	MeshBase &mesh = getMesh();
 
