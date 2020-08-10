@@ -18,6 +18,8 @@ public:
 	coupling_xolotlApp(InputParameters parameters);
 	virtual ~coupling_xolotlApp();
 
+	void createInterface(FileName paramName);
+
 	XolotlInterface & getInterface() {
 		return _interface;
 	}
@@ -33,4 +35,5 @@ public:
 
 private:
 	XolotlInterface _interface;
+	bool _is_xolotl_app;
 };
