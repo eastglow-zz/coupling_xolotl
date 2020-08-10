@@ -7,7 +7,7 @@
 //* Licensed under LGPL 2.1, please see LICENSE for details
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
-#include "PETScDMDAMesh.h"
+#include "XolotlReflectedMesh.h"
 
 #include "libmesh/mesh_generation.h"
 #include "libmesh/string_to_enum.h"
@@ -26,10 +26,10 @@
 // C++ includes
 #include <cmath> // provides round, not std::round (see http://www.cplusplus.com/reference/cmath/round/)
 
-registerMooseObject("coupling_xolotlApp", PETScDMDAMesh);
+registerMooseObject("coupling_xolotlApp", XolotlReflectedMesh);
 
 template<>
-InputParameters validParams<PETScDMDAMesh>() {
+InputParameters validParams<XolotlReflectedMesh>() {
 	InputParameters params = validParams<MooseMesh>();
 
 	MooseEnum elem_types("EDGE2  QUAD4  HEX8"); // no default
@@ -58,28 +58,18 @@ InputParameters validParams<PETScDMDAMesh>() {
 	return params;
 }
 
-PETScDMDAMesh::PETScDMDAMesh(const InputParameters &parameters) :
+XolotlReflectedMesh::XolotlReflectedMesh(const InputParameters &parameters) :
 		MooseMesh(parameters), _xolotl_input_path_name(
 				getParam < FileName > ("XolotlInput_path_name")), _dim(
 				getParam < MooseEnum > ("dim")) {
 	// All generated meshes are regular orthogonal meshes
 	_regular_orthogonal_mesh = true;
-
-	// Get the external app to create the interface and its grid
-	coupling_xolotlApp *xolotl_app = dynamic_cast<coupling_xolotlApp*>(&_app);
-	if (xolotl_app) {
-		auto interface = xolotl_app->getInterface();
-		// This has to be done here because the base app cannot take parameters
-		// from the input file
-		int argc = 2;
-		char **argv = new char*[argc];
-		std::string parameterFile = "bla";
-		argv[0] = new char[parameterFile.length() + 1];
-		strcpy(argv[0], parameterFile.c_str());
-		argv[1] = new char[_xolotl_input_path_name.length() + 1];
-		strcpy(argv[1], _xolotl_input_path_name.c_str());
-
-		interface->initializeXolotl(argc, argv, _communicator.get());
+	if (&_app) {
+		// Get the external app to create the interface and its grid
+		coupling_xolotlApp *xolotl_app =
+				dynamic_cast<coupling_xolotlApp*>(&_app);
+		// Create the interface to initialiaze the DMDA
+		xolotl_app->createInterface(_xolotl_input_path_name);
 		// Now we can get the TS from the app
 		TS &ts = xolotl_app->getXolotlTS();
 		// Retrieve mesh from TS
@@ -88,7 +78,7 @@ PETScDMDAMesh::PETScDMDAMesh(const InputParameters &parameters) :
 		mooseError("Missing the Xolotl App");
 }
 
-Real PETScDMDAMesh::getMinInDimension(unsigned int component) const {
+Real XolotlReflectedMesh::getMinInDimension(unsigned int component) const {
 	switch (component) {
 	case 0:
 		return _xmin;
@@ -101,7 +91,7 @@ Real PETScDMDAMesh::getMinInDimension(unsigned int component) const {
 	}
 }
 
-Real PETScDMDAMesh::getMaxInDimension(unsigned int component) const {
+Real XolotlReflectedMesh::getMaxInDimension(unsigned int component) const {
 	switch (component) {
 	case 0:
 		return _xmax;
@@ -114,8 +104,8 @@ Real PETScDMDAMesh::getMaxInDimension(unsigned int component) const {
 	}
 }
 
-std::unique_ptr<MooseMesh> PETScDMDAMesh::safeClone() const {
-	return libmesh_make_unique < PETScDMDAMesh > (*this);
+std::unique_ptr<MooseMesh> XolotlReflectedMesh::safeClone() const {
+	return libmesh_make_unique < XolotlReflectedMesh > (*this);
 }
 
 inline dof_id_type node_id_Edge2(const ElemType /*type*/, const dof_id_type i)
@@ -186,7 +176,7 @@ void add_element_Edge2(DM da, const dof_id_type nx, const dof_id_type i,
 	// Left
 	auto node0_ptr = mesh.add_point(libMesh::Point(xolotlGrid[i], 0, 0),
 			node_id_Edge2(type, i));
-	node0_ptr->set_unique_id() = node_id_Edge2(type, i);
+	node0_ptr->set_unique_id(node_id_Edge2(type, i));
 	node0_ptr->set_id() = node0_ptr->unique_id();
 	// xpid + ypid * xp is the global processor ID
 	node0_ptr->processor_id() = xpid;
@@ -194,7 +184,7 @@ void add_element_Edge2(DM da, const dof_id_type nx, const dof_id_type i,
 	// Right
 	auto node1_ptr = mesh.add_point(libMesh::Point(xolotlGrid[i + 1], 0, 0),
 			node_id_Edge2(type, i + 1));
-	node1_ptr->set_unique_id() = node_id_Edge2(type, i + 1);
+	node1_ptr->set_unique_id(node_id_Edge2(type, i + 1));
 	node1_ptr->set_id() = node1_ptr->unique_id();
 	node1_ptr->processor_id() = xpidplus;
 
@@ -203,7 +193,7 @@ void add_element_Edge2(DM da, const dof_id_type nx, const dof_id_type i,
 	elem->set_id(elem_id);
 	elem->processor_id() = pid;
 	// Make sure our unique_id doesn't overlap any nodes'
-	elem->set_unique_id() = elem_id + (nx + 1);
+	elem->set_unique_id(elem_id + (nx + 1));
 	elem = mesh.add_elem(elem);
 	elem->set_node(0) = node0_ptr;
 	elem->set_node(1) = node1_ptr;
@@ -271,7 +261,7 @@ void add_element_Quad4(DM da, const dof_id_type nx, const dof_id_type ny,
 	auto node0_ptr = mesh.add_point(
 			libMesh::Point(xolotlGrid[i], static_cast<Real>(j) * hy, 0),
 			node_id_Quad4(type, nx, i, j));
-	node0_ptr->set_unique_id() = node_id_Quad4(type, nx, i, j);
+	node0_ptr->set_unique_id(node_id_Quad4(type, nx, i, j));
 	node0_ptr->set_id() = node0_ptr->unique_id();
 	// xpid + ypid * xp is the global processor ID
 	node0_ptr->processor_id() = xpid + ypid * xp;
@@ -280,7 +270,7 @@ void add_element_Quad4(DM da, const dof_id_type nx, const dof_id_type ny,
 	auto node1_ptr = mesh.add_point(
 			libMesh::Point(xolotlGrid[i + 1], static_cast<Real>(j) * hy, 0),
 			node_id_Quad4(type, nx, i + 1, j));
-	node1_ptr->set_unique_id() = node_id_Quad4(type, nx, i + 1, j);
+	node1_ptr->set_unique_id(node_id_Quad4(type, nx, i + 1, j));
 	node1_ptr->set_id() = node1_ptr->unique_id();
 	node1_ptr->processor_id() = xpidplus + ypid * xp;
 
@@ -288,7 +278,7 @@ void add_element_Quad4(DM da, const dof_id_type nx, const dof_id_type ny,
 	auto node2_ptr = mesh.add_point(
 			libMesh::Point(xolotlGrid[i + 1], static_cast<Real>(j + 1) * hy, 0),
 			node_id_Quad4(type, nx, i + 1, j + 1));
-	node2_ptr->set_unique_id() = node_id_Quad4(type, nx, i + 1, j + 1);
+	node2_ptr->set_unique_id(node_id_Quad4(type, nx, i + 1, j + 1));
 	node2_ptr->set_id() = node2_ptr->unique_id();
 	node2_ptr->processor_id() = xpidplus + ypidplus * xp;
 
@@ -296,7 +286,7 @@ void add_element_Quad4(DM da, const dof_id_type nx, const dof_id_type ny,
 	auto node3_ptr = mesh.add_point(
 			libMesh::Point(xolotlGrid[i], static_cast<Real>(j + 1) * hy, 0),
 			node_id_Quad4(type, nx, i, j + 1));
-	node3_ptr->set_unique_id() = node_id_Quad4(type, nx, i, j + 1);
+	node3_ptr->set_unique_id(node_id_Quad4(type, nx, i, j + 1));
 	node3_ptr->set_id() = node3_ptr->unique_id();
 	node3_ptr->processor_id() = xpid + ypidplus * xp;
 
@@ -305,7 +295,7 @@ void add_element_Quad4(DM da, const dof_id_type nx, const dof_id_type ny,
 	elem->set_id(elem_id);
 	elem->processor_id() = pid;
 	// Make sure our unique_id doesn't overlap any nodes'
-	elem->set_unique_id() = elem_id + (nx + 1) * (ny + 1);
+	elem->set_unique_id(elem_id + (nx + 1) * (ny + 1));
 	elem = mesh.add_elem(elem);
 	elem->set_node(0) = node0_ptr;
 	elem->set_node(1) = node1_ptr;
@@ -396,7 +386,7 @@ void add_element_Hex8(DM da, const dof_id_type nx, const dof_id_type ny,
 			libMesh::Point(xolotlGrid[i], static_cast<Real>(j) * hy,
 					static_cast<Real>(k) * hz),
 			node_id_Hex8(type, nx, ny, i, j, k));
-	node0_ptr->set_unique_id() = node_id_Hex8(type, nx, ny, i, j, k);
+	node0_ptr->set_unique_id(node_id_Hex8(type, nx, ny, i, j, k));
 	node0_ptr->set_id() = node0_ptr->unique_id();
 	node0_ptr->processor_id() = xpid + (ypid + zpid * yp) * xp;
 
@@ -405,7 +395,7 @@ void add_element_Hex8(DM da, const dof_id_type nx, const dof_id_type ny,
 			libMesh::Point(xolotlGrid[i + 1], static_cast<Real>(j) * hy,
 					static_cast<Real>(k) * hz),
 			node_id_Hex8(type, nx, ny, i + 1, j, k));
-	node1_ptr->set_unique_id() = node_id_Hex8(type, nx, ny, i + 1, j, k);
+	node1_ptr->set_unique_id(node_id_Hex8(type, nx, ny, i + 1, j, k));
 	node1_ptr->set_id() = node1_ptr->unique_id();
 	node1_ptr->processor_id() = xpidplus + (ypid + zpid * yp) * xp;
 
@@ -414,7 +404,7 @@ void add_element_Hex8(DM da, const dof_id_type nx, const dof_id_type ny,
 			libMesh::Point(xolotlGrid[i + 1], static_cast<Real>(j + 1) * hy,
 					static_cast<Real>(k) * hz),
 			node_id_Hex8(type, nx, ny, i + 1, j + 1, k));
-	node2_ptr->set_unique_id() = node_id_Hex8(type, nx, ny, i + 1, j + 1, k);
+	node2_ptr->set_unique_id(node_id_Hex8(type, nx, ny, i + 1, j + 1, k));
 	node2_ptr->set_id() = node2_ptr->unique_id();
 	node2_ptr->processor_id() = xpidplus + (ypidplus + zpid * yp) * xp;
 
@@ -423,7 +413,7 @@ void add_element_Hex8(DM da, const dof_id_type nx, const dof_id_type ny,
 			libMesh::Point(xolotlGrid[i], static_cast<Real>(j + 1) * hy,
 					static_cast<Real>(k) * hz),
 			node_id_Hex8(type, nx, ny, i, j + 1, k));
-	node3_ptr->set_unique_id() = node_id_Hex8(type, nx, ny, i, j + 1, k);
+	node3_ptr->set_unique_id(node_id_Hex8(type, nx, ny, i, j + 1, k));
 	node3_ptr->set_id() = node3_ptr->unique_id();
 	node3_ptr->processor_id() = xpid + (ypidplus + zpid * yp) * xp;
 
@@ -432,7 +422,7 @@ void add_element_Hex8(DM da, const dof_id_type nx, const dof_id_type ny,
 			libMesh::Point(xolotlGrid[i], static_cast<Real>(j) * hy,
 					static_cast<Real>(k + 1) * hz),
 			node_id_Hex8(type, nx, ny, i, j, k + 1));
-	node4_ptr->set_unique_id() = node_id_Hex8(type, nx, ny, i, j, k + 1);
+	node4_ptr->set_unique_id(node_id_Hex8(type, nx, ny, i, j, k + 1));
 	node4_ptr->set_id() = node4_ptr->unique_id();
 	node4_ptr->processor_id() = xpid + (ypid + zpidplus * yp) * xp;
 
@@ -441,7 +431,7 @@ void add_element_Hex8(DM da, const dof_id_type nx, const dof_id_type ny,
 			libMesh::Point(xolotlGrid[i + 1], static_cast<Real>(j) * hy,
 					static_cast<Real>(k + 1) * hz),
 			node_id_Hex8(type, nx, ny, i + 1, j, k + 1));
-	node5_ptr->set_unique_id() = node_id_Hex8(type, nx, ny, i + 1, j, k + 1);
+	node5_ptr->set_unique_id(node_id_Hex8(type, nx, ny, i + 1, j, k + 1));
 	node5_ptr->set_id() = node5_ptr->unique_id();
 	node5_ptr->processor_id() = xpidplus + (ypid + zpidplus * yp) * xp;
 
@@ -450,8 +440,7 @@ void add_element_Hex8(DM da, const dof_id_type nx, const dof_id_type ny,
 			libMesh::Point(xolotlGrid[i + 1], static_cast<Real>(j + 1) * hy,
 					static_cast<Real>(k + 1) * hz),
 			node_id_Hex8(type, nx, ny, i + 1, j + 1, k + 1));
-	node6_ptr->set_unique_id() = node_id_Hex8(type, nx, ny, i + 1, j + 1,
-			k + 1);
+	node6_ptr->set_unique_id(node_id_Hex8(type, nx, ny, i + 1, j + 1, k + 1));
 	node6_ptr->set_id() = node6_ptr->unique_id();
 	node6_ptr->processor_id() = xpidplus + (ypidplus + zpidplus * yp) * xp;
 
@@ -460,7 +449,7 @@ void add_element_Hex8(DM da, const dof_id_type nx, const dof_id_type ny,
 			libMesh::Point(xolotlGrid[i], static_cast<Real>(j + 1) * hy,
 					static_cast<Real>(k + 1) * hz),
 			node_id_Hex8(type, nx, ny, i, j + 1, k + 1));
-	node7_ptr->set_unique_id() = node_id_Hex8(type, nx, ny, i, j + 1, k + 1);
+	node7_ptr->set_unique_id(node_id_Hex8(type, nx, ny, i, j + 1, k + 1));
 	node7_ptr->set_id() = node7_ptr->unique_id();
 	node7_ptr->processor_id() = xpid + (ypidplus + zpidplus * yp) * xp;
 
@@ -469,7 +458,7 @@ void add_element_Hex8(DM da, const dof_id_type nx, const dof_id_type ny,
 	elem->set_id(elem_id);
 	elem->processor_id() = pid;
 	// Make sure our unique_id doesn't overlap any nodes'
-	elem->set_unique_id() = elem_id + (nx + 1) * (ny + 1) * (nz + 1);
+	elem->set_unique_id(elem_id + (nx + 1) * (ny + 1) * (nz + 1));
 	elem = mesh.add_elem(elem);
 	elem->set_node(0) = node0_ptr;
 	elem->set_node(1) = node1_ptr;
@@ -530,7 +519,7 @@ void add_node_Edge2(dof_id_type i, processor_id_type pid, ElemType type,
 // Bottom Left Back
 	auto node0_ptr = mesh.add_point(libMesh::Point(xolotlGrid[i], 0.0, 0.0),
 			node_id_Edge2(type, i));
-	node0_ptr->set_unique_id() = node_id_Edge2(type, i);
+	node0_ptr->set_unique_id(node_id_Edge2(type, i));
 	node0_ptr->processor_id() = pid;
 }
 
@@ -545,7 +534,7 @@ void add_node_Quad4(dof_id_type nx, dof_id_type i, dof_id_type j,
 	auto node0_ptr = mesh.add_point(
 			libMesh::Point(xolotlGrid[i], static_cast<Real>(j) * hy, 0.0),
 			node_id_Quad4(type, nx, i, j));
-	node0_ptr->set_unique_id() = node_id_Quad4(type, nx, i, j);
+	node0_ptr->set_unique_id(node_id_Quad4(type, nx, i, j));
 	node0_ptr->processor_id() = pid;
 }
 
@@ -561,7 +550,7 @@ void add_node_Hex8(dof_id_type nx, dof_id_type ny, dof_id_type i, dof_id_type j,
 			libMesh::Point(xolotlGrid[i], static_cast<Real>(j) * hy,
 					static_cast<Real>(k) * hz),
 			node_id_Hex8(type, nx, ny, i, j, k));
-	node0_ptr->set_unique_id() = node_id_Hex8(type, nx, ny, i, j, k);
+	node0_ptr->set_unique_id(node_id_Hex8(type, nx, ny, i, j, k));
 	node0_ptr->processor_id() = pid;
 }
 
@@ -625,13 +614,10 @@ void build_cube_Edge2(UnstructuredMesh &mesh, DM da, const ElemType type,
 	mesh.set_next_unique_id(Mx + (Mx - 1));
 
 // No need to renumber or find neighbors - done did it.
-// Avoid deprecation message/error by _also_ setting
-// allow_renumbering(false). This is a bit silly, but we want to
-// catch cases where people are purely using the old "skip"
-// interface and not the new flag setting one.
 	mesh.allow_renumbering(false);
-	mesh.prepare_for_use(/*skip_renumber (ignored!) = */false,
-	/*skip_find_neighbors = */true);
+	mesh.allow_find_neighbors(false);
+	mesh.prepare_for_use();
+	mesh.allow_find_neighbors(true);
 }
 
 void build_cube_Quad4(UnstructuredMesh &mesh, DM da, const ElemType type,
@@ -698,14 +684,11 @@ void build_cube_Quad4(UnstructuredMesh &mesh, DM da, const ElemType type,
 	// future mesh modifications use subsequent values.
 	mesh.set_next_unique_id(Mx * My + (Mx - 1) * (My - 1));
 
-// No need to renumber or find neighbors - done did it.
-// Avoid deprecation message/error by _also_ setting
-// allow_renumbering(false). This is a bit silly, but we want to
-// catch cases where people are purely using the old "skip"
-// interface and not the new flag setting one.
+	// No need to renumber or find neighbors - done did it.
 	mesh.allow_renumbering(false);
-	mesh.prepare_for_use(/*skip_renumber (ignored!) = */false,
-	/*skip_find_neighbors = */true);
+	mesh.allow_find_neighbors(false);
+	mesh.prepare_for_use();
+	mesh.allow_find_neighbors(true);
 }
 
 void build_cube_Hex8(UnstructuredMesh &mesh, DM da, const ElemType type,
@@ -778,17 +761,14 @@ void build_cube_Hex8(UnstructuredMesh &mesh, DM da, const ElemType type,
 	// future mesh modifications use subsequent values.
 	mesh.set_next_unique_id(Mx * My * Mz + (Mx - 1) * (My - 1) * (Mz - 1));
 
-// No need to renumber or find neighbors - done did it.
-// Avoid deprecation message/error by _also_ setting
-// allow_renumbering(false). This is a bit silly, but we want to
-// catch cases where people are purely using the old "skip"
-// interface and not the new flag setting one.
+	// No need to renumber or find neighbors - done did it.
 	mesh.allow_renumbering(false);
-	mesh.prepare_for_use(/*skip_renumber (ignored!) = */false,
-	/*skip_find_neighbors = */true);
+	mesh.allow_find_neighbors(false);
+	mesh.prepare_for_use();
+	mesh.allow_find_neighbors(true);
 }
 
-void PETScDMDAMesh::buildMesh() {
+void XolotlReflectedMesh::buildMesh() {
 // Reference to the libmesh mesh
 	MeshBase &mesh = getMesh();
 

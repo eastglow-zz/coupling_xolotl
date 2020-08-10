@@ -9,16 +9,16 @@
 
 #pragma once
 
-#include "MooseApp.h"
+#include "coupling_xolotlApp.h"
 
-class coupling_xolotlTestApp : public MooseApp
-{
+class coupling_xolotlTestApp: public coupling_xolotlApp {
 public:
-  static InputParameters validParams();
+	static InputParameters validParams();
 
-  coupling_xolotlTestApp(InputParameters parameters);
-  virtual ~coupling_xolotlTestApp();
+	coupling_xolotlTestApp(InputParameters parameters);
+	virtual ~coupling_xolotlTestApp();
 
-  static void registerApps();
-  static void registerAll(Factory & f, ActionFactory & af, Syntax & s, bool use_test_objs = false);
+	static void registerApps();
+	static void registerAll(Factory &f, ActionFactory &af, Syntax &s,
+			bool use_test_objs = false);
 };

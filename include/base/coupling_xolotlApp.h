@@ -22,14 +22,16 @@ public:
 	coupling_xolotlApp(InputParameters parameters);
 	virtual ~coupling_xolotlApp();
 
+	void createInterface(FileName paramName);
+
 	std::shared_ptr<XolotlInterface> getInterface() {
 		return _interface;
 	}
-	TS & getXolotlTS() {
+	TS& getXolotlTS() {
 		return _interface->getTS();
 	}
 	static void registerApps();
-	static void registerAll(Factory & f, ActionFactory & af, Syntax & s);
+	static void registerAll(Factory &f, ActionFactory &af, Syntax &s);
 
 	// For restart capabilities
 	std::shared_ptr<Backup> backup();
@@ -37,4 +39,5 @@ public:
 
 private:
 	std::shared_ptr<XolotlInterface> _interface;
+	bool _is_xolotl_app;
 };

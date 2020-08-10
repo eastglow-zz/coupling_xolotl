@@ -2,7 +2,7 @@
 # default time unit: s
 # default mass unit: ?
 [Mesh]
-  type = PETScDMDAMesh
+  type = XolotlReflectedMesh
   dim = 2
   XolotlInput_path_name = './param_2D_noCnoR.txt'
 []
