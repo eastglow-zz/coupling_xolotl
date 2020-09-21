@@ -97,8 +97,6 @@ void XolotlProblem::externalSolve() {
 	if (time() > _current_time) {
 		// Set the time we want to reach
 		_interface->setTimes(time(), dt());
-		// Reset the concentrations where the GBs are
-		_interface->initGBLocation();
 		// Save the size of the dt for derivative calculation
 		_dt_for_derivative = dt();
 		// Run the solver
