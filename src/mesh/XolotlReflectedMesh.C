@@ -32,22 +32,6 @@ template<>
 InputParameters validParams<XolotlReflectedMesh>() {
 	InputParameters params = validParams<MooseMesh>();
 
-	MooseEnum elem_types("EDGE2  QUAD4  HEX8"); // no default
-
-	MooseEnum dims("1=1 2 3", "2");
-	params.addRequiredParam < MooseEnum
-			> ("dim", dims, "The dimension of the mesh to be generated"); // Make this parameter required
-
-	params.addParam < MooseEnum
-			> ("elem_type", elem_types, "The type of element from libMesh to "
-					"generate (default: linear element for "
-					"requested dimension)");
-
-	params.addParamNamesToGroup("dim", "Main");
-
-	params.addClassDescription(
-			"Create a line, square, or cube mesh with uniformly spaced memsh using PETSc DMDA.");
-
 	// This mesh is always distributed
 	params.set < MooseEnum > ("parallel_type") = "DISTRIBUTED";
 
@@ -62,8 +46,6 @@ XolotlReflectedMesh::XolotlReflectedMesh(const InputParameters &parameters) :
 		MooseMesh(parameters), _xolotl_input_path_name(
 				getParam < FileName > ("XolotlInput_path_name")), _dim(
 				getParam < MooseEnum > ("dim")) {
-	// All generated meshes are regular orthogonal meshes
-	_regular_orthogonal_mesh = true;
 	if (&_app) {
 		// Get the external app to create the interface and its grid
 		coupling_xolotlApp *xolotl_app =
@@ -78,37 +60,11 @@ XolotlReflectedMesh::XolotlReflectedMesh(const InputParameters &parameters) :
 		mooseError("Missing the Xolotl App");
 }
 
-Real XolotlReflectedMesh::getMinInDimension(unsigned int component) const {
-	switch (component) {
-	case 0:
-		return _xmin;
-	case 1:
-		return _dim > 1 ? _ymin : 0;
-	case 2:
-		return _dim > 2 ? _zmin : 0;
-	default:
-		mooseError("Invalid component");
-	}
-}
-
-Real XolotlReflectedMesh::getMaxInDimension(unsigned int component) const {
-	switch (component) {
-	case 0:
-		return _xmax;
-	case 1:
-		return _dim > 1 ? _ymax : 0;
-	case 2:
-		return _dim > 2 ? _zmax : 0;
-	default:
-		mooseError("Invalid component");
-	}
-}
-
 std::unique_ptr<MooseMesh> XolotlReflectedMesh::safeClone() const {
 	return libmesh_make_unique < XolotlReflectedMesh > (*this);
 }
 
-inline dof_id_type node_id_Edge2(const ElemType /*type*/, const dof_id_type i)
+inline dof_id_type node_id_Edge2(const dof_id_type i)
 
 {
 	// Transform a grid coordinate (i, j, k) to its global node ID
@@ -116,8 +72,8 @@ inline dof_id_type node_id_Edge2(const ElemType /*type*/, const dof_id_type i)
 	return i;
 }
 
-inline dof_id_type node_id_Quad4(const ElemType /*type*/, const dof_id_type nx,
-		const dof_id_type i, const dof_id_type j)
+inline dof_id_type node_id_Quad4(const dof_id_type nx, const dof_id_type i,
+		const dof_id_type j)
 
 		{
 	// Transform a grid coordinate (i, j, k) to its global node ID
@@ -125,9 +81,8 @@ inline dof_id_type node_id_Quad4(const ElemType /*type*/, const dof_id_type nx,
 	return i + j * (nx + 1);
 }
 
-inline dof_id_type node_id_Hex8(const ElemType /*type*/, const dof_id_type nx,
-		const dof_id_type ny, const dof_id_type i, const dof_id_type j,
-		const dof_id_type k)
+inline dof_id_type node_id_Hex8(const dof_id_type nx, const dof_id_type ny,
+		const dof_id_type i, const dof_id_type j, const dof_id_type k)
 
 		{
 	// Transform a grid coordinate (i, j, k) to its global node ID
@@ -136,8 +91,8 @@ inline dof_id_type node_id_Hex8(const ElemType /*type*/, const dof_id_type nx,
 }
 
 void add_element_Edge2(DM da, const dof_id_type nx, const dof_id_type i,
-		const dof_id_type elem_id, const processor_id_type pid,
-		const ElemType type, MeshBase &mesh, XolotlInterface &interface) {
+		const dof_id_type elem_id, const processor_id_type pid, MeshBase &mesh,
+		XolotlInterface &interface) {
 	BoundaryInfo &boundary_info = mesh.get_boundary_info();
 	// Mx: number of grid points in x direction for all processors
 	// xp: number of processors in x direction
@@ -175,16 +130,16 @@ void add_element_Edge2(DM da, const dof_id_type nx, const dof_id_type i,
 
 	// Left
 	auto node0_ptr = mesh.add_point(libMesh::Point(xolotlGrid[i], 0, 0),
-			node_id_Edge2(type, i));
-	node0_ptr->set_unique_id(node_id_Edge2(type, i));
+			node_id_Edge2(i));
+	node0_ptr->set_unique_id(node_id_Edge2(i));
 	node0_ptr->set_id() = node0_ptr->unique_id();
 	// xpid + ypid * xp is the global processor ID
 	node0_ptr->processor_id() = xpid;
 
 	// Right
 	auto node1_ptr = mesh.add_point(libMesh::Point(xolotlGrid[i + 1], 0, 0),
-			node_id_Edge2(type, i + 1));
-	node1_ptr->set_unique_id(node_id_Edge2(type, i + 1));
+			node_id_Edge2(i + 1));
+	node1_ptr->set_unique_id(node_id_Edge2(i + 1));
 	node1_ptr->set_id() = node1_ptr->unique_id();
 	node1_ptr->processor_id() = xpidplus;
 
@@ -208,7 +163,7 @@ void add_element_Edge2(DM da, const dof_id_type nx, const dof_id_type i,
 
 void add_element_Quad4(DM da, const dof_id_type nx, const dof_id_type ny,
 		const dof_id_type i, const dof_id_type j, const dof_id_type elem_id,
-		const processor_id_type pid, const ElemType type, MeshBase &mesh,
+		const processor_id_type pid, MeshBase &mesh,
 		XolotlInterface &interface) {
 	BoundaryInfo &boundary_info = mesh.get_boundary_info();
 	// Mx: number of grid points in x direction for all processors
@@ -260,8 +215,8 @@ void add_element_Quad4(DM da, const dof_id_type nx, const dof_id_type ny,
 	// Bottom Left
 	auto node0_ptr = mesh.add_point(
 			libMesh::Point(xolotlGrid[i], static_cast<Real>(j) * hy, 0),
-			node_id_Quad4(type, nx, i, j));
-	node0_ptr->set_unique_id(node_id_Quad4(type, nx, i, j));
+			node_id_Quad4(nx, i, j));
+	node0_ptr->set_unique_id(node_id_Quad4(nx, i, j));
 	node0_ptr->set_id() = node0_ptr->unique_id();
 	// xpid + ypid * xp is the global processor ID
 	node0_ptr->processor_id() = xpid + ypid * xp;
@@ -269,24 +224,24 @@ void add_element_Quad4(DM da, const dof_id_type nx, const dof_id_type ny,
 	// Bottom Right
 	auto node1_ptr = mesh.add_point(
 			libMesh::Point(xolotlGrid[i + 1], static_cast<Real>(j) * hy, 0),
-			node_id_Quad4(type, nx, i + 1, j));
-	node1_ptr->set_unique_id(node_id_Quad4(type, nx, i + 1, j));
+			node_id_Quad4(nx, i + 1, j));
+	node1_ptr->set_unique_id(node_id_Quad4(nx, i + 1, j));
 	node1_ptr->set_id() = node1_ptr->unique_id();
 	node1_ptr->processor_id() = xpidplus + ypid * xp;
 
 	// Top Right
 	auto node2_ptr = mesh.add_point(
 			libMesh::Point(xolotlGrid[i + 1], static_cast<Real>(j + 1) * hy, 0),
-			node_id_Quad4(type, nx, i + 1, j + 1));
-	node2_ptr->set_unique_id(node_id_Quad4(type, nx, i + 1, j + 1));
+			node_id_Quad4(nx, i + 1, j + 1));
+	node2_ptr->set_unique_id(node_id_Quad4(nx, i + 1, j + 1));
 	node2_ptr->set_id() = node2_ptr->unique_id();
 	node2_ptr->processor_id() = xpidplus + ypidplus * xp;
 
 	// Top Left
 	auto node3_ptr = mesh.add_point(
 			libMesh::Point(xolotlGrid[i], static_cast<Real>(j + 1) * hy, 0),
-			node_id_Quad4(type, nx, i, j + 1));
-	node3_ptr->set_unique_id(node_id_Quad4(type, nx, i, j + 1));
+			node_id_Quad4(nx, i, j + 1));
+	node3_ptr->set_unique_id(node_id_Quad4(nx, i, j + 1));
 	node3_ptr->set_id() = node3_ptr->unique_id();
 	node3_ptr->processor_id() = xpid + ypidplus * xp;
 
@@ -320,7 +275,7 @@ void add_element_Quad4(DM da, const dof_id_type nx, const dof_id_type ny,
 void add_element_Hex8(DM da, const dof_id_type nx, const dof_id_type ny,
 		const dof_id_type nz, const dof_id_type i, const dof_id_type j,
 		const dof_id_type k, const dof_id_type elem_id,
-		const processor_id_type pid, const ElemType type, MeshBase &mesh,
+		const processor_id_type pid, MeshBase &mesh,
 		XolotlInterface &interface) {
 	BoundaryInfo &boundary_info = mesh.get_boundary_info();
 // Mx: number of grid points in x direction for all processors
@@ -384,9 +339,8 @@ void add_element_Hex8(DM da, const dof_id_type nx, const dof_id_type ny,
 // Bottom Left Back
 	auto node0_ptr = mesh.add_point(
 			libMesh::Point(xolotlGrid[i], static_cast<Real>(j) * hy,
-					static_cast<Real>(k) * hz),
-			node_id_Hex8(type, nx, ny, i, j, k));
-	node0_ptr->set_unique_id(node_id_Hex8(type, nx, ny, i, j, k));
+					static_cast<Real>(k) * hz), node_id_Hex8(nx, ny, i, j, k));
+	node0_ptr->set_unique_id(node_id_Hex8(nx, ny, i, j, k));
 	node0_ptr->set_id() = node0_ptr->unique_id();
 	node0_ptr->processor_id() = xpid + (ypid + zpid * yp) * xp;
 
@@ -394,8 +348,8 @@ void add_element_Hex8(DM da, const dof_id_type nx, const dof_id_type ny,
 	auto node1_ptr = mesh.add_point(
 			libMesh::Point(xolotlGrid[i + 1], static_cast<Real>(j) * hy,
 					static_cast<Real>(k) * hz),
-			node_id_Hex8(type, nx, ny, i + 1, j, k));
-	node1_ptr->set_unique_id(node_id_Hex8(type, nx, ny, i + 1, j, k));
+			node_id_Hex8(nx, ny, i + 1, j, k));
+	node1_ptr->set_unique_id(node_id_Hex8(nx, ny, i + 1, j, k));
 	node1_ptr->set_id() = node1_ptr->unique_id();
 	node1_ptr->processor_id() = xpidplus + (ypid + zpid * yp) * xp;
 
@@ -403,8 +357,8 @@ void add_element_Hex8(DM da, const dof_id_type nx, const dof_id_type ny,
 	auto node2_ptr = mesh.add_point(
 			libMesh::Point(xolotlGrid[i + 1], static_cast<Real>(j + 1) * hy,
 					static_cast<Real>(k) * hz),
-			node_id_Hex8(type, nx, ny, i + 1, j + 1, k));
-	node2_ptr->set_unique_id(node_id_Hex8(type, nx, ny, i + 1, j + 1, k));
+			node_id_Hex8(nx, ny, i + 1, j + 1, k));
+	node2_ptr->set_unique_id(node_id_Hex8(nx, ny, i + 1, j + 1, k));
 	node2_ptr->set_id() = node2_ptr->unique_id();
 	node2_ptr->processor_id() = xpidplus + (ypidplus + zpid * yp) * xp;
 
@@ -412,8 +366,8 @@ void add_element_Hex8(DM da, const dof_id_type nx, const dof_id_type ny,
 	auto node3_ptr = mesh.add_point(
 			libMesh::Point(xolotlGrid[i], static_cast<Real>(j + 1) * hy,
 					static_cast<Real>(k) * hz),
-			node_id_Hex8(type, nx, ny, i, j + 1, k));
-	node3_ptr->set_unique_id(node_id_Hex8(type, nx, ny, i, j + 1, k));
+			node_id_Hex8(nx, ny, i, j + 1, k));
+	node3_ptr->set_unique_id(node_id_Hex8(nx, ny, i, j + 1, k));
 	node3_ptr->set_id() = node3_ptr->unique_id();
 	node3_ptr->processor_id() = xpid + (ypidplus + zpid * yp) * xp;
 
@@ -421,8 +375,8 @@ void add_element_Hex8(DM da, const dof_id_type nx, const dof_id_type ny,
 	auto node4_ptr = mesh.add_point(
 			libMesh::Point(xolotlGrid[i], static_cast<Real>(j) * hy,
 					static_cast<Real>(k + 1) * hz),
-			node_id_Hex8(type, nx, ny, i, j, k + 1));
-	node4_ptr->set_unique_id(node_id_Hex8(type, nx, ny, i, j, k + 1));
+			node_id_Hex8(nx, ny, i, j, k + 1));
+	node4_ptr->set_unique_id(node_id_Hex8(nx, ny, i, j, k + 1));
 	node4_ptr->set_id() = node4_ptr->unique_id();
 	node4_ptr->processor_id() = xpid + (ypid + zpidplus * yp) * xp;
 
@@ -430,8 +384,8 @@ void add_element_Hex8(DM da, const dof_id_type nx, const dof_id_type ny,
 	auto node5_ptr = mesh.add_point(
 			libMesh::Point(xolotlGrid[i + 1], static_cast<Real>(j) * hy,
 					static_cast<Real>(k + 1) * hz),
-			node_id_Hex8(type, nx, ny, i + 1, j, k + 1));
-	node5_ptr->set_unique_id(node_id_Hex8(type, nx, ny, i + 1, j, k + 1));
+			node_id_Hex8(nx, ny, i + 1, j, k + 1));
+	node5_ptr->set_unique_id(node_id_Hex8(nx, ny, i + 1, j, k + 1));
 	node5_ptr->set_id() = node5_ptr->unique_id();
 	node5_ptr->processor_id() = xpidplus + (ypid + zpidplus * yp) * xp;
 
@@ -439,8 +393,8 @@ void add_element_Hex8(DM da, const dof_id_type nx, const dof_id_type ny,
 	auto node6_ptr = mesh.add_point(
 			libMesh::Point(xolotlGrid[i + 1], static_cast<Real>(j + 1) * hy,
 					static_cast<Real>(k + 1) * hz),
-			node_id_Hex8(type, nx, ny, i + 1, j + 1, k + 1));
-	node6_ptr->set_unique_id(node_id_Hex8(type, nx, ny, i + 1, j + 1, k + 1));
+			node_id_Hex8(nx, ny, i + 1, j + 1, k + 1));
+	node6_ptr->set_unique_id(node_id_Hex8(nx, ny, i + 1, j + 1, k + 1));
 	node6_ptr->set_id() = node6_ptr->unique_id();
 	node6_ptr->processor_id() = xpidplus + (ypidplus + zpidplus * yp) * xp;
 
@@ -448,8 +402,8 @@ void add_element_Hex8(DM da, const dof_id_type nx, const dof_id_type ny,
 	auto node7_ptr = mesh.add_point(
 			libMesh::Point(xolotlGrid[i], static_cast<Real>(j + 1) * hy,
 					static_cast<Real>(k + 1) * hz),
-			node_id_Hex8(type, nx, ny, i, j + 1, k + 1));
-	node7_ptr->set_unique_id(node_id_Hex8(type, nx, ny, i, j + 1, k + 1));
+			node_id_Hex8(nx, ny, i, j + 1, k + 1));
+	node7_ptr->set_unique_id(node_id_Hex8(nx, ny, i, j + 1, k + 1));
 	node7_ptr->set_id() = node7_ptr->unique_id();
 	node7_ptr->processor_id() = xpid + (ypidplus + zpidplus * yp) * xp;
 
@@ -510,22 +464,21 @@ void set_boundary_names_Hex8(BoundaryInfo &boundary_info) {
 	boundary_info.sideset_name(5) = "front";
 }
 
-void add_node_Edge2(dof_id_type i, processor_id_type pid, ElemType type,
-		MeshBase &mesh, XolotlInterface &interface) {
+void add_node_Edge2(dof_id_type i, processor_id_type pid, MeshBase &mesh,
+		XolotlInterface &interface) {
 // Get the geometry of the Xolotl grid information
 	double hy = 0.0, hz = 0.0;
 	auto xolotlGrid = interface.getGridInfo(hy, hz);
 
 // Bottom Left Back
 	auto node0_ptr = mesh.add_point(libMesh::Point(xolotlGrid[i], 0.0, 0.0),
-			node_id_Edge2(type, i));
-	node0_ptr->set_unique_id(node_id_Edge2(type, i));
+			node_id_Edge2(i));
+	node0_ptr->set_unique_id(node_id_Edge2(i));
 	node0_ptr->processor_id() = pid;
 }
 
 void add_node_Quad4(dof_id_type nx, dof_id_type i, dof_id_type j,
-		processor_id_type pid, ElemType type, MeshBase &mesh,
-		XolotlInterface &interface) {
+		processor_id_type pid, MeshBase &mesh, XolotlInterface &interface) {
 // Get the geometry of the Xolotl grid information
 	double hy = 0.0, hz = 0.0;
 	auto xolotlGrid = interface.getGridInfo(hy, hz);
@@ -533,13 +486,13 @@ void add_node_Quad4(dof_id_type nx, dof_id_type i, dof_id_type j,
 // Bottom Left Back
 	auto node0_ptr = mesh.add_point(
 			libMesh::Point(xolotlGrid[i], static_cast<Real>(j) * hy, 0.0),
-			node_id_Quad4(type, nx, i, j));
-	node0_ptr->set_unique_id(node_id_Quad4(type, nx, i, j));
+			node_id_Quad4(nx, i, j));
+	node0_ptr->set_unique_id(node_id_Quad4(nx, i, j));
 	node0_ptr->processor_id() = pid;
 }
 
 void add_node_Hex8(dof_id_type nx, dof_id_type ny, dof_id_type i, dof_id_type j,
-		dof_id_type k, processor_id_type pid, ElemType type, MeshBase &mesh,
+		dof_id_type k, processor_id_type pid, MeshBase &mesh,
 		XolotlInterface &interface) {
 // Get the geometry of the Xolotl grid information
 	double hy = 0.0, hz = 0.0;
@@ -548,13 +501,12 @@ void add_node_Hex8(dof_id_type nx, dof_id_type ny, dof_id_type i, dof_id_type j,
 // Bottom Left Back
 	auto node0_ptr = mesh.add_point(
 			libMesh::Point(xolotlGrid[i], static_cast<Real>(j) * hy,
-					static_cast<Real>(k) * hz),
-			node_id_Hex8(type, nx, ny, i, j, k));
-	node0_ptr->set_unique_id(node_id_Hex8(type, nx, ny, i, j, k));
+					static_cast<Real>(k) * hz), node_id_Hex8(nx, ny, i, j, k));
+	node0_ptr->set_unique_id(node_id_Hex8(nx, ny, i, j, k));
 	node0_ptr->processor_id() = pid;
 }
 
-void build_cube_Edge2(UnstructuredMesh &mesh, DM da, const ElemType type,
+void build_cube_Edge2(UnstructuredMesh &mesh, DM da,
 		XolotlInterface &interface) {
 	const auto pid = mesh.comm().rank();
 
@@ -583,15 +535,14 @@ void build_cube_Edge2(UnstructuredMesh &mesh, DM da, const ElemType type,
 
 		dof_id_type ele_id = (i - 1);
 
-		add_element_Edge2(da, Mx - 1, i - 1, ele_id, pid, type, mesh,
-				interface);
+		add_element_Edge2(da, Mx - 1, i - 1, ele_id, pid, mesh, interface);
 	}
 
 // If there is no element at the given processor
 // We need to manually add all mesh nodes
 	if (xs == 0 && xm == 1)
 		for (PetscInt i = xs; i < xs + xm; i++)
-			add_node_Edge2(i, pid, type, mesh, interface);
+			add_node_Edge2(i, pid, mesh, interface);
 
 // Need to link up the local elements before we can know what's missing
 	mesh.find_neighbors();
@@ -620,7 +571,7 @@ void build_cube_Edge2(UnstructuredMesh &mesh, DM da, const ElemType type,
 	mesh.allow_find_neighbors(true);
 }
 
-void build_cube_Quad4(UnstructuredMesh &mesh, DM da, const ElemType type,
+void build_cube_Quad4(UnstructuredMesh &mesh, DM da,
 		XolotlInterface &interface) {
 	const auto pid = mesh.comm().rank();
 
@@ -654,7 +605,7 @@ void build_cube_Quad4(UnstructuredMesh &mesh, DM da, const ElemType type,
 			dof_id_type ele_id = (i - 1) + (j - 1) * (Mx - 1);
 
 			add_element_Quad4(da, Mx - 1, My - 1, i - 1, j - 1, ele_id, pid,
-					type, mesh, interface);
+					mesh, interface);
 		}
 
 // If there is no element at the given processor
@@ -662,7 +613,7 @@ void build_cube_Quad4(UnstructuredMesh &mesh, DM da, const ElemType type,
 	if ((ys == 0 && ym == 1) || (xs == 0 && xm == 1))
 		for (PetscInt j = ys; j < ys + ym; j++)
 			for (PetscInt i = xs; i < xs + xm; i++)
-				add_node_Quad4(Mx, i, j, pid, type, mesh, interface);
+				add_node_Quad4(Mx, i, j, pid, mesh, interface);
 
 // Need to link up the local elements before we can know what's missing
 	mesh.find_neighbors();
@@ -691,7 +642,7 @@ void build_cube_Quad4(UnstructuredMesh &mesh, DM da, const ElemType type,
 	mesh.allow_find_neighbors(true);
 }
 
-void build_cube_Hex8(UnstructuredMesh &mesh, DM da, const ElemType type,
+void build_cube_Hex8(UnstructuredMesh &mesh, DM da,
 		XolotlInterface &interface) {
 	const auto pid = mesh.comm().rank();
 
@@ -731,7 +682,7 @@ void build_cube_Hex8(UnstructuredMesh &mesh, DM da, const ElemType type,
 						+ (j - 1 + (k - 1) * (My - 1)) * (Mx - 1);
 
 				add_element_Hex8(da, Mx - 1, My - 1, Mz - 1, i - 1, j - 1,
-						k - 1, ele_id, pid, type, mesh, interface);
+						k - 1, ele_id, pid, mesh, interface);
 			}
 
 // If there is no element at the given processor
@@ -740,7 +691,7 @@ void build_cube_Hex8(UnstructuredMesh &mesh, DM da, const ElemType type,
 		for (PetscInt k = zs; k < zs + zm; k++)
 			for (PetscInt j = ys; j < ys + ym; j++)
 				for (PetscInt i = xs; i < xs + xm; i++)
-					add_node_Hex8(Mx, My, i, j, k, pid, type, mesh, interface);
+					add_node_Hex8(Mx, My, i, j, k, pid, mesh, interface);
 
 // Need to link up the local elements before we can know what's missing
 	mesh.find_neighbors();
@@ -772,30 +723,6 @@ void XolotlReflectedMesh::buildMesh() {
 // Reference to the libmesh mesh
 	MeshBase &mesh = getMesh();
 
-	std::cout << "building" << std::endl;
-
-	MooseEnum elem_type_enum = getParam < MooseEnum > ("elem_type");
-
-	if (!isParamValid("elem_type")) {
-		// Switching on MooseEnum
-		switch (_dim) {
-		case 1:
-			elem_type_enum = "EDGE2";
-			break;
-		case 2:
-			elem_type_enum = "QUAD4";
-			break;
-		case 3:
-			elem_type_enum = "HEX8";
-			break;
-
-		default:
-			mooseError("Does not support dimension ", _dim, "yet");
-		}
-	}
-
-	_elem_type = Utility::string_to_enum < ElemType > (elem_type_enum);
-
 	mesh.set_mesh_dimension(_dim);
 	mesh.set_spatial_dimension(_dim);
 
@@ -807,15 +734,15 @@ void XolotlReflectedMesh::buildMesh() {
 	switch (_dim) {
 	case 1:
 		build_cube_Edge2(dynamic_cast<UnstructuredMesh&>(getMesh()), _dmda,
-				_elem_type, interface);
+				interface);
 		break;
 	case 2:
 		build_cube_Quad4(dynamic_cast<UnstructuredMesh&>(getMesh()), _dmda,
-				_elem_type, interface);
+				interface);
 		break;
 	case 3:
 		build_cube_Hex8(dynamic_cast<UnstructuredMesh&>(getMesh()), _dmda,
-				_elem_type, interface);
+				interface);
 		break;
 	default:
 		mooseError("Does not support dimension ", _dim, "yet");

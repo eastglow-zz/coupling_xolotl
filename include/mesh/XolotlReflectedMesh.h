@@ -39,8 +39,6 @@ public:
 	virtual std::unique_ptr<MooseMesh> safeClone() const override;
 
 	virtual void buildMesh() override;
-	virtual Real getMinInDimension(unsigned int component) const override;
-	virtual Real getMaxInDimension(unsigned int component) const override;
 
 protected:
 	/// The path to the input file for Xolotl
@@ -54,9 +52,6 @@ protected:
 
 	/// The min/max values for x,y,z component
 	Real _xmin, _xmax, _ymin, _ymax, _zmin, _zmax;
-
-	/// The type of element to build
-	ElemType _elem_type;
 
 	/// Mesh object
 	DM _dmda;

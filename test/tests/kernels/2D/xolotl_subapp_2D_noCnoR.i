@@ -24,6 +24,18 @@
     order = FIRST
     family = LAGRANGE
   [../]
+  [./AuxPid]
+    family = MONOMIAL
+    order = CONSTANT
+  []
+[]
+
+[AuxKernels]
+  [pid_aux]
+    type = ProcessorIDAux
+    variable = AuxPid
+    execute_on = 'INITIAL'
+  []
 []
 
 [Problem]
@@ -60,4 +72,8 @@
   start_time = 0
   end_time = 1.2e8
   # end_time = 20000.0
+[]
+
+[Outputs]
+  exodus = true
 []
