@@ -44,11 +44,8 @@ POROUS_FLOW         := no
 include $(MOOSE_DIR)/modules/modules.mk
 ###############################################################################
 #External non-MOOSE shared library linking - not necessary
-extlibpath          :=/projects/NE_SciDAC/dependencies/xolotl-64bit/build/lib
-extheaderpath       :=/projects/NE_SciDAC/dependencies/xolotl-64bit/build/include
-#ADDITIONAL_INCLUDES    +=/Users/sophie/Code/petsc/include/
-#ADDITIONAL_INCLUDES    +=/Users/sophie/Code/petsc/20180509/include
-#ADDITIONAL_DEPEND_LIBS    +=$(extlibpath)
+extlibpath          :=$(XOLOTL_PATH)/lib
+extheaderpath       :=$(XOLOTL_PATH)/include
 ADDITIONAL_INCLUDES:= -I$(extheaderpath)
 ###############################################################################
 
