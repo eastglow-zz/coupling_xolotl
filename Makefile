@@ -59,3 +59,10 @@ export EXTERNAL_FLAGS += -std=c++11 -L$(extlibpath) -lxolotlInter
 
 ###############################################################################
 # Additional special case targets should be added here
+xo:
+	@mkdir xolotl/build
+	@cd xolotl/build; PETSC_DIR=/home/sophie/MOOSE/projects/moose/petsc/ PETSC_ARCH=arch-moose \
+	CXX=mpicxx CC=mpicc HDF5_ROOT=/home/sophie/Code/hdf5-install/ \
+	cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=mpicxx \
+	-DBUILD_SHARED_LIBS=yes -DCMAKE_CXX_FLAGS_RELEASE="-o3 -fPIC" ../xolotl; \
+	make; make install
