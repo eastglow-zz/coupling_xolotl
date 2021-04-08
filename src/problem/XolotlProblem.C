@@ -68,18 +68,18 @@ XolotlProblem::XolotlProblem(const InputParameters &params) :
 						< std::vector<
 								std::vector<
 										std::vector<
-												std::vector<std::pair<int, Real> > > > >
+												std::vector<std::pair<xolotl::IdType, Real> > > > >
 						> ("conc_vector")) {
-	PetscInt xs, ys, zs, xm, ym, zm, Mx, My, Mz;
+	xolotl::IdType xs, ys, zs, xm, ym, zm, Mx, My, Mz;
 	_interface->getLocalCoordinates(xs, xm, Mx, ys, ym, My, zs, zm, Mz);
 
 	// Initialize old rate
 	_old_rate.clear();
-	for (int i = 0; i < max(xm, 1); i++) {
+	for (int i = 0; i < max(xm, (xolotl::IdType) 1); i++) {
 		std::vector < std::vector<double> > tempTempVector;
-		for (int j = 0; j < max(ym, 1); j++) {
+		for (int j = 0; j < max(ym, (xolotl::IdType) 1); j++) {
 			std::vector<double> tempVector;
-			for (int k = 0; k < max(zm, 1); k++) {
+			for (int k = 0; k < max(zm, (xolotl::IdType) 1); k++) {
 				tempVector.push_back(0.0);
 			}
 			tempTempVector.push_back(tempVector);
@@ -114,7 +114,7 @@ bool XolotlProblem::converged() {
 }
 
 void XolotlProblem::syncSolutions(Direction direction) {
-	PetscInt i, j, k, xs, ys, zs, xm, ym, zm, Mx, My, Mz;
+	xolotl::IdType i, j, k, xs, ys, zs, xm, ym, zm, Mx, My, Mz;
 	_interface->getLocalCoordinates(xs, xm, Mx, ys, ym, My, zs, zm, Mz);
 	if (direction == Direction::FROM_EXTERNAL_APP && _xolotl_has_run) {
 		MeshBase &to_mesh = mesh().getMesh();
@@ -131,9 +131,9 @@ void XolotlProblem::syncSolutions(Direction direction) {
 		// Get the rate vector
 		auto ne_vector = _interface->getLocalNE();
 
-		for (k = zs; k < zs + max(zm, 1); k++)
-			for (j = ys; j < ys + max(ym, 1); j++)
-				for (i = xs; i < xs + max(xm, 1); i++) {
+		for (k = zs; k < zs + max(zm, (xolotl::IdType) 1); k++)
+			for (j = ys; j < ys + max(ym, (xolotl::IdType) 1); j++)
+				for (i = xs; i < xs + max(xm, (xolotl::IdType) 1); i++) {
 					Node *to_node = to_mesh.node_ptr(i + (j + k * My) * Mx);
 					if (to_node->n_comp(sync_rate.sys().number(),
 							sync_rate.number()) > 1)
@@ -173,9 +173,9 @@ void XolotlProblem::syncSolutions(Direction direction) {
 		// Create a list of GB
 		std::vector<int> localGBList;
 
-		for (k = zs; k < zs + max(zm, 1); k++)
-			for (j = ys; j < ys + max(ym, 1); j++)
-				for (i = xs; i < xs + max(xm, 1); i++) {
+		for (k = zs; k < zs + max(zm, (xolotl::IdType) 1); k++)
+			for (j = ys; j < ys + max(ym, (xolotl::IdType) 1); j++)
+				for (i = xs; i < xs + max(xm, (xolotl::IdType) 1); i++) {
 					Node *to_node = to_mesh.node_ptr(i + (j + k * My) * Mx);
 					if (to_node->n_comp(sync_gb.sys().number(),
 							sync_gb.number()) > 1)
@@ -212,14 +212,14 @@ void XolotlProblem::saveState() {
 	_previous_time = _interface->getPreviousTime();
 	_n_xenon = _interface->getNXeGB();
 
-	PetscInt i, j, k, xs, ys, zs, xm, ym, zm, Mx, My, Mz;
+	xolotl::IdType i, j, k, xs, ys, zs, xm, ym, zm, Mx, My, Mz;
 	_interface->getLocalCoordinates(xs, xm, Mx, ys, ym, My, zs, zm, Mz);
 	// Set old rate from local NE
-	for (k = zs; k < zs + max(zm, 1); k++)
-		for (j = ys; j < ys + max(ym, 1); j++)
-			for (i = xs; i < xs + max(xm, 1); i++) {
-				_old_rate[i - xs][j - ys][k - zs] = _local_NE[i - xs][j - ys][k
-						- zs][0];
+	for (k = zs; k < zs + max(zm, (xolotl::IdType) 1); k++)
+		for (j = ys; j < ys + max(ym, (xolotl::IdType) 1); j++)
+			for (i = xs; i < xs + max(xm, (xolotl::IdType) 1); i++) {
+				_old_rate[i - xs][j - ys][k - zs] = std::get < 0
+						> (_local_NE[i - xs][j - ys][k - zs]);
 			}
 }
 

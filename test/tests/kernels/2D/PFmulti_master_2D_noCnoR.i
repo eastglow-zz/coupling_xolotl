@@ -3,14 +3,17 @@
 # Energy unit: eV
 
 [Mesh]
-  type = GeneratedMesh
-  dim = 2
-  nx = 62
-  ny = 62
-  xmin = 0
-  xmax = 20000
-  ymin = 0
-  ymax = 20000
+  [gmg]
+    type = DistributedRectilinearMeshGenerator
+    dim = 2
+    nx = 62
+    ny = 62
+    xmin = 0
+    xmax = 20000
+    ymin = 0
+    ymax = 20000
+    partition = square
+  []
   #uniform_refine = 3
 []
 
@@ -64,6 +67,10 @@
     order = FIRST
     family = MONOMIAL
   [../]
+  [pid]
+    family = MONOMIAL
+    order = CONSTANT
+  []
 []
 
 [AuxKernels]
@@ -82,6 +89,11 @@
     variable = cv
     property = cv_from_rhov
   [../]
+  [pid_aux]
+    type = ProcessorIDAux
+    variable = pid
+    execute_on = 'INITIAL'
+  []
 []
 
 [ICs]
@@ -844,7 +856,7 @@
 
 [Transfers]
   [./fromsubrate]
-    type = MultiAppInterpolationTransfer
+    type = MultiAppMeshFunctionTransfer
     direction = from_multiapp
     multi_app = sub_app
     source_variable = Auxv
@@ -852,7 +864,7 @@
     execute_on = SAME_AS_MULTIAPP
   [../]
   [./fromsubmono]
-    type = MultiAppInterpolationTransfer
+    type = MultiAppMeshFunctionTransfer
     direction = from_multiapp
     multi_app = sub_app
     source_variable = AuxMono
@@ -860,7 +872,7 @@
     execute_on = SAME_AS_MULTIAPP
   [../]
   [./fromsubfrac]
-    type = MultiAppInterpolationTransfer
+    type = MultiAppMeshFunctionTransfer
     direction = from_multiapp
     multi_app = sub_app
     source_variable = AuxFrac
@@ -868,7 +880,7 @@
     execute_on = SAME_AS_MULTIAPP
   [../]
   [./tosub]
-    type = MultiAppInterpolationTransfer
+    type = MultiAppMeshFunctionTransfer
     direction = to_multiapp
     multi_app = sub_app
     source_variable = bnds

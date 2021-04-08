@@ -62,3 +62,7 @@
   num_steps = 10  
 []
 
+
+[Outputs]
+  exodus = true
+[]

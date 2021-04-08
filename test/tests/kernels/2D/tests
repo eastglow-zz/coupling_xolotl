@@ -1,9 +1,32 @@
 [Tests]
-  [./PF_as_master]
+  [./PF_as_master_1]
     type = 'Exodiff'
     input = 'PFmulti_master_2D_noCnoR.i'
-    exodiff = 'PFmulti_master_2D_noCnoR_exodus.e'
+    exodiff = 'PFmulti_master_2D_noCnoR_exodus_1.e PFmulti_master_2D_noCnoR_exodus_1_sub_app0.e'
+    cli_args = 'Outputs/file_base="PFmulti_master_2D_noCnoR_exodus_1"'
     allow_unused = True
+    min_parallel = 1
+    max_parallel = 1
+    allow_warnings = True
+  [../]  
+  [./PF_as_master_2]
+    type = 'Exodiff'
+    input = 'PFmulti_master_2D_noCnoR.i'
+    exodiff = 'PFmulti_master_2D_noCnoR_exodus_2.e PFmulti_master_2D_noCnoR_exodus_2_sub_app0.e'
+    cli_args = 'Outputs/file_base="PFmulti_master_2D_noCnoR_exodus_2"'
+    allow_unused = True
+    min_parallel = 2
+    max_parallel = 2
+    allow_warnings = True
+  [../]
+  [./PF_as_master_4]
+    type = 'Exodiff'
+    input = 'PFmulti_master_2D_noCnoR.i'
+    exodiff = 'PFmulti_master_2D_noCnoR_exodus_4.e PFmulti_master_2D_noCnoR_exodus_4_sub_app0.e'
+    cli_args = 'Outputs/file_base="PFmulti_master_2D_noCnoR_exodus_4"'
+    allow_unused = True
+    min_parallel = 4
+    max_parallel = 4
     allow_warnings = True
   [../]
   [./Xolotl_standalone]

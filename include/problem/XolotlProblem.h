@@ -55,7 +55,7 @@ private:
 	Real &_previous_time;
 	Real &_n_xenon;
 	std::vector<std::vector<std::vector<std::array<Real, 4> > > > &_local_NE;
-	std::vector<std::vector<std::vector<std::vector<std::pair<int, Real> > > > > &_conc_vector;
+	std::vector<std::vector<std::vector<std::vector<std::pair<xolotl::IdType, Real> > > > > &_conc_vector;
 
 };
 
