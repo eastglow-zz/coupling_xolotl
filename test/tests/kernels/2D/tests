@@ -37,4 +37,11 @@
     allow_unused = True
     allow_warnings = True
   [../]
+  [./Xolotl_to_xolotl]
+    type = 'Exodiff'
+    input = 'x2x_master_2D_noCnoR.i'
+    exodiff = 'x2x_master_2D_noCnoR_out.e x2x_master_2D_noCnoR_out_sub_app0.e'
+    allow_unused = True
+    allow_warnings = True
+  [../]
 []
