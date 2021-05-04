@@ -13,11 +13,24 @@ ifneq ($(wildcard $(MOOSE_SUBMODULE)/framework/Makefile),)
 else
   MOOSE_DIR        ?= $(shell dirname `pwd`)/moose
 endif
+# Try to use PETSc submodule if PETSC_DIR is not set
+PETSC_DIR          ?=$(MOOSE_DIR)/petsc
+PETSC_ARCH         ?=arch-moose
+
+# Xolotl
+XOLOTL_DIR         ?= $(CURDIR)/xolotl
 
 # framework
 FRAMEWORK_DIR      := $(MOOSE_DIR)/framework
 include $(FRAMEWORK_DIR)/build.mk
 include $(FRAMEWORK_DIR)/moose.mk
+
+# Darwin
+ifneq (,$(findstring darwin,$(libmesh_HOST)))
+	lib_suffix := dylib
+else
+	lib_suffix := so
+endif
 
 ################################## MODULES ####################################
 # To use certain physics included with MOOSE, set variables below to
@@ -42,27 +55,42 @@ XFEM                := no
 POROUS_FLOW         := no
 
 include $(MOOSE_DIR)/modules/modules.mk
-###############################################################################
-#External non-MOOSE shared library linking - not necessary
-extlibpath          :=$(XOLOTL_PATH)/lib
-extheaderpath       :=$(XOLOTL_PATH)/include
-ADDITIONAL_INCLUDES:= -I$(extheaderpath)
-###############################################################################
+
+# List XOLOTL as a dependency
+# Use ADDITIONAL flags to link XOLOTL
+XOLOTL_DEPEND_LIBS     := $(XOLOTL_DIR)/build/lib/libxolotlInter.$(lib_suffix)
+ADDITIONAL_DEPEND_LIBS += $(XOLOTL_DEPEND_LIBS)
+# -Wl,-rpath trikcy is used for load XOLOTL properly from executable
+ADDITIONAL_LIBS        += -L$(XOLOTL_DIR)/build/lib -Wl,-rpath,$(XOLOTL_DIR)/build/lib -lxolotlInter
+ADDITIONAL_INCLUDES    += -I$(XOLOTL_DIR)/build/include
 
 # dep apps
 APPLICATION_DIR    := $(CURDIR)
 APPLICATION_NAME   := coupling_xolotl
 BUILD_EXEC         := yes
 GEN_REVISION       := no
+# DEP_APPS           := $(shell $(FRAMEWORK_DIR)/scripts/find_dep_apps.py $(APPLICATION_NAME))
 include            $(FRAMEWORK_DIR)/app.mk
-export EXTERNAL_FLAGS += -std=c++11 -L$(extlibpath) -lxolotlInter
 
 ###############################################################################
 # Additional special case targets should be added here
-xo:
-	@mkdir xolotl/build
-	@cd xolotl/build; PETSC_DIR=/home/sophie/MOOSE/projects/moose/petsc/ PETSC_ARCH=arch-moose \
-	CXX=mpicxx CC=mpicc HDF5_ROOT=/home/sophie/Code/hdf5-install/ \
+
+# We want to build XOLOTL first before compiling anything in the coupling app
+# The coupling app has a dependency on XOLOTL
+$(app_LIBS): $(ADDITIONAL_DEPEND_LIBS)
+$(mesh_library): $(ADDITIONAL_DEPEND_LIBS)
+$(main_object): $(ADDITIONAL_DEPEND_LIBS)
+$(app_test_LIB): $(ADDITIONAL_DEPEND_LIBS)
+$(depend_test_libs): $(ADDITIONAL_DEPEND_LIBS)
+
+# TODO: should list all source files as a dependency
+# Then if source codes change, make will try to call "cmake"
+# "cmake" should build lib with updated source codes
+$(XOLOTL_DEPEND_LIBS): $(XOLOTL_DIR)/xolotl/xolotlSolver/Solver.cpp
+	cd xolotl; \
+	mkdir build; \
+	cd build; \
+	PETSC_DIR=$(PETSC_DIR) PETSC_ARCH=$(PETSC_ARCH) HDF5_ROOT=$(PETSC_DIR)/$(PETSC_ARCH) \
 	cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=mpicxx \
 	-DBUILD_SHARED_LIBS=yes -DCMAKE_CXX_FLAGS_RELEASE="-o3 -fPIC" ../xolotl; \
-	make; make install
+	make; make install \
