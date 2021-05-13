@@ -22,6 +22,9 @@ XOLOTL_DIR         ?= $(CURDIR)/xolotl
 
 # framework
 FRAMEWORK_DIR      := $(MOOSE_DIR)/framework
+
+ADDITIONAL_SRC_DEPS := $(XOLOTL_DIR)/build/include/interface.h
+
 include $(FRAMEWORK_DIR)/build.mk
 include $(FRAMEWORK_DIR)/moose.mk
 
@@ -59,7 +62,6 @@ include $(MOOSE_DIR)/modules/modules.mk
 # List XOLOTL as a dependency
 # Use ADDITIONAL flags to link XOLOTL
 XOLOTL_DEPEND_LIBS     := $(XOLOTL_DIR)/build/lib/libxolotlInter.$(lib_suffix)
-ADDITIONAL_DEPEND_LIBS += $(XOLOTL_DEPEND_LIBS)
 # -Wl,-rpath trikcy is used for load XOLOTL properly from executable
 ADDITIONAL_LIBS        += -L$(XOLOTL_DIR)/build/lib -Wl,-rpath,$(XOLOTL_DIR)/build/lib -lxolotlInter
 ADDITIONAL_INCLUDES    += -I$(XOLOTL_DIR)/build/include
@@ -75,13 +77,7 @@ include            $(FRAMEWORK_DIR)/app.mk
 ###############################################################################
 # Additional special case targets should be added here
 
-# We want to build XOLOTL first before compiling anything in the coupling app
-# The coupling app has a dependency on XOLOTL
-$(app_LIBS): $(ADDITIONAL_DEPEND_LIBS)
-$(mesh_library): $(ADDITIONAL_DEPEND_LIBS)
-$(main_object): $(ADDITIONAL_DEPEND_LIBS)
-$(app_test_LIB): $(ADDITIONAL_DEPEND_LIBS)
-$(depend_test_libs): $(ADDITIONAL_DEPEND_LIBS)
+$(ADDITIONAL_SRC_DEPS): $(XOLOTL_DEPEND_LIBS)
 
 # TODO: should list all source files as a dependency
 # Then if source codes change, make will try to call "cmake"
