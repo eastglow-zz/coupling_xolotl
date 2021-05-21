@@ -1,0 +1,6 @@
+[submodule "moose"]
+	path = moose
+	url = https://github.com/idaholab/moose.git
+[submodule "xolotl"]
+	path = xolotl
+	url = https://github.com/ORNL-Fusion/xolotl

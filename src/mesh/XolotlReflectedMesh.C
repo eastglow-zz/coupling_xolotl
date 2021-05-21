@@ -45,19 +45,17 @@ InputParameters validParams<XolotlReflectedMesh>() {
 XolotlReflectedMesh::XolotlReflectedMesh(const InputParameters &parameters) :
 		MooseMesh(parameters), _xolotl_input_path_name(
 				getParam < FileName > ("XolotlInput_path_name")), _dim(
-				getParam < MooseEnum > ("dim")) {
-	if (&_app) {
-		// Get the external app to create the interface and its grid
-		coupling_xolotlApp *xolotl_app =
-				dynamic_cast<coupling_xolotlApp*>(&_app);
-		// Create the interface to initialiaze the DMDA
-		xolotl_app->createInterface(_xolotl_input_path_name);
-		// Now we can get the TS from the app
-		TS &ts = xolotl_app->getXolotlTS();
-		// Retrieve mesh from TS
-		TSGetDM(ts, &_dmda);
-	} else
-		mooseError("Missing the Xolotl App");
+				getParam < MooseEnum > ("dim"))
+{
+	// Get the external app to create the interface and its grid
+	coupling_xolotlApp *xolotl_app =
+			dynamic_cast<coupling_xolotlApp*>(&_app);
+	// Create the interface to initialiaze the DMDA
+	xolotl_app->createInterface(_xolotl_input_path_name);
+	// Now we can get the TS from the app
+	TS &ts = xolotl_app->getXolotlTS();
+	// Retrieve mesh from TS
+	TSGetDM(ts, &_dmda);
 }
 
 std::unique_ptr<MooseMesh> XolotlReflectedMesh::safeClone() const {
@@ -750,4 +748,3 @@ void XolotlReflectedMesh::buildMesh() {
 
 	std::cout << "Done building" << std::endl;
 }
-
